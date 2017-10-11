@@ -90,11 +90,7 @@
             <artifactId>json-simple</artifactId>
             <version>1.1</version>
         </dependency>
-        <dependency>
-            <groupId>javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.12.1.GA</version>
-        </dependency>                                                
+                                            
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-ognl</artifactId>
@@ -104,11 +100,31 @@
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-core</artifactId>
             <version>2.3.15.2</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.struts.xwork</groupId>
             <artifactId>xwork-core</artifactId>
             <version>2.3.15.2</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>   
 <!--        <dependency>
             <groupId>ognl</groupId>
@@ -119,26 +135,76 @@
             <groupId>com.jgeppert.struts2.jquery</groupId>
             <artifactId>struts2-jquery-plugin</artifactId>
             <version>3.6.1</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>
         <dependency>
             <groupId>com.jgeppert.struts2.bootstrap</groupId>
             <artifactId>struts2-bootstrap-plugin</artifactId>
             <version>1.6.1</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-json-plugin</artifactId>
             <version>2.3.15.2</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-api</artifactId>
             <version>2.0.5</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.struts</groupId>
             <artifactId>struts2-convention-plugin</artifactId>
             <version>2.3.15.2</version>
+            <exclusions>
+               <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
         </dependency>
         <!--        <dependency>
             <groupId>org.slf4j</groupId>
@@ -161,10 +227,40 @@
             <version>5.1.26</version>
         </dependency>
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>4.2.6.Final</version>
-        </dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-core</artifactId>
+         <version>4.3.11.Final</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+             <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>com.zaxxer</groupId>
+         <artifactId>HikariCP</artifactId>
+         <version>2.4.6</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+               <exclusion>
+               <groupId>javassist</groupId>
+               <artifactId>javassist</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.javassist</groupId>
+         <artifactId>javassist</artifactId>
+         <version>3.18.1-GA</version>
+      </dependency>
         <dependency>
             <groupId>jstl</groupId>
             <artifactId>jstl</artifactId>
