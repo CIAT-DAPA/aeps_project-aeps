@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -47,13 +44,13 @@ import org.hibernate.Transaction;
  */
 public class ActionResiduals extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
     private int idCrop;    
     private int idResMan;    
     private int typeCrop;
+    private int costCrop;
     private List<HashMap> listResMan;
     private Users user;
     private Integer idEntSystem;    
@@ -63,8 +60,9 @@ public class ActionResiduals extends BaseAction {
     private Sowing sowing = new Sowing();
     private List<ResidualsClasification> type_res_clas;
     private UsersDao usrDao;
+    private String coCode;
+    private ProductionEvents event = new ProductionEvents();
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -116,6 +114,15 @@ public class ActionResiduals extends BaseAction {
         this.typeCrop = typeCrop;
     }
 
+     public int getCostCrop() {
+        return costCrop;
+    }
+
+    public void setCostCrop(int costCrop) {
+        this.costCrop = costCrop;
+    }
+
+    
     public Users getUser() {
         return user;
     }
@@ -128,7 +135,14 @@ public class ActionResiduals extends BaseAction {
         return listResMan;
     }
     
-    //Atributos generales de clase
+       public ProductionEvents getEvent() {
+        return event;
+    }
+    
+    public void setEvent(ProductionEvents event) {
+        this.event = event;
+    }
+    
     /**
      * Atributos generales de clase
      */
@@ -141,7 +155,6 @@ public class ActionResiduals extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -150,7 +163,6 @@ public class ActionResiduals extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -184,7 +196,9 @@ public class ActionResiduals extends BaseAction {
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        coCode = (String) ActionContext.getContext().getSession().get(APConstants.COUNTRY_CODE);
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -217,13 +231,13 @@ public class ActionResiduals extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.residual"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.residual"));
             }
             
             Date dateSowing = null;
@@ -235,11 +249,10 @@ public class ActionResiduals extends BaseAction {
 //                if (sowing.getDateSow()!=null && prep.getDatePrep()!=null) {
                 if (!dmySow.equals("") && resMan.getDateResMan()!=null) {
 
-                    Integer valDiffAff = GlobalFunctions.compareDateBeforeSowing(resMan.getDateResMan(), sowing.getDateSow());
+                    Integer valDiffAff = GlobalFunctions.compareDateBeforeSowing(resMan.getDateResMan(), sowing.getDateSow(), 0);
                     if (valDiffAff==2) {
-        //				$fails[]  = $prefix.'date_harvest_crop';
-                        addFieldError("resMan.dateResMan", "Dato invalido");                
-                        addActionError("Se ingreso una fecha de trabajo de mas de 6 meses antes de la siembra ("+dmySow+")");
+                        addFieldError("resMan.dateResMan", getText("message.residualdateinvalidrank.residual"));                
+                        addActionError(getText("desc.residualdateinvalidrank.residual")+" ("+dmySow+")");
                     }
 
                 }
@@ -294,8 +307,11 @@ public class ActionResiduals extends BaseAction {
         
         HashMap prod  = cropDao.findById(idCrop);
         Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
-//        System.out.println("tyCro=>"+tyCro);
-        
+        Boolean costRes = Boolean.valueOf(String.valueOf(prod.get("costCrop")));
+        if (costRes) setCostCrop(1);
+        else setCostCrop(2);
+//        System.out.println("mjk: CostRes=>"+costRes);
+//        System.out.println("mjk2: CostCroo=>"+getCostCrop());
         try {
             this.setIdResMan(Integer.parseInt(this.getRequest().getParameter("idResMan")));
         } catch (NumberFormatException e) {
@@ -319,7 +335,6 @@ public class ActionResiduals extends BaseAction {
             return BaseAction.NOT_AUTHORIZED;
         }
         String action = "";
-//        System.out.println("Entre a guardar la info");
         /*
          * Se evalua dependiendo a la accion realizada:
          * 1) create: Al momento de guardar un registro por primera ves
@@ -347,28 +362,32 @@ public class ActionResiduals extends BaseAction {
             resMan.setStatus(true);
             session.saveOrUpdate(resMan);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(resMan.getIdResMan());
-            log.setTableLogEnt("residuals_management");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);          
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, resMan.getIdResMan(), "residuals_management", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(resMan.getIdResMan());
+                log.setTableLogEnt("residuals_management");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }          
             tx.commit();           
             state = "success";            
             if (action.equals("C")) {
-                info  = "El manejo de rastrojo ha sido agregado con exito";
+                info  = getText("message.successadd.residual");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "El manejo de rastrojo ha sido modificado con exito";
+                info  = getText("message.successedit.residual");
 //                return "list";
             }
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -376,7 +395,11 @@ public class ActionResiduals extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar un manejo de rastrojo";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.residual");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.residual");
+            }
         } catch (ParseException e) { 
         
         } finally {
@@ -405,7 +428,7 @@ public class ActionResiduals extends BaseAction {
         
         if (idResMan==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.residual");
             return "states";
         }
         
@@ -431,14 +454,14 @@ public class ActionResiduals extends BaseAction {
 //            logDao.save(log);
             tx.commit();         
             state = "success";
-            info  = "El manejo de rastrojo ha sido borrado con exito";
+            info  = getText("message.successdelete.residual");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar un manejo de rastrojo";
+            info  = getText("message.faildelete.residual");
         } finally {
             session.close();
         }      

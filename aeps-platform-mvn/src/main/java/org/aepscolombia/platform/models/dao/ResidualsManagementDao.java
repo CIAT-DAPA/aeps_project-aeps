@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 //import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
@@ -65,7 +63,7 @@ public class ResidualsManagementDao
         String sql = "";     
         String sqlAdd = "";     
                       
-        sql  += "select p.id_res_man, p.date_res_man, cr.name_res_cla, p.other_residuals_management_res_man";
+        sql  += "select p.id_res_man, p.date_res_man, cr.name_res_cla, p.other_residuals_management_res_man,p.comment_res_man,p.cost_res_man";
         sql += " from residuals_management p"; 
         sql += " inner join production_events ep on ep.id_pro_eve=p.id_production_event_res_man";     
         sql += " left join residuals_clasification cr on cr.id_res_cla=p.id_residuals_type_res_man and cr.status_res_cla=1";    
@@ -74,9 +72,9 @@ public class ResidualsManagementDao
         if (args.containsKey("idEvent")) {
             sql += " and p.id_production_event_res_man="+args.get("idEvent");
         }
-		if (args.containsKey("idEntUser")) {
-			sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
-		}
+//		if (args.containsKey("idEntUser")) {
+//			sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
+//		}
 		sqlAdd += " order by p.id_res_man ASC";
 		sql += sqlAdd;
 //        args.get("countTotal");
@@ -98,7 +96,9 @@ public class ResidualsManagementDao
                 temp.put("idResMan", data[0]);
                 temp.put("dateResMan", data[1]);
                 temp.put("residualsResMan", data[2]);
-                temp.put("otherResidualsResMan", data[3]);                
+                temp.put("otherResidualsResMan", data[3]);       
+                temp.put("commentResMan", data[4]);         
+                temp.put("costResMan", data[5]);         
                 result.add(temp);
             }
             tx.commit();
@@ -236,7 +236,7 @@ public class ResidualsManagementDao
         String result = "[";
         
         String sql = "";    
-        sql += "select DATE_FORMAT(rm.date_res_man,'%Y-%m-%d') as dateRes, rm.id_residuals_type_res_man, rm.other_residuals_management_res_man";
+        sql += "select DATE_FORMAT(rm.date_res_man,'%Y-%m-%d') as dateRes, rm.id_residuals_type_res_man, rm.other_residuals_management_res_man,rm.comment_res_man,rm.cost_res_man";
         sql += " from residuals_management rm"; 
         sql += " where rm.status=1";
         sql += " and rm.id_production_event_res_man="+idCrop;
@@ -287,7 +287,7 @@ public class ResidualsManagementDao
         String result = "[";
         
         String sql = "";    
-        sql += "select DATE_FORMAT(rm.date_res_man,'%Y-%m-%d') as dateRes, rm.id_residuals_type_res_man, rm.other_residuals_management_res_man";
+        sql += "select DATE_FORMAT(rm.date_res_man,'%Y-%m-%d') as dateRes, rm.id_residuals_type_res_man, rm.other_residuals_management_res_man,rm.comment_res_man,rm.cost_res_man";
         sql += " from residuals_management rm"; 
         sql += " where rm.status=1";
         sql += " and rm.id_production_event_res_man="+idCrop;
@@ -328,4 +328,42 @@ public class ResidualsManagementDao
 		}
         return result;
     }
+    
+    public boolean haveBurning(HashMap args) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+        Object[] events = null;
+        Transaction tx  = null;
+        Integer result  = 0;
+        boolean check   = false;
+        
+        String sql = "";     
+        sql  += "select count(rm.id_res_man), rm.id_res_man";
+        sql += " from residuals_management rm"; 
+        sql += " where rm.status=1 and rm.id_residuals_type_res_man=1";
+        if (args.containsKey("idEvent")) {
+            sql += " and rm.id_production_event_res_man="+args.get("idEvent");
+        }
+//        System.out.println("sql=>"+sql);
+        
+        try {
+            tx = session.beginTransaction();
+            Query query  = session.createSQLQuery(sql);
+            events = (Object[])query.uniqueResult();
+            result = Integer.parseInt(String.valueOf(events[0]));            
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        if (result>0) {
+            check = true;
+        }
+        return check;
+    }
+    
 }

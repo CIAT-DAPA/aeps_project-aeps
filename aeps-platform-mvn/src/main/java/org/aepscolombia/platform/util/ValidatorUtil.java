@@ -59,9 +59,13 @@ public class ValidatorUtil {
 
     }   
     
+    /**
+     * Metodo encargado de verificar un captcha que ha enviado una persona, al momento de registrar un
+     * nuevo usuario
+     * @return Obtiene si un captcha a sido valido o no
+     */
     public static boolean verifyCaptcha(String remoteAddr, String recaptChallenge, String recaptResponse) {
         ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-//        reCaptcha.setPublicKey("6Lfh2O0SAAAAANN4PftAGB-KQF26H4qUoyUMH69F");
         reCaptcha.setPrivateKey("66Lfh2O0SAAAAANtqQ1zF9uKjryu-9EZZnlCU_d76");
         ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer(remoteAddr, recaptChallenge, recaptResponse);
         return reCaptchaResponse.isValid();

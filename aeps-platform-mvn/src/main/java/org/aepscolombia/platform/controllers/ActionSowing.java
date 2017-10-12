@@ -1,40 +1,33 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Locale;
 import org.aepscolombia.platform.models.dao.BeansDao;
 import org.aepscolombia.platform.models.dao.CassavasDao;
 
 import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.MaizeDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
+import org.aepscolombia.platform.models.dao.RiceDao;
 import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.SowingDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.Beans;
 import org.aepscolombia.platform.models.entity.Cassavas;
-import org.aepscolombia.platform.models.entity.CropsTypes;
 
 import org.aepscolombia.platform.models.entity.LogEntities;
 import org.aepscolombia.platform.models.entity.Maize;
 import org.aepscolombia.platform.models.entity.ProductionEvents;
+import org.aepscolombia.platform.models.entity.Rice;
 import org.aepscolombia.platform.models.entity.Sowing;
 import org.aepscolombia.platform.models.entity.Users;
 import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
-import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 
 import org.apache.commons.lang.StringUtils;
@@ -53,24 +46,25 @@ import org.hibernate.Transaction;
  */
 public class ActionSowing extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
     private int idCrop;    
     private int typeCrop;
     private Users user;
+    private int costCrop;
     private Integer idEntSystem;    
     private Integer idUsrSystem;    
 
     private Beans beans   = new Beans();
     private Cassavas cass = new Cassavas();
     private Maize maize   = new Maize();
+    private Rice rice     = new Rice();
     private Sowing sowing = new Sowing();
     private ProductionEvents event = new ProductionEvents();
     private UsersDao usrDao;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -97,6 +91,14 @@ public class ActionSowing extends BaseAction {
     public void setCass(Cassavas cass) {
         this.cass = cass;
     }
+
+    public Rice getRice() {
+        return rice;
+    }
+
+    public void setRice(Rice rice) {
+        this.rice = rice;
+    }   
 
     public Maize getMaize() {
         return maize;
@@ -129,6 +131,14 @@ public class ActionSowing extends BaseAction {
     public void setTypeCrop(int typeCrop) {
         this.typeCrop = typeCrop;
     }
+    
+    public int getCostCrop() {
+        return costCrop;
+    }
+
+    public void setCostCrop(int costCrop) {
+        this.costCrop = costCrop;
+    }
 
     public Users getUser() {
         return user;
@@ -138,7 +148,6 @@ public class ActionSowing extends BaseAction {
         this.user = user;
     }       
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
      */
@@ -147,13 +156,13 @@ public class ActionSowing extends BaseAction {
     private BeansDao beansDao     = new BeansDao();
     private CassavasDao cassDao   = new CassavasDao();
     private MaizeDao maizeDao     = new MaizeDao();
+    private RiceDao riceDao       = new RiceDao();
     private SowingDao sowDao      = new SowingDao();
     private LogEntitiesDao logDao = new LogEntitiesDao();
     
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -162,7 +171,6 @@ public class ActionSowing extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -194,9 +202,11 @@ public class ActionSowing extends BaseAction {
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr()); 
-        usrDao = new UsersDao();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        usrDao = new UsersDao();        
         idUsrSystem = user.getIdUsr();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -221,10 +231,11 @@ public class ActionSowing extends BaseAction {
             required.put("sowing.seedsNumberSow", sowing.getSeedsNumberSow());
             required.put("sowing.treatedSeedsSow", sowing.isTreatedSeedsSow());
             required.put("sowing.genotypes.idGen", sowing.getGenotypes().getIdGen());                
-//            required.put("event.expected_production_pro_eve", event.getExpectedProductionProEve());     
-            required.put("sowing.furrowsDistanceSow", sowing.getFurrowsDistanceSow());
-            required.put("sowing.sitesDistanceSow", sowing.getSitesDistanceSow());
-//            System.out.println("valDistance=>"+sowing.getFurrowsDistanceSow());
+//            required.put("event.expected_production_pro_eve", event.getExpectedProductionProEve()); 
+            if (typeCrop!=4) {        
+                required.put("sowing.furrowsDistanceSow", sowing.getFurrowsDistanceSow());
+                required.put("sowing.sitesDistanceSow", sowing.getSitesDistanceSow());
+            }
             
 //            if (sowing.getGenotypesSowing().getIdGenSow()==1000000) {
             if (sowing.getGenotypes().getIdGen()!=null && sowing.getGenotypes().getIdGen()==1000000) {
@@ -242,9 +253,12 @@ public class ActionSowing extends BaseAction {
 //              required.put("beans.seedsInoculations.idSeeIno", beans.getSeedsInoculations().getIdSeeIno());
               required.put("beans.growingEnvironment.idGroEnv", beans.getGrowingEnvironment().getIdGroEnv());
 
-              if (beans.getOtroInoculationBea().equals("1000000")) {
-                required.put("sowing.otherGenotypeSow", sowing.getOtherGenotypeSow());
-              }
+//              if (beans.getOtroInoculationBea().equals("1000000")) {
+//                required.put("sowing.otherGenotypeSow", sowing.getOtherGenotypeSow());
+//              }
+            } else if (typeCrop==4) {
+              required.put("sowing.genotypesSowing.idGenSow", sowing.getGenotypesSowing().getIdGenSow());
+              required.put("rice.riceSystem.idRieSys", rice.getRiceSystem().getIdRieSys());
             }                   
             
             for (Iterator it = required.keySet().iterator(); it.hasNext();) {
@@ -252,42 +266,50 @@ public class ActionSowing extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.sowing"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.sowing"));
             }
             
-//            if (typeCrop==2) {
-            required.put("sowing.furrowsDistanceSow", sowing.getFurrowsDistanceSow());
-            if (sowing.getFurrowsDistanceSow()!=null && sowing.getFurrowsDistanceSow()!=0 && (sowing.getFurrowsDistanceSow()<0 || sowing.getFurrowsDistanceSow()>10)) {
-                addFieldError("sowing.furrowsDistanceSow", "Dato invalido valor entre 0 y 10");
-                addActionError("Se ingreso una distancia entre surcos invalida, por favor ingresar un valor entre 0 y 10");
-            }
+            if (typeCrop!=4) {        
+                required.put("sowing.furrowsDistanceSow", sowing.getFurrowsDistanceSow());
+                if (sowing.getFurrowsDistanceSow()!=null && sowing.getFurrowsDistanceSow()!=null && sowing.getFurrowsDistanceSow()!=0 && (sowing.getFurrowsDistanceSow()<0.1 || sowing.getFurrowsDistanceSow()>10)) {
+                    addFieldError("sowing.furrowsDistanceSow", getText("message.invaliddatafurrowsdistance.sowing"));
+                    addActionError(getText("desc.invaliddatafurrowsdistance.sowing"));
+                }
 
-            required.put("sowing.sitesDistanceSow", sowing.getSitesDistanceSow());
-            if (sowing.getFurrowsDistanceSow()!=null && sowing.getSitesDistanceSow()!=0 && (sowing.getSitesDistanceSow()<0 || sowing.getSitesDistanceSow()>10)) {
-                addFieldError("sowing.sitesDistanceSow", "Dato invalido valor entre 0 y 10");
-                addActionError("Se ingreso una distancia entre sitios invalida, por favor ingresar un valor entre 0 y 10");
+                required.put("sowing.sitesDistanceSow", sowing.getSitesDistanceSow());
+                if (sowing.getSitesDistanceSow()!=null && sowing.getSitesDistanceSow()!=0 && (sowing.getSitesDistanceSow()<0.1 || sowing.getSitesDistanceSow()>10)) {
+                    addFieldError("sowing.sitesDistanceSow", getText("message.invaliddatasitesdistance.sowing"));
+                    addActionError(getText("desc.invaliddatasitesdistance.sowing"));
+                }
             }
                 
             if (typeCrop==2) {
                 required.put("beans.seedsNumberSiteBea", beans.getSeedsNumberSiteBea());
-                if (beans.getSeedsNumberSiteBea()!=0 && (beans.getSeedsNumberSiteBea()<1 || beans.getSeedsNumberSiteBea()>10)) {
-                    addFieldError("beans.seedsNumberSiteBea", "Dato invalido valor entre 1 y 10");
-                    addActionError("Se ingreso un numero de semillas por sitio invalido, por favor ingresar un valor entre 1 y 10");
+                if (beans.getSeedsNumberSiteBea()!=null && beans.getSeedsNumberSiteBea()!=0 && (beans.getSeedsNumberSiteBea()<1 || beans.getSeedsNumberSiteBea()>10)) {
+                    addFieldError("beans.seedsNumberSiteBea", getText("message.invaliddataseedsnumberbean.sowing"));
+                    addActionError(getText("desc.invaliddataseedsnumberbean.sowing"));
                 }
             } else if (typeCrop==1) {
                 required.put("maize.seedsNumberSiteMai", maize.getSeedsNumberSiteMai());
                 if (maize.getSeedsNumberSiteMai()!=null && maize.getSeedsNumberSiteMai()!=0 && (maize.getSeedsNumberSiteMai()<1 || maize.getSeedsNumberSiteMai()>10)) {
-                    addFieldError("maize.seedsNumberSiteMai", "Dato invalido valor entre 1 y 10");
-                    addActionError("Se ingreso un numero de semillas por sitio invalido, por favor ingresar un valor entre 1 y 10");
+                    addFieldError("maize.seedsNumberSiteMai", getText("message.invaliddataseedsnumbermaize.sowing"));
+                    addActionError(getText("desc.invaliddataseedsnumbermaize.sowing"));
                 }
             }
 
+            /*if (event.getExpectedProductionProEve()!=null && event.getExpectedProductionProEve()!=0) {
+                if (event.getExpectedProductionProEve()<0 || event.getExpectedProductionProEve()>30000) {
+                    addFieldError("event.expected_production_pro_eve", getText("message.invaliddataexpectedproduction.sowing"));
+                    addActionError(getText("desc.invaliddataexpectedproduction.sowing"));
+                }
+            }*/
+            
             if (event.getExpectedProductionProEve()!=null && event.getExpectedProductionProEve()!=0) {
                 if (typeCrop==1) {
                     if (event.getExpectedProductionProEve()<800 || event.getExpectedProductionProEve()>30000) {
@@ -297,9 +319,9 @@ public class ActionSowing extends BaseAction {
                 }
                 
                 if (typeCrop==2) {    
-                    if (event.getExpectedProductionProEve()<200 || event.getExpectedProductionProEve()>30000) {
-                        addFieldError("event.expectedProductionProEve", "Dato invalido valor entre 200 y 30000");
-                        addActionError("Se ingreso un rendimiento histórico obtenido invalido, por favor ingresar un valor entre 200 y 30000");
+                    if (event.getExpectedProductionProEve()<200 || event.getExpectedProductionProEve()>8000) {
+                        addFieldError("event.expectedProductionProEve", "Dato invalido valor entre 200 y 8000");
+                        addActionError("Se ingreso un rendimiento histórico obtenido invalido, por favor ingresar un valor entre 200 y 8000");
                     }
                 }
                 
@@ -317,7 +339,6 @@ public class ActionSowing extends BaseAction {
             return BaseAction.NOT_AUTHORIZED;
         }
         String action = "";
-//        System.out.println("Entre a guardar la info");
         /*
          * Se evalua dependiendo a la accion realizada:
          * 1) create: Al momento de guardar un registro por primera ves
@@ -334,6 +355,7 @@ public class ActionSowing extends BaseAction {
         Session session = sessions.openSession();
         Transaction tx = null;
 //        info = "La siembra ha sido modificado con exito";
+        
 
         try {
             tx = session.beginTransaction();           
@@ -348,6 +370,12 @@ public class ActionSowing extends BaseAction {
 //            event.setCropsTypes(new CropsTypes(2));
 //            event.setIdProjectProEve(event.getIdProjectProEve());
 //            event.setStatus(event.isStatus());
+            if (coCode.equals("NI")) {
+                Double seedNum = sowing.getSeedsNumberSow()*65.71;
+                Double expPro  = event.getExpectedProductionProEve()*65.71;
+                sowing.setSeedsNumberSow(seedNum);            
+                eventInfo.setExpectedProductionProEve(expPro);
+            } 
             session.saveOrUpdate(eventInfo);
             
             if (sowing.getIdSow()==null) {
@@ -367,7 +395,7 @@ public class ActionSowing extends BaseAction {
                 sowing.setDoseUnits(null);
             }
 //            sowing.setSowingTypes(new SowingTypes(idCrop));          
-            sowing.setStatus(true);
+            sowing.setStatus(true);     
             session.saveOrUpdate(sowing);
             
             
@@ -376,6 +404,9 @@ public class ActionSowing extends BaseAction {
             
             Beans beansOld  = beansDao.objectById(this.getIdCrop());
             if(beansOld!=null) session.delete(beansOld);
+            
+            Rice riceOld  = riceDao.objectById(this.getIdCrop());
+            if(riceOld!=null) session.delete(riceOld);
 
             if (typeCrop==1) {        
                 maize.setProductionEvents(new ProductionEvents(idCrop));
@@ -393,29 +424,37 @@ public class ActionSowing extends BaseAction {
 //                Cassavas ca = new Cassavas();
 //                ca.setIdCas(null);
 //                ca.setProductionEvents(pro);
+            } else if (typeCrop==4) {        
+                rice.setProductionEvents(new ProductionEvents(idCrop));
+                rice.setStatus(true);
+                session.saveOrUpdate(rice);
             }
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(sowing.getIdSow());
-            log.setTableLogEnt("sowing");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);           
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, sowing.getIdSow(), "sowing", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(sowing.getIdSow());
+                log.setTableLogEnt("sowing");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }          
             
             tx.commit();             
             state = "success";            
             if (action.equals("C")) {
-                info  = "La siembra ha sido agregada con exito";
+                info  = getText("message.successadd.sowing");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "La siembra ha sido modificada con exito";
+                info  = getText("message.successedit.sowing");
 //                return "list";
             }
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, typeCrop, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, typeCrop, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -423,7 +462,11 @@ public class ActionSowing extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar una siembra";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.sowing");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.sowing");
+            }
         } catch (ParseException e) { 
         
         } finally {

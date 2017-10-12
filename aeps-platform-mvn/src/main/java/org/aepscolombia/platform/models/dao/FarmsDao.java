@@ -1,20 +1,26 @@
 package org.aepscolombia.platform.models.dao;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
-import java.io.FileWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.aepscolombia.platform.controllers.ActionField;
@@ -32,6 +38,12 @@ import org.aepscolombia.platform.models.entity.Producers;
 import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  * Clase FarmsDao
@@ -75,7 +87,6 @@ public class FarmsDao
             events = query.list();         
             
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("id_producer", data[0]);
                 temp.put("id_farm", data[1]);
@@ -111,7 +122,7 @@ public class FarmsDao
         Transaction tx = null;
         String sql = "";
 
-        sql += "select fp.id_farm_far_pro, fp.id_producer_far_pro ";
+        sql += "select fp.id_farm_far_pro, fp.id_producer_far_pro, fp.created_by ";
         
 //        sql += "select usr.id_usr, usr.name_user_usr, usr.password_usr, usr.cod_validation_usr, usr.status";
         sql += " from farms_producers fp";
@@ -164,6 +175,7 @@ public class FarmsDao
         Transaction tx = null;
         List<HashMap> result = new ArrayList<HashMap>();
         
+        String selAll  = String.valueOf(args.get("selAll"));
         String sql = "";       
         String entType = String.valueOf(args.get("entType"));
         sql += "select fp.id_producer_far_pro, f.id_far, e.name_ent, f.name_far, f.address_far, f.phone_far, f.id_district_far,";
@@ -180,8 +192,11 @@ public class FarmsDao
         sql += " inner join log_entities le on le.id_object_log_ent=f.id_far and le.table_log_ent='farms' and le.action_type_log_ent='C'";   
         if (entType.equals("3")) {
             sql += " inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)"; 
-            sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            if (selAll.equals("true")) {
+                sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
+                sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+                sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
+            }
         }
         sql += " inner join farms_producers fp on fp.id_farm_far_pro=f.id_far"; 
         sql += " inner join producers p on p.id_pro=fp.id_producer_far_pro"; 
@@ -190,8 +205,7 @@ public class FarmsDao
         
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
             sql += " and le.id_entity_log_ent="+args.get("idEntUser");
-        } else {
-            String selAll  = String.valueOf(args.get("selAll"));
+        } else {            
             if (selAll.equals("true")) {
                 sql += " and ass.id_entity_asc="+args.get("idEntUser");
             } else {
@@ -224,7 +238,16 @@ public class FarmsDao
             }
         }
         
-        // if ($identProductor!='' ) sql .= "where";
+        if (args.containsKey("date_ini") && args.containsKey("date_end")) {
+            String valIni = String.valueOf(args.get("date_ini"));            
+            String valEnd = String.valueOf(args.get("date_end"));            
+            if((!valIni.equals(" ") && !valIni.equals("") && !valIni.equals("null")) && (!valEnd.equals(" ") && !valEnd.equals("") && !valEnd.equals("null"))) {
+                String dateIni = new SimpleDateFormat("yyyy-MM-dd").format(new Date(valIni));
+                String dateEnd = new SimpleDateFormat("yyyy-MM-dd").format(new Date(valEnd));
+                sql += " and le.date_log_ent >= '"+dateIni+"' and le.date_log_ent <= '"+dateEnd+"'";
+            }
+        }
+        
         if (args.containsKey("idProducer")) {
             sql += " and fp.id_producer_far_pro="+args.get("idProducer");
         }
@@ -288,14 +311,19 @@ public class FarmsDao
             HashMap tempTotal = new HashMap();
             tempTotal.put("countTotal", query.list().size());
             result.add(tempTotal);
+            eventsTotal = query.list();     
             if(query.list().size()>maxResults) {
                 query.setFirstResult(valIni);
                 query.setMaxResults(maxResults);      
             }
             events = query.list();     
             
+            JSONObject objPrin = new JSONObject();
+            objPrin.put("type", "FeatureCollection");     
+            
+            JSONArray features = new JSONArray();
+            
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("id_producer", data[0]);
                 temp.put("id_farm", data[1]);
@@ -317,6 +345,43 @@ public class FarmsDao
                 }
                 result.add(temp);
             }
+            
+            for (Object[] data : eventsTotal) {                
+                JSONObject objRow = new JSONObject();
+                objRow.put("type", "Feature");
+
+                JSONObject objRowCont = new JSONObject();
+                objRowCont.put("type", "Point");
+                JSONArray listCoor = new JSONArray();
+                listCoor.add(data[9]);
+                listCoor.add(data[8]);
+
+                objRowCont.put("coordinates", listCoor);
+                objRow.put("geometry", objRowCont);
+
+                JSONObject objRowProperties = new JSONObject();
+                objRowProperties.put("idPro", ""+data[0]);
+                objRowProperties.put("idFarm", ""+data[1]);
+                objRowProperties.put("namePro", ""+data[2]);
+                objRowProperties.put("nameFarm", ""+data[3]);
+                objRowProperties.put("dirFarm", ""+data[4]);
+                objRowProperties.put("latFarm", ""+data[8]);
+                objRowProperties.put("lonFarm", ""+data[9]);
+                objRowProperties.put("altFarm", ""+data[10]);
+                objRowProperties.put("nameMun", ""+data[13]);
+                objRowProperties.put("nameDep", ""+data[15]);
+                objRowProperties.put("status", ""+data[16]);
+                objRowProperties.put("typeEnt", ""+data[17]);
+                objRow.put("properties", objRowProperties);      
+                
+                features.add(objRow);
+            }
+            
+            objPrin.put("features", features);
+//            System.out.println("JSONObject=>"+objPrin);
+            HashMap jsonRes = new HashMap();
+            jsonRes.put("points", objPrin.toString());
+            result.add(jsonRes);
 //            System.out.println(result);
 //            for (HashMap datos : result) {
 //                System.out.println(datos.get("id_productor")+" "+datos.get("id_entidad")+" "+datos.get("cedula"));
@@ -351,7 +416,8 @@ public class FarmsDao
         if (entType.equals("3")) {
             sql += " inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)"; 
             sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += " where f.status=1 and e.status=1";
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
@@ -406,7 +472,6 @@ public class FarmsDao
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         Transaction tx = null;
-//        HibernateUtil.getInstanceConnection();
 
         try {
             tx = session.beginTransaction();
@@ -449,8 +514,6 @@ public class FarmsDao
 //            }
 //            ex.printStackTrace();
 //        }
-        
-//        return event;
     }
 
     public void save(Farms event) {
@@ -501,7 +564,7 @@ public class FarmsDao
         String sql = "";
         String entType = String.valueOf(args.get("entType"));
         
-        sql += "select f.id_far as ID_FINCA, p.id_pro as ID_PROD, e.name_ent as USUARIO, ent.name_ent as PRODUCTOR, concat(ent.document_type_ent, ':', ent.document_number_ent) as CEDULA, f.name_far as FINCA,";
+        sql += "select f.id_far as ID_FINCA, p.id_pro as ID_PROD, IF(e.name_ent is null,e.email_ent,e.name_ent) as USUARIO, ent.name_ent as PRODUCTOR, concat(ent.document_type_ent, ':', ent.document_number_ent) as CEDULA, f.name_far as FINCA,";
         sql += "f.address_far as DIRECCION, f.latitude_far as LATITUD, f.longitude_far as LONGITUD, f.altitude_far as ALTITUD, m.name_mun as MUNICIPIO";
         sql += " from farms f";
         sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
@@ -513,7 +576,8 @@ public class FarmsDao
         sql += " inner join entities e on le.id_entity_log_ent = e.ID_ENT";
         if (entType.equals("3")) {
             sql += " inner join extension_agents ext on (ext.id_entity_ext_age=e.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += " where le.action_type_log_ent = 'C'";
         sql += " and f.status=1 and ent.status=1";
@@ -532,7 +596,8 @@ public class FarmsDao
         if (entType.equals("3")) {
             sql += "	inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)";
             sql += "	inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += "	inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += "	where le.action_type_log_ent = 'D' AND le.table_log_ent = 'farms'";
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
@@ -551,11 +616,19 @@ public class FarmsDao
 //        System.out.println("sql=>"+sql);
         try {
             tx = session.beginTransaction();
-            CSVWriter writer = new CSVWriter(new FileWriter(fileName), ';');
+            String nameFile = String.valueOf(args.get("fileName"));
+            File myFileTemp = new File(nameFile);
+            FileInputStream fis = new FileInputStream(myFileTemp);
+            
+            HSSFWorkbook workbook = new HSSFWorkbook(fis);            
+            HSSFSheet sheet = workbook.getSheetAt(0);
+            sheet.createFreezePane(0,0);
+            Map<String, Object[]> dataSheet = new TreeMap<String, Object[]>();
+//            CSVWriter writer = new CSVWriter(new FileWriter(fileName), ';');
             Query query  = session.createSQLQuery(sql);
             events = query.list();  
         
-            String[] val = {
+            Object[] val = {
                 "ID_FINCA",
                 "ID_PROD",                
                 "USUARIO",
@@ -568,26 +641,60 @@ public class FarmsDao
                 "ALTITUD",
                 "MUNICIPIO"
             };
-            writer.writeNext(val);
+//            writer.writeNext(val);
+            dataSheet.put("1", val);
+            Integer cont = 2;
             for (Object[] data : events) {
-                String[] valTemp = {
-                    String.valueOf(data[0]),
-                    String.valueOf(data[1]),
-                    String.valueOf(data[2]),
-                    String.valueOf(data[3]),
-                    String.valueOf(data[4]),
-                    String.valueOf(data[5]),
-                    String.valueOf(data[6]),
-                    String.valueOf(data[7]),
-                    String.valueOf(data[8]),
-                    String.valueOf(data[9]),
-                    String.valueOf(data[10])
+                Object[] valTemp = {
+                    data[0],
+                    data[1],
+                    data[2],
+                    data[3],
+                    data[4],
+                    data[5],
+                    data[6],
+                    data[7],
+                    data[8],
+                    data[9],
+                    data[10]
                 };
-                writer.writeNext(valTemp);
+//                writer.writeNext(valTemp);
+                dataSheet.put(""+cont, valTemp);
+                cont++;
             }
-            writer.close();
-//            stmt   = con.prepareStatement(sql);     
-//            result = stmt.executeQuery();
+//            writer.close();
+            Set<String> keyset = dataSheet.keySet();
+            int rownum = 0;
+            for (String key : keyset)
+            {
+                Row row = sheet.createRow(rownum++);
+                Object [] objArr = dataSheet.get(key);
+                int cellnum = 0;
+                for (Object obj : objArr)
+                {
+                    Cell cell = row.createCell(cellnum++);
+                    if (obj instanceof String) {
+                        cell.setCellValue((String) obj);
+                    } else if (obj instanceof Boolean) {
+                        cell.setCellValue((Boolean) obj);
+                    } else if (obj instanceof Timestamp) {
+                        cell.setCellValue((Timestamp) obj);
+                    } else if (obj instanceof Date) {
+                        cell.setCellValue((Date) obj);
+                    } else if (obj instanceof Double) {
+                        cell.setCellValue((Double) obj);
+                    } else if (obj instanceof Integer) {
+                        cell.setCellValue((Integer) obj);
+                    } else if (obj instanceof BigInteger) {   
+                        cell.setCellValue((String) obj.toString());
+                    } 
+                }
+            }
+            File myFile = new File(fileName);
+            if (!myFile.exists()) myFile.createNewFile();
+            FileOutputStream out = new FileOutputStream(myFile);
+            workbook.write(out);
+            out.close();
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
@@ -636,7 +743,6 @@ public class FarmsDao
             events = query.list();         
             
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("id_producer", data[0]);
                 temp.put("id_farm", data[1]);
@@ -678,7 +784,7 @@ public class FarmsDao
                 queryMongo.put("InsertedId", ""+temp.get("id_farm"));
                 queryMongo.put("form_id", "3");
 
-                MongoClient mongo = null;
+                /*MongoClient mongo = null;
                 try {
                     mongo = new MongoClient("localhost", 27017);
                 } catch (UnknownHostException ex) {
@@ -703,7 +809,7 @@ public class FarmsDao
                     throw new HibernateException("");
                 }
 
-                mongo.close();
+                mongo.close();*/
                 
             }   
             tx.commit();
@@ -747,7 +853,6 @@ public class FarmsDao
             mongo = new MongoClient("localhost", 27017);
             
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("id_farm", data[0]);
                 temp.put("name_farm", data[1]);          
@@ -809,7 +914,7 @@ public class FarmsDao
             tx = session.beginTransaction();
             Query query = session.createSQLQuery(sql).addEntity("f", Farms.class);
             events = query.list();
-            MongoClient mongo = new MongoClient("localhost", 27017);
+//            MongoClient mongo = new MongoClient("localhost", 27017);
             for (Farms farm : events) {
 //                System.out.println("farId->"+farm.getIdFar());
                 farm.setStatus(false);     
@@ -828,7 +933,7 @@ public class FarmsDao
                 queryMongo.put("InsertedId", ""+farm.getIdFar());
                 queryMongo.put("form_id", "3");
 
-                DB db = mongo.getDB("ciat");
+                /*DB db = mongo.getDB("ciat");
                 DBCollection col = db.getCollection("log_form_records");
                 WriteResult result = null;
 
@@ -837,12 +942,12 @@ public class FarmsDao
 
                 if (result.getError()!=null) {
                     throw new HibernateException("");
-                }
+                }*/
 
-                FieldsDao fieDao = new FieldsDao();
-                fieDao.deleteFieldsMongo(farm.getIdFar());
+//                FieldsDao fieDao = new FieldsDao();
+//                fieDao.deleteFieldsMongo(farm.getIdFar());
             }
-            mongo.close();
+//            mongo.close();
             tx.commit();
             state = "success";
         } catch (HibernateException e) {
@@ -850,8 +955,8 @@ public class FarmsDao
                 tx.rollback();
             }
             e.printStackTrace();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (UnknownHostException ex) {
+//            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             session.close();
         } 

@@ -49,10 +49,8 @@ public class OrganicControlsDao
         List<OrganicControls> event = null;
         Transaction tx = null;
 		
-//        if (idTargetType>0) {
-            sql += "select ms.id_org_con, ms.name_org_con, ms.target_type_org_con from organic_controls ms";
+            sql += "select ms.id_org_con, ms.name_org_con, ms.target_type_org_con, ms.country_org_con from organic_controls ms";
             sql += " inner join organic_controls_crops_types t on t.id_org_control_cro_typ=ms.id_org_con";
-    //        sql += " where ms.status_dis=1";            
             if (idTypeCrop!=null) {
                 sql += " where t.id_crop_type_cro_typ="+idTypeCrop;
             }
@@ -78,12 +76,33 @@ public class OrganicControlsDao
             } finally {
                 session.close();
             }            
-//        }
         return event;
     }
     
     public OrganicControls objectById(Integer id) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+
+        String sql  = "";        
         OrganicControls event = null;
+        Transaction tx = null;
+				
+        sql += "select p.id_org_con, p.name_org_con, p.target_type_org_con, p.country_org_con";
+        sql += " from organic_controls p";
+        sql += " where p.id_org_con="+id;
+        try {
+            tx = session.beginTransaction();
+            Query query = session.createSQLQuery(sql).addEntity("p", OrganicControls.class);
+            event = (OrganicControls)query.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
         return event;
     }    
 

@@ -98,7 +98,7 @@ public class OrganicFertilizationsDao
         return event;
     }
     
-    public List<OrganicFertilizations> getListOrgFert(Integer idFert) {
+    public List<OrganicFertilizations> getListOrgFert(Integer idFert, String coCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         List<OrganicFertilizations> eventsTemp = null;
@@ -107,13 +107,17 @@ public class OrganicFertilizationsDao
         try {
             tx = session.beginTransaction();
             String sql = "select p.id_org_fer, p.id_fertilization_org_fer, p.id_product_org_fer,";
-            sql += " p.other_product_org_fer, p.amount_product_used_org_fer, p.status, p.created_by"; 
+            sql += " p.other_product_org_fer, p.amount_product_used_org_fer, p.cost_app_org_fer,p.cost_product_org_fer,p.cost_form_app_org_fer,p.status, p.created_by"; 
             sql += " from organic_fertilizations p";
             sql += " where p.status=1 and p.id_fertilization_org_fer="+idFert;
+//            System.out.println("sql=>"+sql);
             Query query = session.createSQLQuery(sql).addEntity("p", OrganicFertilizations.class);
             eventsTemp = query.list();
             for (OrganicFertilizations data : eventsTemp) {
-                if (data!=null && data.getOtherProductOrgFer()!=null && !data.getOtherProductOrgFer().equals("")) data.setOrganicFertilizers(new OrganicFertilizers(1000000, "Otro"));
+                if (coCode.equals("NI")) {
+                    data.setAmountProductUsedOrgFer(data.getAmountProductUsedOrgFer()*0.01522);
+                }
+//                if (data!=null && data.getOrganicFertilizers()==null && data.getOrganicFertilizers().getIdOrgFer()==1000000 && data.getOtherProductOrgFer()!=null && !data.getOtherProductOrgFer().equals("")) data.setOrganicFertilizers(new OrganicFertilizers(1000000, "Otro"));
                 result.add(data);
             }
             tx.commit();
@@ -122,6 +126,11 @@ public class OrganicFertilizationsDao
                 tx.rollback();
             }
             e.printStackTrace();
+        } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+//            e.printStackTrace();
         } finally {
             session.close();
         }

@@ -10,58 +10,72 @@
         <link rel="icon" type="image/ico" href="img/logoAEPS.ico">
         <title>AEPS</title>
         <meta name="description" content="">
-        <meta name="viewport" content="width=device-width"> 							
-        <!--<link rel="stylesheet" href="<%// request.getContextPath() %>/scripts/css/bootstrap/bootstrap-responsive.min.css">-->
-        <!-- <link rel="stylesheet" href="scripts/css/bootstrap-theme.min.css"> -->
-        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/beoro.css">        
-        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/generals/functions.js"></script>		
-        <sj:head jqueryui="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Cache-control: max-age=86400" content="public">
+        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/beoro.min.css">       		
+        <sj:head jqueryui="true" loadAtOnce="true"/>
         <sb:head includeScripts="true" includeScriptsValidation="true"/>
         <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/colorbox/colorbox.css"/>
-        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/main.css">
+        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/main.min.css">        
+        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/font-awesome/css/font-awesome.min.css">               
+        <link href='http://fonts.googleapis.com/css?family=Istok+Web:500,700' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/geoxml/gmap.css"/>
+        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/multiple-select.css"/> 
+        <link href="<%= request.getContextPath() %>/scripts/css/generals/vis.min.css" rel="stylesheet" type="text/css" />
+        <!--<script src="http://t4t5.github.io/sweetalert/dist/sweetalert.min.js"></script>-->
+        <!--<link href="http://t4t5.github.io/sweetalert/dist/sweetalert.css" rel="stylesheet" type="text/css"/>-->
+    </head>
+    <body>
+        <s:hidden name="lanSel"/>
+        <div id="divMessage"></div>
+        <div id="dialog-form"></div>
+        <div class="header container-fluid">
+            <%@ include file="header-private.jsp" %>
+        </div>
+        <div class="body container-fluid" id="divBodyLayout">
+            <%--<%@ include file="dashboard.jsp" %>--%>
+        </div>
+        <div class="footer container-fluid">
+            <%@ include file="footer.jsp" %>
+        </div>        
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery.maskedinput.js"></script>
+        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery.maskMoney.js"></script>
+        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery.base64.min.js"></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery.numeric.js"></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery.blockUI.js"></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery-ui/ui/jquery-ui.js"></script>	
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/jquery-ui/ui/jquery.ui.dialog.js"></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/colorbox/jquery.colorbox.min.js"></script>
-        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/font-awesome/css/font-awesome.min.css">
-        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/pwdMeter/jquery.pwdMeter.min.js"></script>
-        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/generals/responsiveslides.js"></script>
-        <link href = 'http://fonts.googleapis.com/css?family=Istok+Web:400700400cursiva,700italicysubconjunto=latin,latin-ext' rel='stylesheet' type='text/css'>
-        <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/geoxml/geoxml3.js"></script>                        
-        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/geoxml/gmap.css"/>
-        <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/multiple-select.css"/>
+        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/jquery/pwdMeter/jquery.pwdMeter.js"></script>        
+        <script type="text/javascript" src="http://maps.google.com/maps/api/js"></script>
+        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/geoxml/geoxml3.js"></script>  
+        <script type="text/javascript" src="/scripts/js/bootbox/bootbox.min.js"></script>
+        <script type="text/javascript" src="http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/src/markerclusterer.js"></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/generals/jquery.multiple.select.js"></script>
-        <script src="<%= request.getContextPath() %>/scripts/js/generals/vis.min.js"></script>
-        <link href="<%= request.getContextPath() %>/scripts/css/generals/vis.min.css" rel="stylesheet" type="text/css" />
-        <script src="http://t4t5.github.io/sweetalert/dist/sweetalert.min.js"></script>
-        <link href="http://t4t5.github.io/sweetalert/dist/sweetalert.css" rel="stylesheet" type="text/css"/>
-    </head>
-    <body>
-        <div id="divMessage"></div>
-        <div id="dialog-form"></div>
-        <div class="header">
-            <%@ include file="header-private.jsp" %>
-        </div>
-        <div class="body" id="divBodyLayout">
-            <%--<%@ include file="dashboard.jsp" %>--%>
-        </div>
-        <div class="footer">
-            <%@ include file="footer.jsp" %>
-        </div>
+        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/generals/functions.js"></script>
+        <script type="text/javascript" src="<%= request.getContextPath() %>/scripts/js/generals/vis.min.js"></script>
         <script>
             var actionName   = '<%= session.getAttribute("action") %>';
-            var actionUrl    = '<%= session.getAttribute("actionUrl") %>';
-            activeOption('ulOptionsMenu', actionName+'Cls');
-            if (actionName!='' && actionName!='dashboard') {
-                showInfoPage(''+actionUrl, 'divBodyLayout');                       
-            } else if(actionName=='dashboard' || actionName=='') {
-                showInfoPage('homePrivate.action', 'divBodyLayout');
+            var actionUrl    = '<%= session.getAttribute("actionUrl") %>';      
+            function doAction() {                  
+                if (actionName!='' && actionName!='dashboard') {
+                    showInfoPage(''+actionUrl, 'divBodyLayout');                       
+                } else if(actionName=='dashboard' || actionName=='') {
+    //                showInfoPage('homePrivate.action', 'divBodyLayout');
+                    showInfoPageCountry('homePrivate.action', countryCode, 'divBodyLayout');
+                }
+                activeOption('ulOptionsMenu', actionName+'Cls');
+            }
+            if (actionName=='dashboard' || actionName=='') {
+//                bootbox.alert("Se ha cambiado el sistema AEPS, para tener una mejor experiencia, si le llegase a presentar algún fallo, por favor escribanos en la sección de reportar problema!", function() {
+//                    console.log("Alert Callback");
+//                });
+                $.when(getCountry()).then(doAction);
+            } else {
+                doAction();
             }
             $(document).ready(function() {
-                beoro_scrollToTop.init();
+                beoro_scrollToTop.init();                
             })
         </script>
     </body>

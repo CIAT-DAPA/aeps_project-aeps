@@ -2,7 +2,6 @@ package org.aepscolombia.platform.models.dao;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-//import java.sql.ResultSet;
 import java.util.List;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
@@ -16,7 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-//import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,7 +105,6 @@ public class UserEntityDao
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         Transaction tx = null;
-//        HibernateUtil.getInstanceConnection();
 
         try {
             tx = session.beginTransaction();
@@ -139,7 +136,6 @@ public class UserEntityDao
             ex.printStackTrace();
         }
         
-//        return event;
     }
 
     public void delete(UserEntity event) {

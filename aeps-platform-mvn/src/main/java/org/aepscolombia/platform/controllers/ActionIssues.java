@@ -1,18 +1,19 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.aepscolombia.platform.models.dao.EntitiesDao;
 
 import org.aepscolombia.platform.models.dao.LogEntitiesDao;
-import org.aepscolombia.platform.models.dao.ProductionEventsDao;
-import org.aepscolombia.platform.models.dao.SowingDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.Entities;
 
@@ -23,6 +24,8 @@ import org.aepscolombia.platform.models.entity.Users;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.HibernateException;
@@ -40,7 +43,6 @@ import org.hibernate.Transaction;
  */
 public class ActionIssues extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
@@ -55,8 +57,41 @@ public class ActionIssues extends BaseAction {
     private TmpIssueReports issRep = new TmpIssueReports();
     private Sowing sowing = new Sowing();
     private UsersDao usrDao;
+    private File archivo;
+    private String archivoFileName;
+    private String archivoContentType;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
+    public String getArchivoContentType()
+    {
+        return archivoContentType;
+    }
+    
+    public void setArchivoContentType(String archivoContentType)
+    {
+        this.archivoContentType = archivoContentType;
+    }
+
+    public void setArchivoFileName(String archivoFileName)
+    {
+        this.archivoFileName = archivoFileName;
+    }
+
+    public String getNombre()
+    {
+        return archivoFileName;
+    }
+    
+    public String getRuta()
+    {
+        return archivo.getAbsolutePath();
+    }
+    
+    public void setArchivo(File archivo)
+    {
+        this.archivo = archivo;
+    }
+
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -112,7 +147,6 @@ public class ActionIssues extends BaseAction {
 //        return listDesPro;
 //    }
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
      */
@@ -123,7 +157,6 @@ public class ActionIssues extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -132,7 +165,6 @@ public class ActionIssues extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -160,13 +192,18 @@ public class ActionIssues extends BaseAction {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        coCode = (String) ActionContext.getContext().getSession().get(APConstants.COUNTRY_CODE);
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -188,21 +225,34 @@ public class ActionIssues extends BaseAction {
             HashMap required = new HashMap();
             required.put("issRep.nameIss", issRep.getNameIss());
             required.put("issRep.descriptionIss", issRep.getDescriptionIss());
+            required.put("archivo", archivo);
             
             for (Iterator it = required.keySet().iterator(); it.hasNext();) {
                 String sK = (String) it.next();
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.issue"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.issue"));
+            }                
+            
+            sowing=null; 
+            if (archivo!=null) {
+                if (archivo.length()>2097152) {
+                    addFieldError("archivo", "Dato invalido");
+                    addActionError("El archivo proporcionado supera el tamaño máximo permitido (2MB)");
+                }
+
+                if (!archivoContentType.equals("image/jpeg") && !archivoContentType.equals("image/jpg") && !archivoContentType.equals("image/png")) {
+                    addFieldError("archivo", "Dato invalido");
+                    addActionError("El archivo presenta un formato inapropidado. Se deben adjuntar formatos *.jpg, *.jpeg ó *.png");
+                }
             }
-            sowing=null;            
         }
     }     
     
@@ -212,7 +262,7 @@ public class ActionIssues extends BaseAction {
      * @param valName:  Nombre del valor a buscar
      * @param valId:    Identificacion del valor a buscar
      * @param selected: Valor seleccionado
-     * @return lista de observaciones en un cultivo
+     * @return lista de problemas registrados en un cultivo
      */
     public String search() {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "crop/list")) {
@@ -267,16 +317,6 @@ public class ActionIssues extends BaseAction {
         return SUCCESS;
     }
     
-    /**
-     * Encargado de enviar el correo sobre las inquietudes del usuario
-     * @return Estado del proceso
-     */
-//    public String sendInformation() {
-//        state = "success";
-//        info  = "Se le ha enviado la informacion al administrador del sistema, espere su respuesta.";
-//        GlobalFunctions.sendEmail(getText("email.from"), getText("email.from"), getText("email.fromPass"), getText("email.subjectContact"), GlobalFunctions.messageToSendContact(this.getNameUser(), this.getEmailUser(), this.getWhatneed()));
-//        return "states";
-//    }
 
     /**
      * Encargado de guardar la informacion suministrada por el usuario para un reporte de problemas
@@ -286,8 +326,7 @@ public class ActionIssues extends BaseAction {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "crop/create") || !usrDao.getPrivilegeUser(idUsrSystem, "crop/modify")) {
             return BaseAction.NOT_AUTHORIZED;
         }
-        String action = "";
-//        System.out.println("Entre a guardar la info");
+        String action = "";        
         /*
          * Se evalua dependiendo a la accion realizada:
          * 1) create: Al momento de guardar un registro por primera ves
@@ -303,45 +342,63 @@ public class ActionIssues extends BaseAction {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         Transaction tx = null;        
-
-        try {
-            tx = session.beginTransaction();                       
-            
-            session.saveOrUpdate(issRep);
-            
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(issRep.getIdIss());
-            log.setTableLogEnt("issues");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);
-            tx.commit();           
-            state = "success";            
-//            if (action.equals("C")) {
-//                info  = "El reporte ha sido agregado con exito";
-////                return "list";
-//            } else if (action.equals("M")) {
-//                info  = "El reporte ha sido modificado con exito";
-////                return "list";
-//            }
-            info  = "Se le ha enviado la informacion al administrador del sistema, espere su respuesta.";
-            EntitiesDao entDao = new EntitiesDao();
-            Entities entTemp   = entDao.findById(idEntSystem);
-            GlobalFunctions.sendEmail(getText("email.fromContact"), getText("email.from"), getText("email.fromPass"), getText("email.subjectContact"), GlobalFunctions.reportToSend(entTemp.getNameEnt(), entTemp.getEmailEnt(), issRep.getNameIss(), issRep.getDescriptionIss()));
         
-        } catch (HibernateException e) {
-            if (tx != null) {
-                tx.rollback();
-            }
-            e.printStackTrace();
-//            System.out.println("error->"+e.getMessage());
-            state = "failure";
-            info  = "Fallo al momento de agregar un reporte de problemas";
-        } finally {
-            session.close();
-        }  
+        if (!action.equals("")) {
+            try {
+                tx = session.beginTransaction();                       
+    //            System.out.println("archivo.getParent()=>"+archivo.getParent());
+                String fileDirection = "";
+                String OS = System.getProperty("os.name").toLowerCase();
+                if (OS.indexOf("win") >= 0) {
+                    fileDirection  = ""+getText("file.imageissuewin");
+                } else {
+                    fileDirection  = ""+getText("file.imageissueunix");
+                }
+                File newFile = new File(fileDirection+archivoFileName);
+                if(!newFile.exists()) Files.move(archivo.toPath(), newFile.toPath());
+                session.saveOrUpdate(issRep);
+            
+                LogEntities log = null;            
+                log = LogEntitiesDao.getData(idEntSystem, issRep.getIdIss(), "issues", action);
+                if ((log==null && action.equals("C")) || action.equals("M")) {
+                    log = new LogEntities();
+                    log.setIdLogEnt(null);
+                    log.setIdEntityLogEnt(idEntSystem);
+                    log.setIdObjectLogEnt(issRep.getIdIss());
+                    log.setTableLogEnt("issues");
+                    log.setDateLogEnt(new Date());
+                    log.setActionTypeLogEnt(action);
+                    session.saveOrUpdate(log);
+                }
+                tx.commit();           
+                state = "success";            
+    //            if (action.equals("C")) {
+    //                info  = "El reporte ha sido agregado con exito";
+    ////                return "list";
+    //            } else if (action.equals("M")) {
+    //                info  = "El reporte ha sido modificado con exito";
+    ////                return "list";
+    //            }
+                info  = getText("message.successsendreport.issue")+".";
+                EntitiesDao entDao = new EntitiesDao();
+                Entities entTemp   = entDao.findById(idEntSystem);
+                GlobalFunctions.sendEmail(getText("email.fromContact"), getText("email.from"), getText("email.fromPass"), getText("email.subjectContact"), GlobalFunctions.reportToSend(entTemp.getNameEnt(), entTemp.getEmailEnt(), issRep.getNameIss(), issRep.getDescriptionIss()), newFile);
+                this.getSession().put("routeImage", fileDirection+archivoFileName);
+                archivo.delete();
+            } catch (HibernateException e) {
+                if (tx != null) {
+                    tx.rollback();
+                }
+                e.printStackTrace();
+    //            System.out.println("error->"+e.getMessage());
+                state = "failure";
+                info  = getText("message.failsendreport.issue");
+            } catch (Exception ex) {
+                Logger.getLogger(ActionIssues.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                session.close();
+            }  
+        }
         
 //        return ERROR;
         return "states";
@@ -365,7 +422,7 @@ public class ActionIssues extends BaseAction {
         
         if (idIss==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.issue");
             return "states";
         }
         
@@ -391,20 +448,66 @@ public class ActionIssues extends BaseAction {
 //            logDao.save(log);
             tx.commit();         
             state = "success";
-            info  = "El reporte ha sido borrado con exito";
+            info  = getText("message.successdelete.issue");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar un reporte de problemas";
+            info  = getText("message.faildelete.issue");
         } finally {
             session.close();
         }      
         
         return "states";
-//        return SUCCESS;
     }
+    
+    private InputStream imagenDinamica;    
+    
+    private String resultImage;
+
+    public String getResultImage() {
+        return resultImage;
+    }
+
+    public void setResultImage(String resultImage) {
+        this.resultImage = resultImage;
+    }   
+    
+    /**
+     * Metodo encargado de cargar la imagen suministrada por el usuario, de un reporte de un problema
+     * @return lista de materiales geneticos
+     * @throws Exception
+     */
+    public String loadImage() throws Exception
+    {
+        String fileDirection = "";
+        String OS = System.getProperty("os.name").toLowerCase();
+        if (OS.indexOf("win") >= 0) {
+            fileDirection  = ""+getText("file.imageissuewin");
+        } else {
+            fileDirection  = ""+getText("file.imageissueunix");
+        }
+        File newFile = new File(fileDirection+archivoFileName);
+        if(!newFile.exists()) Files.move(archivo.toPath(), newFile.toPath());
+//        String route = (String) this.getSession().get("routeImage");       
+//        System.out.println("route=>"+archivoFileName);
+        imagenDinamica = new FileInputStream(newFile);
+        byte[] imageData = IOUtils.toByteArray(imagenDinamica);
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("data:image/jpeg;base64,");
+        sb.append(Base64.encodeBase64String(imageData));
+        resultImage = sb.toString();
+        
+        imagenDinamica.close();
+        return "states";
+    }
+
+    public InputStream getImagenDinamica()
+    {
+        return imagenDinamica;
+    }  
     
 }

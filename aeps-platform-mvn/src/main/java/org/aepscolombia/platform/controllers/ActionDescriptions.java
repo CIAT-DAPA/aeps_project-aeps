@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import java.text.ParseException;
@@ -38,14 +35,13 @@ import org.hibernate.Transaction;
 /**
  * Clase ActionDescriptions
  *
- * Contiene los metodos para interactuar con el modulo de observaciones en un cultivo
+ * Contiene los metodos para interactuar con el modulo de observaciones en un evento productivo
  *
  * @author Juan Felipe Rodriguez
  * @version 1.0
  */
 public class ActionDescriptions extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
@@ -60,8 +56,8 @@ public class ActionDescriptions extends BaseAction {
     private DescriptionsProductionEvent desPro = new DescriptionsProductionEvent();
     private Sowing sowing = new Sowing();
     private UsersDao usrDao;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -117,11 +113,9 @@ public class ActionDescriptions extends BaseAction {
         return listDesPro;
     }
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
-     */
-    
+     */    
     private ProductionEventsDao cropDao    = new ProductionEventsDao();
     private DescriptionsProductionEventDao desDao = new DescriptionsProductionEventDao();
     private SowingDao sowDao      = new SowingDao();
@@ -130,16 +124,13 @@ public class ActionDescriptions extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
-
     public String getState() {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -150,19 +141,35 @@ public class ActionDescriptions extends BaseAction {
 
     public void setLogDao(LogEntitiesDao logDao) {
         this.logDao = logDao;
-    }      
+    }   
+    
+    private String lanSel;
+
+    public String getLanSel() {
+        return lanSel;
+    }
+
+    public void setLanSel(String lanSel) {
+        this.lanSel = lanSel;
+    }
     
     @Override
     public String execute() throws Exception {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -191,13 +198,13 @@ public class ActionDescriptions extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.description"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.description"));
             }
             
 //            Date dateSowing = null;
@@ -320,28 +327,32 @@ public class ActionDescriptions extends BaseAction {
             desPro.setStatus(true);
             session.saveOrUpdate(desPro);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(desPro.getIdDesPro());
-            log.setTableLogEnt("descriptions");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);         
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, desPro.getIdDesPro(), "descriptions", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(desPro.getIdDesPro());
+                log.setTableLogEnt("descriptions");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }       
             tx.commit();           
             state = "success";            
             if (action.equals("C")) {
-                info  = "La observacion ha sida agregada con exito";
+                info  = getText("message.successadd.description");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "La observacion ha sida modificada con exito";
+                info  = getText("message.successedit.description");
 //                return "list";
             }
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -349,14 +360,19 @@ public class ActionDescriptions extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar una descripcion";
+            state = "success";            
+            if (action.equals("C")) {
+                info  = getText("message.failadd.description");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.description");
+            }
+            
         } catch (ParseException e) { 
         
         } finally {
             session.close();
         }  
         
-//        return ERROR;
         return "states";
     }
     
@@ -378,7 +394,7 @@ public class ActionDescriptions extends BaseAction {
         
         if (idDesPro==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.description");
             return "states";
         }
         
@@ -404,20 +420,19 @@ public class ActionDescriptions extends BaseAction {
 //            logDao.save(log);
             tx.commit();         
             state = "success";
-            info  = "La observacion ha sido borrada con exito";
+            info  = getText("message.successdelete.description");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar un observacion en un cultivo";
+            info  = getText("message.faildelete.description");
         } finally {
             session.close();
         }      
         
         return "states";
-//        return SUCCESS;
     }
     
 }

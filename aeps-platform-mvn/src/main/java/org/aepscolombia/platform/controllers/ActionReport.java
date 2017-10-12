@@ -1,23 +1,16 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
-import com.opensymphony.xwork2.ActionContext;
+import java.io.FileNotFoundException;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import javax.script.ScriptException;
 import org.aepscolombia.platform.models.dao.BeansDao;
-import org.aepscolombia.platform.models.dao.CassavasDao;
-import org.aepscolombia.platform.models.dao.ChemicalsSowingDao;
 import org.aepscolombia.platform.models.dao.ControlsDao;
 import org.aepscolombia.platform.models.dao.CropsTypesDao;
 import org.aepscolombia.platform.models.dao.DepartmentsDao;
-import org.aepscolombia.platform.models.dao.DescriptionsProductionEventDao;
 import org.aepscolombia.platform.models.dao.DocumentsTypesDao;
-import org.aepscolombia.platform.models.dao.DoseUnitsDao;
 import org.aepscolombia.platform.models.dao.EntitiesDao;
 import org.aepscolombia.platform.models.dao.FertilizationsDao;
 
@@ -25,59 +18,33 @@ import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.FieldsDao;
 import org.aepscolombia.platform.models.dao.GenotypesDao;
 import org.aepscolombia.platform.models.dao.GenotypesSowingDao;
-import org.aepscolombia.platform.models.dao.GrowingEnvironmentDao;
-import org.aepscolombia.platform.models.dao.HarvestMethodsDao;
-import org.aepscolombia.platform.models.dao.HarvestsDao;
 import org.aepscolombia.platform.models.dao.IrrigationDao;
 import org.aepscolombia.platform.models.dao.MaizeDao;
 import org.aepscolombia.platform.models.dao.MonitoringDao;
 import org.aepscolombia.platform.models.dao.PhysiologicalMonitoringDao;
 import org.aepscolombia.platform.models.dao.PreparationsDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
+import org.aepscolombia.platform.models.dao.RastasDao;
 import org.aepscolombia.platform.models.dao.ResidualsManagementDao;
-import org.aepscolombia.platform.models.dao.ResultingProductsDao;
-import org.aepscolombia.platform.models.dao.SeedsColorsDao;
-import org.aepscolombia.platform.models.dao.SeedsInoculationsDao;
-import org.aepscolombia.platform.models.dao.SeedsOriginsDao;
-import org.aepscolombia.platform.models.dao.SeedsTypesDao;
 import org.aepscolombia.platform.models.dao.SowingDao;
-import org.aepscolombia.platform.models.dao.SowingTypesDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.Beans;
-import org.aepscolombia.platform.models.entity.Cassavas;
-import org.aepscolombia.platform.models.entity.ChemicalsSowing;
 import org.aepscolombia.platform.models.entity.CropsTypes;
 import org.aepscolombia.platform.models.entity.Departments;
 import org.aepscolombia.platform.models.entity.DocumentsTypes;
-import org.aepscolombia.platform.models.entity.DoseUnits;
 import org.aepscolombia.platform.models.entity.Entities;
-import org.aepscolombia.platform.models.entity.Fields;
 import org.aepscolombia.platform.models.entity.Genotypes;
 import org.aepscolombia.platform.models.entity.GenotypesSowing;
-import org.aepscolombia.platform.models.entity.GrowingEnvironment;
-import org.aepscolombia.platform.models.entity.HarvestMethods;
-import org.aepscolombia.platform.models.entity.Harvests;
-
-import org.aepscolombia.platform.models.entity.LogEntities;
+import org.aepscolombia.platform.models.entity.HorizontesRasta;
 import org.aepscolombia.platform.models.entity.Maize;
 import org.aepscolombia.platform.models.entity.PhysiologicalMonitoring;
 import org.aepscolombia.platform.models.entity.ProductionEvents;
-import org.aepscolombia.platform.models.entity.ResultingProducts;
-import org.aepscolombia.platform.models.entity.SeedsColors;
-import org.aepscolombia.platform.models.entity.SeedsInoculations;
-import org.aepscolombia.platform.models.entity.SeedsOrigins;
-import org.aepscolombia.platform.models.entity.SeedsTypes;
+import org.aepscolombia.platform.models.entity.Rastas;
 import org.aepscolombia.platform.models.entity.Sowing;
-import org.aepscolombia.platform.models.entity.SowingTypes;
 import org.aepscolombia.platform.models.entity.Users;
 import org.aepscolombia.platform.util.APConstants;
-import org.aepscolombia.platform.util.HibernateUtil;
+import org.aepscolombia.platform.util.GlobalFunctions;
 
-import org.apache.commons.lang.StringUtils;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 
 /**
  * Clase ActionCrop
@@ -89,7 +56,6 @@ import org.hibernate.Transaction;
  */
 public class ActionReport extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
@@ -110,14 +76,26 @@ public class ActionReport extends BaseAction {
     private String numDocDep;
     private List<DocumentsTypes> type_ident_producer;    
     private List<Departments> list_departments;
+    private List<CropsTypes> type_crops;
     
     private Users user;
     private Integer idEntSystem;    
+    private String coCode;    
     private Integer idUsrSystem;    
     private ProductionEvents event = new ProductionEvents();
     private UsersDao usrDao;
+    private RastasDao rastaDao   = new RastasDao();;
+    private Rastas rasta;
+    private FieldsDao lotDao    = new FieldsDao();
+    private HashMap fieldInfo;
+    private HashMap cropInfo;
+    private List<Genotypes> type_genotypes;
+    private List<GenotypesSowing> type_genotypes_sow;
+    private Sowing sowing = new Sowing();
+    private Maize maize   = new Maize();
+    private Beans beans   = new Beans();
+    private PhysiologicalMonitoring phys = new PhysiologicalMonitoring();
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */    
@@ -242,8 +220,176 @@ public class ActionReport extends BaseAction {
         this.list_departments = list_departments;
     }
     
+    public List<CropsTypes> getType_crops() {
+        return type_crops;
+    }
+
+    public void setType_crops(List<CropsTypes> type_crops) {
+        this.type_crops = type_crops;
+    } 
+
+    public Rastas getRasta() {
+        return rasta;
+    }
+
+    public void setRasta(Rastas rasta) {
+        this.rasta = rasta;
+    }
+
+    public HashMap getFieldInfo() {
+        return fieldInfo;
+    }
+
+    public void setFieldInfo(HashMap fieldInfo) {
+        this.fieldInfo = fieldInfo;
+    }   
+
+    public HashMap getCropInfo() {
+        return cropInfo;
+    }
+
+    public void setCropInfo(HashMap cropInfo) {
+        this.cropInfo = cropInfo;
+    }   
     
-    //Atributos generales de clase
+    private List<HorizontesRasta> additionalsAtrib; 
+
+    public List<HorizontesRasta> getAdditionalsAtrib() {
+        return additionalsAtrib;
+    }
+
+    public void setAdditionalsAtrib(List<HorizontesRasta> additionalsAtrib) {
+        this.additionalsAtrib = additionalsAtrib;
+    }
+    
+    private List<HashMap> lastCrops;
+
+    public List<HashMap> getLastCrops() {
+        return lastCrops;
+    }
+
+    public void setLastCrops(List<HashMap> lastCrops) {
+        this.lastCrops = lastCrops;
+    }   
+    
+    private List<HashMap> listPrep;
+
+    public List<HashMap> getListPrep() {
+        return listPrep;
+    }
+
+    public void setListPrep(List<HashMap> listPrep) {
+        this.listPrep = listPrep;
+    }   
+    
+    private List<HashMap> listIrr;
+
+    public List<HashMap> getListIrr() {
+        return listIrr;
+    }
+
+    public void setListIrr(List<HashMap> listIrr) {
+        this.listIrr = listIrr;
+    }   
+    
+    private List<HashMap> listFert;
+
+    public List<HashMap> getListFert() {
+        return listFert;
+    }
+
+    public void setListFert(List<HashMap> listFert) {
+        this.listFert = listFert;
+    }   
+    
+    private List<HashMap> listCont;
+
+    public List<HashMap> getListCont() {
+        return listCont;
+    }
+
+    public void setListCont(List<HashMap> listCont) {
+        this.listCont = listCont;
+    }   
+    
+    private List<HashMap> listMon;
+
+    public List<HashMap> getListMon() {
+        return listMon;
+    }
+
+    public void setListMon(List<HashMap> listMon) {
+        this.listMon = listMon;
+    }   
+
+    public List<Genotypes> getType_genotypes() {
+        return type_genotypes;
+    }
+
+    public void setType_genotypes(List<Genotypes> type_genotypes) {
+        this.type_genotypes = type_genotypes;
+    }   
+    
+    public List<GenotypesSowing> getType_genotypes_sow() {
+        return type_genotypes_sow;
+    }
+
+    public void setType_genotypes_sow(List<GenotypesSowing> type_genotypes_sow) {
+        this.type_genotypes_sow = type_genotypes_sow;
+    }
+    
+    public Sowing getSowing() {
+        return sowing;
+    }
+
+    public void setSowing(Sowing sowing) {
+        this.sowing = sowing;
+    } 
+
+    public Maize getMaize() {
+        return maize;
+    }
+
+    public void setMaize(Maize maize) {
+        this.maize = maize;
+    }
+
+    public Beans getBeans() {
+        return beans;
+    }
+
+    public void setBeans(Beans beans) {
+        this.beans = beans;
+    }  
+
+    public PhysiologicalMonitoring getPhys() {
+        return phys;
+    }
+
+    public void setPhys(PhysiologicalMonitoring phys) {
+        this.phys = phys;
+    }   
+    
+    private ResidualsManagementDao resDao = new ResidualsManagementDao();
+    private PreparationsDao prepDao = new PreparationsDao();
+    private FertilizationsDao fertDao     = new FertilizationsDao();
+    private ControlsDao conDao    = new ControlsDao();
+    private SowingDao sowDao      = new SowingDao();
+    private BeansDao beansDao     = new BeansDao();
+    private MaizeDao maizeDao     = new MaizeDao();
+    private PhysiologicalMonitoringDao physDao     = new PhysiologicalMonitoringDao();
+    private IrrigationDao irrDao  = new IrrigationDao();
+    private MonitoringDao monDao  = new MonitoringDao();
+    
+    private String lanSel;
+
+    public String getLanSel() {
+        return lanSel;
+    }
+
+    public void setLanSel(String lanSel) {
+        this.lanSel = lanSel;
+    }
     /**
      * Atributos generales de clase
      */
@@ -256,7 +402,6 @@ public class ActionReport extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */
@@ -265,7 +410,6 @@ public class ActionReport extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -306,6 +450,11 @@ public class ActionReport extends BaseAction {
         return additionals;
     }    
     
+    @Override
+    public String execute() throws Exception {
+        return SUCCESS;
+    }    
+    
     private Integer typeEnt;
 
     public Integer getTypeEnt() {
@@ -316,33 +465,22 @@ public class ActionReport extends BaseAction {
         this.typeEnt = typeEnt;
     }
     
-    private String lanSel;
-
-    public String getLanSel() {
-        return lanSel;
-    }
-
-    public void setLanSel(String lanSel) {
-        this.lanSel = lanSel;
-    }
-    
-    @Override
-    public String execute() throws Exception {
-        return SUCCESS;
-    }       
-    
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
+//        coCode = user.getCountryUsr().getAcronymIdCo();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
-        this.setType_ident_producer(new DocumentsTypesDao().findAll());
-        this.setList_departments(new DepartmentsDao().findAll());
+        this.setType_ident_producer(new DocumentsTypesDao().findAll(coCode));
+        this.setList_departments(new DepartmentsDao().findAll(coCode));
+        this.setType_crops(new CropsTypesDao().findAll(coCode));
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
         EntitiesDao entDao = new EntitiesDao();
         Entities entTemp = entDao.findById(idEntSystem);
         typeEnt = entTemp.getEntitiesTypes().getIdEntTyp();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -357,7 +495,7 @@ public class ActionReport extends BaseAction {
          * 2) modify: Al momento de modificar un registro
          * 3) delete: Al momento de borrar un registro
          */
-        if (actExe.equals("create") || actExe.equals("modify")) {
+        if (actExe.equals("cropcheck") || actExe.equals("modify")) {
             HashMap required = new HashMap();
 //            required.put("nameField", nameField);
 //            required.put("typeCrop", typeCrop);
@@ -372,16 +510,24 @@ public class ActionReport extends BaseAction {
 //            for (Iterator it = required.keySet().iterator(); it.hasNext();) {
 //                String sK = (String) it.next();
 //                String sV = String.valueOf(required.get(sK));
-////                System.out.println(sK + " : " + sV);
+//                System.out.println(sK + " : " + sV);
 //                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
 //                    addFieldError(sK, "El campo es requerido");
 //                    enter = true;
 //                }
 //            }
 //            
-//            if (enter) {
-//                addActionError("Faltan campos por ingresar por favor digitelos");
-//            }
+            Integer idCrop;        
+            try {
+                idCrop = (Integer.parseInt(this.getRequest().getParameter("idCrop")));
+            } catch (NumberFormatException e) {
+                idCrop = (-1);
+            } 
+            System.out.println("entreeeeeeeee=>"+idCrop);
+
+            if (idCrop==-1) {
+                addActionError("Debe seleccionar un cultivo");
+            }
 //            
 //            System.out.println("performObj->"+performObj);
         }
@@ -405,7 +551,7 @@ public class ActionReport extends BaseAction {
      * @param selected: Valor seleccionado
      * @return lista de cultivos
      */
-    public String getReport() {
+    public String viewReport() {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "crop/list")) {
             return BaseAction.NOT_AUTHORIZED;
         }
@@ -484,7 +630,6 @@ public class ActionReport extends BaseAction {
                     values     += "]\"";
                 }
                 info    = "{"+categories+", "+outlier+", "+values+"}";
-//                info    = "";
                 return "reportBox";
             } else {
                 semA    = cropDao.getReportAnnualProducer(findParams);
@@ -496,5 +641,135 @@ public class ActionReport extends BaseAction {
         } 
         return SUCCESS;
     }    
+    
+    private Double maxDepth;
+    private Boolean checkBurning;
 
+    public Double getMaxDepth() {
+        return maxDepth;
+    }
+
+    public void setMaxDepth(Double maxDepth) {
+        this.maxDepth = maxDepth;
+    }
+
+    public Boolean getCheckBurning() {
+        return checkBurning;
+    }
+
+    public void setCheckBurning(Boolean checkBurning) {
+        this.checkBurning = checkBurning;
+    }   
+    
+    private HashMap infoReport;
+
+    public HashMap getInfoReport() {
+        return infoReport;
+    }
+
+    public void setInfoReport(HashMap infoReport) {
+        this.infoReport = infoReport;
+    }    
+    
+    private boolean[] divisions;
+
+    public boolean[] getDivisions() {
+        return divisions;
+    }    
+    
+
+    /**
+     * Encargado de generar el reporte de cropcheck a partir de un lote determinado
+     * @param idField: Id del Lote seleccionado
+     * @return lista de informacion correspondiente de cropcheck
+     */
+    public String viewCropcheck() {
+        if (!usrDao.getPrivilegeUser(idUsrSystem, "crop/list")) {
+            return BaseAction.NOT_AUTHORIZED;
+        }
+        
+        Integer idCrop;        
+        try {
+            idCrop = (Integer.parseInt(this.getRequest().getParameter("idCrop")));
+        } catch (NumberFormatException e) {
+            idCrop = (-1);
+        } 
+
+        if (idCrop!=-1) {
+            cropInfo         = cropDao.findById(idCrop);
+            Integer idField  = Integer.parseInt(String.valueOf(cropInfo.get("idField")));
+            Integer typeCrop = Integer.parseInt(String.valueOf(cropInfo.get("typeCrop")));
+            fieldInfo        = lotDao.findById(idField);
+            rasta            = rastaDao.getRastaByField(idField);
+            String info      = "";
+            if (rasta!=null) {
+                GlobalFunctions glo = new GlobalFunctions();
+                try {   
+//                    System.out.println("rasta.getIdRas()=>"+rasta.getIdRas());
+                    if (rasta.getProfundidadEfectivaRas()==null || true) {
+                        HashMap res = glo.getResultRasta(rasta.getIdRas());     
+                        rasta.setProfundidadEfectivaRas(Double.parseDouble(String.valueOf(res.get("depth"))));
+                        rastaDao.save(rasta);
+                    }
+                    
+                } catch (ScriptException ex) {
+                    info  = getText("message.failtoshowinfo.soil");
+                } catch (FileNotFoundException ex) {
+                    info  = getText("message.failtoloadscript.soil");
+                }                
+                additionalsAtrib = rastaDao.getHorizonRasta(rasta.getIdRas());
+            }
+                lastCrops        = lotDao.getLastCrops(idField);
+                HashMap findParams = new HashMap();
+                findParams.put("idEvent", idCrop);
+                findParams.put("coCode", coCode);
+                boolean checkDirect  = prepDao.haveDirectSowing(findParams);
+                checkBurning = false;
+                if (checkDirect) checkBurning = resDao.haveBurning(findParams);
+
+                maxDepth = prepDao.getMaxDepth(findParams);
+                listPrep = prepDao.findByParams(findParams);
+                listFert = fertDao.findByParams(findParams);
+                type_genotypes = new GenotypesDao().findAllByTypeCrop(typeCrop, 0, coCode);
+                type_genotypes_sow = new GenotypesSowingDao().findAllByTypeCrop(typeCrop, coCode);
+                sowing = sowDao.objectById(idCrop);
+                beans  = beansDao.objectById(idCrop);
+                maize  = maizeDao.objectById(idCrop);
+                phys   = physDao.objectById(idCrop);
+                listCont = conDao.findByParams(findParams);
+                listIrr  = irrDao.findByParams(findParams);
+//                listMon  = monDao.findByParams(findParams);
+                boolean checkMonitoring = false;
+                boolean checkControlsWeeds    = false;
+                boolean checkControlsDiseases = false;
+                infoReport      = new HashMap();
+                checkMonitoring = monDao.checkMonitoring(findParams);
+                checkControlsWeeds    = conDao.checkControlsWeeds(findParams);
+                checkControlsDiseases = conDao.checkControlsDiseases(findParams);
+                
+                infoReport.put("monCheck", checkMonitoring);
+                infoReport.put("conWeeds", checkControlsWeeds);
+                infoReport.put("conDiseases", checkControlsDiseases);
+//                fieldInfo.get("id_dep");
+                
+                if (sowing!=null) findParams.put("dateSow", sowing.getDateSow());
+                findParams.put("depId", String.valueOf(fieldInfo.get("id_dep")));
+                findParams.put("cropType", typeCrop);
+                if (typeCrop==2){
+                    if(beans.getGrowingEnvironment()!=null) findParams.put("growId", beans.getGrowingEnvironment().getIdGroEnv());
+                }
+                
+                double[] distrib   = fertDao.getDistribution(findParams);
+                double[] nutrients = fertDao.getNutrients(findParams);
+                boolean resultCompare = fertDao.compareNutrients(distrib, nutrients);                
+                infoReport.put("elements", resultCompare);
+                
+                divisions = fertDao.getDivisions(findParams);
+        } else {
+            return INPUT;
+        }        
+        
+        return SUCCESS;
+    }    
+    
 }

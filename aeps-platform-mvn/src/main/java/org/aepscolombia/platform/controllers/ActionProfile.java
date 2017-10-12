@@ -1,10 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
-//import com.opensymphony.xwork2.inject.Inject;
 import com.opensymphony.xwork2.ActionContext;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,6 +16,7 @@ import org.aepscolombia.platform.models.dao.MunicipalitiesDao;
 import org.aepscolombia.platform.models.dao.ProducersDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
 import org.aepscolombia.platform.models.dao.RastasDao;
+import org.aepscolombia.platform.models.dao.SoilAnalysisDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.dao.UserEntityDao;
 import org.aepscolombia.platform.models.dao.UsersProfilesDao;
@@ -41,9 +38,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Clase ActionLogin
+ * Clase ActionProfile
  *
- * Contiene los metodos necesarios al momento de identificar un usuario o crear uno nuevo
+ * Contiene los metodos para interactuar con el modulo del perfil
  *
  * @author Juan Felipe Rodriguez
  * @version 1.0
@@ -60,8 +57,7 @@ public class ActionProfile extends BaseAction {
     private UserEntityDao usrEntDao;
     private UsersProfilesDao usrPerDao;
     
-    //Datos de acceso al sistema
-    
+    //Datos de acceso al sistema    
     private String emailUser;
     private String celphoneUser;
     private Integer noRecords;
@@ -91,8 +87,10 @@ public class ActionProfile extends BaseAction {
     private Integer numPro;
     private Integer numFar;
     private Integer numRas;
+    private Integer numSoils;
     private Integer numFie;
     private Integer numEve;
+    private String coCode="";
 
     public String getEmailUser() {
         return emailUser;
@@ -133,6 +131,14 @@ public class ActionProfile extends BaseAction {
     public void setNumFar(Integer numFar) {
         this.numFar = numFar;
     }
+
+    public Integer getNumSoils() {
+        return numSoils;
+    }
+
+    public void setNumSoils(Integer numSoils) {
+        this.numSoils = numSoils;
+    }    
 
     public Integer getNumRas() {
         return numRas;
@@ -327,7 +333,7 @@ public class ActionProfile extends BaseAction {
     }
     
     private String lanSel;
-
+    
     public String getLanSel() {
         return lanSel;
     }
@@ -336,20 +342,25 @@ public class ActionProfile extends BaseAction {
         this.lanSel = lanSel;
     }
     
-    
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) ActionContext.getContext().getSession().get(APConstants.SESSION_USER);
 //        user = (Users) this.getSession().get(APConstants.SESSION_USER);
+        coCode = (String) ActionContext.getContext().getSession().get(APConstants.COUNTRY_CODE);
+//        coCode = (String) user.getCountryUsr().getAcronymIdCo();
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
         ent = entDao.findById(idEntSystem);
-        this.setType_ident_producer(new DocumentsTypesDao().findAll());
-        this.setDepartment_producer(new DepartmentsDao().findAll());
+        this.setType_ident_producer(new DocumentsTypesDao().findAll(coCode));
+        this.setDepartment_producer(new DepartmentsDao().findAll(coCode));
         List<Municipalities> mun = new ArrayList<Municipalities>();
         mun.add(new Municipalities());         
         this.setTypeDocument("-1");
         this.setCity_producer(mun);
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
 
@@ -388,14 +399,12 @@ public class ActionProfile extends BaseAction {
         return SUCCESS;
     }
     
-    //Propiedades de estado de las peticiones que se manejan a traves de AJAX
     /**
      * Propiedades de estado de las peticiones que se manejan a traves de AJAX
      */
     protected String state;
     protected String info;
     
-    //Metodos getter y setter por cada propiedad de estado de las peticiones
     /**
      * Metodos getter y setter por cada propiedad de estado de las peticiones
      */
@@ -449,12 +458,12 @@ public class ActionProfile extends BaseAction {
 
                 Users loggedUser = userDao.login(user.getNameUserUsr(), passRes);
                 if (loggedUser == null) {
-                    addFieldError("passActual", "Dato invalido");
-                    addActionError("La contraseña ingresada es incorrecta");
+                    addFieldError("passActual", getText("message.passwordinvalid.profile"));
+                    addActionError(getText("desc.passwordinvalid.profile"));
                 } else {
                     if (this.getNewPass()!=null && this.getNewPass().length() < 6) {
-                        addFieldError("newPass", "Dato invalido minimo 6 caracteres");
-                        addActionError("Debe ingresar una contraseña de mas de 6 caracteres");
+                        addFieldError("newPass", getText("message.newpassinvalid.profile"));
+                        addActionError(getText("desc.newpassinvalid.profile"));
                     }
 
 //                    if (this.getNewPass()!=null && this.getNewPass().length() > 10) {
@@ -465,13 +474,18 @@ public class ActionProfile extends BaseAction {
                     if ((this.getNewPass()==null || this.getConfirmNewPass().isEmpty()) || !this.getNewPass().equals(this.getConfirmNewPass())) {
                         addFieldError("newPass", "");
                         addFieldError("confirmNewPass", "");
-                        addActionError("Las contrasenas ingresadas deben coincidir");
+                        addActionError(getText("desc.passdifferent.profile"));
                     }
                 }
             }         
         }
     }
     
+    /**
+     * Metodo encargado de obtener la cantidad de datos en campo que ha realizado un usuario
+     * dentro del sistema
+     * @return Cantidad de datos ingresados
+     */
     public String getValues() {
         HashMap findParams = new HashMap();
         findParams.put("idEntUser", idEntSystem);
@@ -480,6 +494,7 @@ public class ActionProfile extends BaseAction {
         numPro = new ProducersDao().countData(findParams);
         numFar = new FarmsDao().countData(findParams);
         numRas = new RastasDao().countData(findParams);        
+        numSoils = new SoilAnalysisDao().countData(findParams);        
         numFie = new FieldsDao().countData(findParams);
         numEve = new ProductionEventsDao().countData(findParams);
         return SUCCESS;
@@ -516,7 +531,24 @@ public class ActionProfile extends BaseAction {
                 ent.setLastName2Ent(secondLastNameRep);
                 ent.setValidationNumberEnt(digVer);
             } else {
-                ent.setNameEnt(firstName+" "+secondName+" "+firstLastName+" "+secondLastName);
+                String entireName = "";
+                if (firstName.length()>0) {
+                    entireName += firstName;
+                }
+                
+                if (secondName.length()>0) {
+                    entireName += " "+secondName;
+                }
+                
+                if (firstLastName.length()>0) {
+                    entireName += " "+firstLastName;
+                }
+                
+                if (secondLastName.length()>0) {
+                    entireName += " "+secondLastName;
+                }                
+                
+                ent.setNameEnt(entireName);
                 ent.setFirstName1Ent(firstName);
                 ent.setFirstName2Ent(secondName);
                 ent.setLastName1Ent(firstLastName);
@@ -540,13 +572,13 @@ public class ActionProfile extends BaseAction {
 
             tx.commit();
             state = "success";
-            info  = "La informacion del perfil ha sido modificada con exito";
+            info  = getText("message.successeditprofile.profile");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             state = "failure";
-            info  = "Fallo al momento de cambiar la informacion del perfil";
+            info  = getText("message.faileditprofile.profile");
         } finally {
             session.close();
         }
@@ -570,7 +602,7 @@ public class ActionProfile extends BaseAction {
 //                String passRes = GlobalFunctions.generateSHA1(newPass, saltUsr);
                 Double salt = (Math.floor(Math.random()*999999+100000));
                 String saltUsr = GlobalFunctions.generateMD5(salt+user.getNameUserUsr());
-                String passRes = GlobalFunctions.generateMD5(saltUsr+newPass);
+                String passRes = GlobalFunctions.generateSHA1(saltUsr+this.getNewPass());
 
                 user.setSaltUsr(saltUsr);
                 user.setPasswordUsr(passRes);
@@ -587,20 +619,20 @@ public class ActionProfile extends BaseAction {
                 session.saveOrUpdate(logPro);
 
                 tx.commit();
-                info  = "La informacion de configuracion ha sido modificada con exito";
+                info  = getText("message.successeditsetting.profile");
             } else {
-                info  = "El usuario no ha ingresado ninguna informacion al sistema";
+                info  = getText("message.failinsertinfo.profile");
             }
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             state = "failure";
-            info  = "Fallo al momento de cambiar la informacion de configuracion";
+            info  = getText("message.faileditsetting.profile");
 //        } catch (NoSuchAlgorithmException ex) {
-////            java.util.logging.Logger.getLogger(ActionProfile.class.getName()).log(Level.SEVERE, null, ex);
+//            java.util.logging.Logger.getLogger(ActionProfile.class.getName()).log(Level.SEVERE, null, ex);
 //        } catch (NoSuchProviderException ex) {
-////            java.util.logging.Logger.getLogger(ActionProfile.class.getName()).log(Level.SEVERE, null, ex);
+//            java.util.logging.Logger.getLogger(ActionProfile.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             session.close();
         }

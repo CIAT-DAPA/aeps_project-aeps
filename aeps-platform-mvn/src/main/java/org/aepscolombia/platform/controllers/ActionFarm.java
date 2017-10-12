@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.mongodb.BasicDBObject;
@@ -47,14 +44,16 @@ import org.aepscolombia.platform.models.entity.Producers;
 import org.aepscolombia.platform.models.entity.Users;
 import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
-import org.aepscolombia.platform.util.GlobalFunctions;
 
 import org.aepscolombia.platform.util.HibernateUtil;
+import org.aepscolombia.platform.util.RepositoryGoogle;
+import org.aepscolombia.platform.util.RepositoryWaterBody;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.json.simple.JSONObject;
 
 /**
  * Clase ActionFarm
@@ -66,7 +65,6 @@ import org.hibernate.Transaction;
  */
 public class ActionFarm extends BaseAction {
 
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
@@ -101,8 +99,10 @@ public class ActionFarm extends BaseAction {
     private UsersDao usrDao;
     private List<Entities> list_agronomist;
     private AssociationDao assDao;
+    private String coCode;
+    private String points;
+    private String location;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -238,6 +238,14 @@ public class ActionFarm extends BaseAction {
         this.altitude_property = altitude_property;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }    
+
     public String getDirection_property() {
         return direction_property;
     }
@@ -306,7 +314,6 @@ public class ActionFarm extends BaseAction {
         return listProducers;
     }
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
      */
@@ -319,7 +326,6 @@ public class ActionFarm extends BaseAction {
     private String info = "";
     private String valId = "", valName = "", selected = "";
 
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */
@@ -404,6 +410,14 @@ public class ActionFarm extends BaseAction {
     public void setTypeEnt(Integer typeEnt) {
         this.typeEnt = typeEnt;
     }   
+
+    public String getCoCode() {
+        return coCode;
+    }
+    
+    public String getPoints() {
+        return points;
+    }
     
     private String lanSel;
 
@@ -415,16 +429,41 @@ public class ActionFarm extends BaseAction {
         this.lanSel = lanSel;
     }   
     
+    private String date_ini;
     
+    public String getDate_ini() {
+        return date_ini;
+    }
+
+    public void setDate_ini(String date_ini) {
+        this.date_ini = date_ini;
+    }
+    
+    private String date_end;
+    
+    public String getDate_end() {
+        return date_end;
+    }
+
+    public void setDate_end(String date_end) {
+        this.date_end = date_end;
+    }
+    
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) ActionContext.getContext().getSession().get(APConstants.SESSION_USER);
 //        user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
+//        coCode = (String) user.getCountryUsr().getAcronymIdCo();
+        coCode = (String) ActionContext.getContext().getSession().get(APConstants.COUNTRY_CODE);
         EntitiesDao entDao = new EntitiesDao();
         Entities entTemp = entDao.findById(idEntSystem);
         typeEnt = entTemp.getEntitiesTypes().getIdEntTyp();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
         if (entTemp.getEntitiesTypes().getIdEntTyp()==2) {
             ProducersDao proDao = new ProducersDao();
             Producers proTemp   = new Producers();
@@ -434,13 +473,14 @@ public class ActionFarm extends BaseAction {
                 name_producer = entTemp.getNameEnt();
             }
         }
-        this.setDepartment_property(new DepartmentsDao().findAll());
+        this.setDepartment_property(new DepartmentsDao().findAll(coCode));
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
         List<Municipalities> mun = new ArrayList<Municipalities>();
         mun.add(new Municipalities());           
         this.setCity_property(mun);
         assDao = new AssociationDao();
+//        user.setCountryUsr(null);
 //        HashMap route = new HashMap();
 //        route.put("getting", getText("email.from"));
 //        listRoute.add(route);
@@ -469,36 +509,61 @@ public class ActionFarm extends BaseAction {
     }
     
     
-    
+    /**
+     * Metodo encargado de validar la posicion geografica de una finca, y determinar si esta
+     * se encuentra en tierra. En caso de encontrarse en agua se le envia un mensaje de error al usuario
+     * @return Datos con errores
+     */
     public String viewPosition() {
         Double latPro = (latitude_property==null || latitude_property.isEmpty() || latitude_property.equals("")) ? 0.0 : Double.parseDouble(latitude_property.replace(',','.'));
         Double lonPro = (length_property==null || length_property.isEmpty() || length_property.equals("")) ? 0.0 : Double.parseDouble(length_property.replace(',','.'));
 //        position = this.getRequest().getParameter("position");
 //        if (position.equals("in")) {   
         info = "";
+        String lang = (String) ActionContext.getContext().getSession().get(APConstants.SESSION_LANG);
+        Double minlat = Double.parseDouble(getText("min.lat"));
+        Double maxlat = Double.parseDouble(getText("max.lat"));
+        Double minlon = Double.parseDouble(getText("min.lon"));
+        Double maxlon = Double.parseDouble(getText("max.lon"));
+        
+            if (latPro!=0 && lonPro!=0) {
+                HashMap results=RepositoryGoogle.reverse(latPro, lonPro);
+                HashMap resultsEle=RepositoryGoogle.getElevation(latPro, lonPro);
+//                System.out.println(results.get("country"));
+//                System.out.println(resultsEle.get("elevation"));
+//                altitude_property = resultsEle.get("elevation").toString();
+
+                RepositoryWaterBody rWater=new RepositoryWaterBody(RepositoryWaterBody.geocoding_database_world);
+                location = rWater.getDataFromLatLon(latPro, lonPro);
+//                System.out.println(water);
+//                if (water.equals("0")) {
+//                
+//                }
+            }
+        
             if (latPro!=0) {
-                if (latPro < (-4.3) || latPro > (13.5)) {
-                    addFieldError("latitude_property", "Dato invalido valor entre -4.3 y 13.5");
+                if (latPro < (minlat) || latPro > (maxlat)) {
+                    addFieldError("latitude_property", getText("message.invalidranklatitude.farm"));
                     state = "failure";
-                    info  = "Dato invalido valor entre -4.3 y 13.5";
+                    info  += getText("desc.invalidranklatitude.farm");
                 }
             } else {
-                addFieldError("latitude_property", "Dato invalido valor entre -4.3 y 13.5");
+                addFieldError("latitude_property", getText("message.invalidranklatitude.farm"));
                 state = "failure";
-                info  = "Dato invalido valor entre -4.3 y 13.5";
+                info  += getText("desc.invalidranklatitude.farm");
             }
             
             if (lonPro!=0) {
-                if (lonPro < (-81.8) || lonPro > (-66)) {
-                    addFieldError("length_property", "Dato invalido valor entre -81.8 y -66");
+                if (lonPro < (minlon) || lonPro > (maxlon)) {
+                    addFieldError("length_property", getText("message.invalidranklongitude.farm"));
                     state = "failure";
-                    info  = "Dato invalido valor entre -81.8 y -66";
+                    info  += getText("desc.invalidranklongitude.farm");
                 }
             } else {
 //                getFieldErrors()
-                addFieldError("length_property", "Dato invalido valor entre -81.8 y -66");
+                addFieldError("length_property", getText("message.invalidranklongitude.farm"));
                 state = "failure";
-                info  = "Dato invalido valor entre -81.8 y -66";
+                info  += getText("desc.invalidranklongitude.farm");
             }
             fieldError = getFieldErrors();
 //        }
@@ -524,7 +589,7 @@ public class ActionFarm extends BaseAction {
             required.put("name_property", name_property);
             required.put("depFar", depFar);
             required.put("cityFar", cityFar);
-            required.put("lane_property", lane_property);
+            if (coCode.equals("CO")) required.put("lane_property", lane_property);
             required.put("altitude_property", altitude_property);
             boolean enter = false;
 //            if (option_geo == 1) {
@@ -545,13 +610,13 @@ public class ActionFarm extends BaseAction {
 //                System.out.println(sK + " : " + sV);
 //                addFieldError(sK, "El campo es requerido");
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.farm"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.farm"));
             }
             
 //            for (Iterator it = required.keySet().iterator(); it.hasNext();) {
@@ -566,7 +631,6 @@ public class ActionFarm extends BaseAction {
 //                }
 //            }
             
-//            System.out.println("latitude_seconds_property=>"+latitude_seconds_property);
 //            Double altPro = (altitude_property==null || altitude_property.isEmpty() || altitude_property.equals("")) ? 0.0 : Double.parseDouble(altitude_property);
 //            Double latPro = (latitude_property==null || latitude_property.isEmpty() || latitude_property.equals("")) ? 0.0 : Double.parseDouble(latitude_property);
 //            Double lonPro = (length_property==null || length_property.isEmpty() || length_property.equals("")) ? 0.0 : Double.parseDouble(length_property);
@@ -574,36 +638,42 @@ public class ActionFarm extends BaseAction {
             Double latPro = (latitude_property==null || latitude_property.isEmpty() || latitude_property.equals("")) ? 0.0 : Double.parseDouble(latitude_property.replace(',','.'));
             Double lonPro = (length_property==null || length_property.isEmpty() || length_property.equals("")) ? 0.0 : Double.parseDouble(length_property.replace(',','.'));
             
+            Double minlat = Double.parseDouble(getText("min.lat"));
+            Double maxlat = Double.parseDouble(getText("max.lat"));
+            Double minlon = Double.parseDouble(getText("min.lon"));
+            Double maxlon = Double.parseDouble(getText("max.lon"));
+            Double minalt = Double.parseDouble(getText("min.alt"));
+            Double maxalt = Double.parseDouble(getText("max.alt"));
 //            if (altitude_property) {    
-            if (altPro < 0 || altPro > 9000) {
-                addFieldError("altitude_property", "Dato invalido valor entre 0 y 9000");
-                addActionError("Se ingreso una altitud invalida, por favor ingresar un valor entre 0 y 9000");
+            if (altPro < minalt || altPro > maxalt) {
+                addFieldError("altitude_property", getText("message.datainvalidaltitude.farm"));
+                addActionError(getText("desc.datainvalidaltitude.farm"));
             }
 //            }
 
             if (latitude_property.equals("") || latitude_property==null) {
-                addFieldError("latitude_property", "Debe ingresar alguno de estos datos");
+                addFieldError("latitude_property", getText("message.putsomedatalatitude.farm"));
                 addFieldError("latitude_degrees_property", "");
                 addFieldError("latitude_minutes_property", "");
                 addFieldError("latitude_seconds_property", "");
-                addActionError("Debe ingresar la latitud en Decimales o en Grados");
+                addActionError(getText("desc.datainvalidlatitude.farm"));
             }
             
             if (length_property.equals("") || length_property==null) {
-                addFieldError("length_property", "Debe ingresar alguno de estos datos");
+                addFieldError("length_property", getText("message.putsomedatalongitude.farm"));
                 addFieldError("length_degrees_property", "");
                 addFieldError("length_minutes_property", "");
                 addFieldError("length_seconds_property", "");
-                addActionError("Debe ingresar la longitud en Decimales o en Grados");
+                addActionError(getText("desc.datainvalidlongitude.farm"));
             }
             
 //            if (option_geo == 1) {
 //            if (!latitude_property.equals("") || latitude_property!=null) {
             if (latPro!=0) {
 //                if (latPro!=null) { 
-                if (latPro < (-4.3) || latPro > (13.5)) {
-                    addFieldError("latitude_property", "Dato invalido valor entre -4.3 y 13.5");
-                    addActionError("Se ingreso una latitud invalida, por favor ingresar un valor entre -4.3 y 13.5");
+                if (latPro < (minlat) || latPro > (maxlat)) {
+                    addFieldError("latitude_property", getText("message.invalidvalueranklatitude.farm"));
+                    addActionError(getText("desc.invalidvalueranklatitude.farm"));
                 }
 //                }
 
@@ -628,9 +698,9 @@ public class ActionFarm extends BaseAction {
             if (lonPro!=0) {
 //            if (lonPro!=0 && (!length_property.equals("") || length_property!=null)) {
 //                if (length_property) {    
-                if (lonPro < (-81.8) || lonPro > (-66)) {
-                    addFieldError("length_property", "Dato invalido valor entre -81.8 y -66");
-                    addActionError("Se ingreso una longitud invalida, por favor ingresar un valor entre -81.8 y -66");
+                if (lonPro < (minlon) || lonPro > (maxlon)) {
+                    addFieldError("length_property", getText("message.invalidvalueranklongitude.farm"));
+                    addActionError(getText("desc.invalidvalueranklongitude.farm"));
                 }
 //                }
 
@@ -666,7 +736,7 @@ public class ActionFarm extends BaseAction {
      */
     public String comboDepartments() {
         DepartmentsDao eventoDao = new DepartmentsDao();
-        department_property = eventoDao.findAll();
+        department_property = eventoDao.findAll(coCode);
         return "combo";
     }
 
@@ -677,7 +747,12 @@ public class ActionFarm extends BaseAction {
      * @return lista de municipios
      */
     public String comboMunicipalities() {
-        int depId = Integer.parseInt(this.getRequest().getParameter("depId"));
+        int depId = 0;
+        try {
+            depId = Integer.parseInt(this.getRequest().getParameter("depId"));
+        } catch (NumberFormatException e) {
+//            return;
+        }
         MunicipalitiesDao eventoDao = new MunicipalitiesDao();
         city_property = eventoDao.findAll(depId);
         String cadena = "<option value=\"\">---</option>";
@@ -729,7 +804,6 @@ public class ActionFarm extends BaseAction {
      */
     public String search() {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "farm/list")) {
-//        if (!false) {
             return BaseAction.NOT_AUTHORIZED;
         }
         valName     = (String) (this.getRequest().getParameter("valName"));
@@ -761,6 +835,8 @@ public class ActionFarm extends BaseAction {
 //        System.out.println("this.getAltitude_property()->"+this.getAltitude_property());
         findParams.put("idEntUser", idEntSystem);
         findParams.put("search_farm", search_farm);
+        findParams.put("date_ini", date_ini);
+        findParams.put("date_end", date_end);
         findParams.put("name_producer", name_producer);
         findParams.put("name_property", name_property);
         findParams.put("depFar", depFar);
@@ -784,7 +860,9 @@ public class ActionFarm extends BaseAction {
 //        System.out.println("entreeee->"+listProperties.get(0).get("countTotal"));
         this.setCountTotal(Integer.parseInt(String.valueOf(listProperties.get(0).get("countTotal"))));
         this.setPage(page);
-        listProperties.remove(0);
+        points = String.valueOf(listProperties.get(listProperties.size()-1).get("points"));
+        listProperties.remove(0);       
+        listProperties.remove(listProperties.size()-1);       
 //        System.out.println("countTotal->"+this.getCountTotal());
         return SUCCESS;
     }
@@ -803,7 +881,19 @@ public class ActionFarm extends BaseAction {
         this.inputStream = inputStream;  
     }
     
-    public String getReport() throws Exception {
+    private String fileName;
+
+    public String getFileName() {
+        return fileName;
+    }
+    
+    /**
+     * Metodo encargado de generar el reporte en formato Excel de todas las fincas vinculadas
+     * a un usuario del sistema
+     * @return String Estado del proceso
+     * @throws Exception
+     */
+    public String viewReport() throws Exception {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "farm/list")) {
             return BaseAction.NOT_AUTHORIZED;
         }
@@ -818,13 +908,22 @@ public class ActionFarm extends BaseAction {
         findParams.put("selItem", selectItemname_agronomist);
         Integer entTypeId = new EntitiesDao().getEntityTypeId(user.getIdUsr());
         findParams.put("entType", entTypeId);
-        findParams.put("idEntUser", idEntSystem);        
-        String fileName  = ""+getText("file.docfarm");
+        findParams.put("idEntUser", idEntSystem);     
+        String OS = System.getProperty("os.name").toLowerCase();
+        if (OS.indexOf("win") >= 0) {
+            fileName  = ""+getText("file.docfarmwin");
+            findParams.put("fileName", ""+getText("file.tempfarmwin"));
+        } else {
+            fileName  = ""+getText("file.docfarmunix");
+            findParams.put("fileName", ""+getText("file.tempfarmunix"));
+        }
+//        fileName  = ""+getText("file.docfarm");
 //        String fileName  = "farmsInfo.csv";
         farDao.getFarms(findParams, fileName);
   
         File f = new File(fileName);  
         inputStream = new FileInputStream(f);  
+//        f.delete();
         return "OUTPUTCSV"; 
     }
 
@@ -851,7 +950,7 @@ public class ActionFarm extends BaseAction {
 //            return;
         }
 
-        this.setDepartment_property(new DepartmentsDao().findAll());
+        this.setDepartment_property(new DepartmentsDao().findAll(coCode));
 //        System.out.println("id farm->"+this.getIdFarm());
         if (this.getIdFarm() != -1) {
             FarmsDao eventoDao = new FarmsDao();
@@ -859,14 +958,12 @@ public class ActionFarm extends BaseAction {
             HashMap farmInfo = eventoDao.findById(this.getIdFarm());
 //            System.out.println("valores->" + farmInfo);
 
-            //Pasar la conversion a grados, min, seg por defecto ??
             this.setIdProducer(Integer.parseInt(String.valueOf(farmInfo.get("id_producer"))));
             this.setIdFarm(Integer.parseInt(String.valueOf(farmInfo.get("id_farm"))));
             this.setName_producer(String.valueOf(farmInfo.get("name_producer")));
             this.setName_property(String.valueOf(farmInfo.get("name_farm")));
             this.setLatitude_property(String.valueOf(farmInfo.get("latitude_farm")));
             this.setLength_property(String.valueOf(farmInfo.get("length_farm")));
-//            this.setOption_geo(1);
 
             this.setAltitude_property(String.valueOf(farmInfo.get("altitude_farm")));
             this.setDirection_property(String.valueOf(farmInfo.get("dir_farm")));
@@ -964,7 +1061,6 @@ public class ActionFarm extends BaseAction {
                     FarmsProducers farTemp = farDao.checkFarmProducer(far.getIdFar(), idProOld);
                     session.delete(farTemp);
                 }
-//                System.out.println("id field->"+fiePro.getFields().getIdFie());
 //                fiePro = new FieldsProducers();
 //                fiePro.setId(new FieldsProducersId(lot.getIdFie(), idProducer));
 //                fiePro.setFields(lot);   
@@ -983,7 +1079,7 @@ public class ActionFarm extends BaseAction {
 
             /*LogEntities log = new LogEntities();
             log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem); //Colocar el usuario registrado en el sistema
+            log.setIdEntityLogEnt(idEntSystem); 
             log.setIdObjectLogEnt(far.getIdFar());
             log.setTableLogEnt("farms");
             log.setDateLogEnt(new Date());
@@ -1002,7 +1098,6 @@ public class ActionFarm extends BaseAction {
             */
             
             //Manejo para ingresar datos en MongoDB            
-
             HashMap valInfo = new HashMap();
             valInfo.put("farmId", far.getIdFar());
             valInfo.put("nameFarm", far.getNameFar());
@@ -1022,7 +1117,7 @@ public class ActionFarm extends BaseAction {
             query.put("InsertedId", ""+far.getIdFar());
             query.put("form_id", "3");
             
-            MongoClient mongo = null;
+            /*MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1033,28 +1128,29 @@ public class ActionFarm extends BaseAction {
 
             DBCursor cursor    = col.find(query);
             WriteResult result = null;
-            BasicDBObject jsonField = GlobalFunctions.generateJSONFarm(valInfo);
+            BasicDBObject jsonField = null;
+//            jsonField = GlobalFunctions.generateJSONFarm(valInfo);
             
             if (cursor.count()>0) {
                 System.out.println("actualizo mongo");
-                result = col.update(query, jsonField);
+//                result = col.update(query, jsonField);
             } else {
                 System.out.println("inserto mongo");
-                result = col.insert(jsonField);
+//                result = col.insert(jsonField);
             }
             
-            if (result.getError()!=null) {
-                throw new HibernateException("");
-            }
+//            if (result.getError()!=null) {
+//                throw new HibernateException("");
+//            }
             
-            mongo.close();
+            mongo.close();*/
             tx.commit();
             state = "success";
             if (action.equals("C")) {
-                info = "La finca ha sido agregada con exito";
+                info = getText("message.successadd.farm");
 //                return "list";
             } else if (action.equals("M")) {
-                info = "La finca ha sido modificada con exito";
+                info = getText("message.successedit.farm");
             }            
         } catch (HibernateException e) {
             if (tx != null) {
@@ -1062,13 +1158,16 @@ public class ActionFarm extends BaseAction {
             }
             e.printStackTrace();
             state = "failure";
-            info = "Fallo al momento de agregar una finca";
+            if (action.equals("C")) {
+                info = getText("message.failadd.farm");
+            } else if (action.equals("M")) {
+                info = getText("message.failedit.farm");
+            }
         } finally {
             session.close();
         }
 
         return "states";
-//        return ERROR;
     }
 
     /**
@@ -1089,7 +1188,7 @@ public class ActionFarm extends BaseAction {
 
         if (idFar == -1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.farm");
             return "states";
         }
 
@@ -1103,11 +1202,10 @@ public class ActionFarm extends BaseAction {
             far.setStatus(false);     
             session.saveOrUpdate(far);
 //            session.delete(far);
-//            farDao.delete(far);
 
             LogEntities log = new LogEntities();
             log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem); //Colocar el usuario registrado en el sistema
+            log.setIdEntityLogEnt(idEntSystem); 
             log.setIdObjectLogEnt(far.getIdFar());
             log.setTableLogEnt("farms");
             log.setDateLogEnt(new Date());
@@ -1119,7 +1217,7 @@ public class ActionFarm extends BaseAction {
             query.put("InsertedId", ""+far.getIdFar());
             query.put("form_id", "3");
             
-            MongoClient mongo = null;
+            /*MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1135,21 +1233,21 @@ public class ActionFarm extends BaseAction {
             if (result.getError()!=null) {
                 throw new HibernateException("");
             }
-            mongo.close();
+            mongo.close();*/
             
-            FieldsDao fieDao = new FieldsDao();
-            fieDao.deleteFieldsMongo(far.getIdFar());
+//            FieldsDao fieDao = new FieldsDao();
+//            fieDao.deleteFieldsMongo(far.getIdFar());
             
             tx.commit();
             state = "success";
-            info = "La finca ha sido borrada con exito";
+            info  = getText("message.successdelete.farm");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar una finca";
+            info  = getText("message.faildelete.farm");
         } finally {
             session.close();
         }
@@ -1176,15 +1274,15 @@ public class ActionFarm extends BaseAction {
         
         if (valSel.equals("-1")) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.farm");
             return "states";
         }
         
         state = farDao.deleteAllFarms(valSel, idEntSystem);
         if (state.equals("success")) {
-            info = "La o las finca(s) ha(n) sido borrada(s) con exito";
+            info = getText("message.successalldelete.farm");
         } else if (state.equals("failure")) {
-            info = "Fallo al momento de borrar una finca";
+            info = getText("message.failalldelete.farm");
         }
         
         return "states";

@@ -13,6 +13,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.DocumentsTypes;
+import org.aepscolombia.platform.models.entity.IdiomCountry;
 import org.aepscolombia.platform.util.HibernateUtil;
 
 /**
@@ -25,7 +26,8 @@ import org.aepscolombia.platform.util.HibernateUtil;
  */
 public class DocumentsTypesDao {
 
-    public DocumentsTypes findById(Integer id) {
+    public DocumentsTypes findById(Integer id) 
+		{
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
 
@@ -47,21 +49,12 @@ public class DocumentsTypesDao {
         return event;
     }
 
-    public List findByParams(String[] args) {
-//        String sql = "SELECT ID as {c.id}, NAME as {c.name}, " + 
-//         "BIRTHDATE as {c.birthDate}, MOTHER_ID as {c.mother}, {mother.*} " +
-//         "FROM CAT_LOG c, CAT_LOG m WHERE {c.mother} = c.ID";
-//
-//        List loggedCats = sess.createSQLQuery(sql)
-//                .addEntity("cat", Cat.class)
-//                .addEntity("mother", Cat.class).list()
-//        JSONUtil fd = new JSONUtil();
-//        fd.
+    public List findByParams(String[] args) 
+		{
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         List<Object[]> events = null;
         Transaction tx = null;
-//        events.toArray();
         try {
             tx = session.beginTransaction();
             Query query = session.createSQLQuery("select acronym_doc_typ, name_doc_typ from documents_types");
@@ -82,14 +75,16 @@ public class DocumentsTypesDao {
         return events;
     }
 
-    public List<DocumentsTypes> findAll() {
+    public List<DocumentsTypes> findAll(String countryCode) 
+    {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         List<DocumentsTypes> events = null;
         Transaction tx = null;
         try {
             tx = session.beginTransaction();
-            Query query = session.createQuery("from DocumentsTypes");
+            Query query = session.createQuery("from DocumentsTypes WHERE countryDocTyp.acronymIdCo = :country_code");
+            query.setParameter("country_code", countryCode);
             events = query.list();
             tx.commit();
         } catch (HibernateException e) {

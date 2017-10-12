@@ -1,13 +1,11 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.interceptors;
 
 import org.aepscolombia.platform.util.APConstants;
 
 
 import com.opensymphony.xwork2.ActionInvocation;
+import com.opensymphony.xwork2.config.entities.ActionConfig;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
 import java.util.Locale;
 import java.util.Map;
@@ -40,6 +38,16 @@ public class ChangeI18n extends AbstractInterceptor
         Locale locale = new Locale(lang);
         invocation.getInvocationContext().setLocale(locale);
     }
+    
+    /*Locale[] locales = Locale.getAvailableLocales();
+ 
+    for (Locale obj : locales) {
+
+        if ((obj.getDisplayCountry() != null) && (!"".equals(obj.getDisplayCountry()))) {
+            System.out.println("Country=>"+obj.getCountry()+"=>Language=>"+obj.getLanguage());
+        }
+
+    }*/
     
     return invocation.invoke();
   }

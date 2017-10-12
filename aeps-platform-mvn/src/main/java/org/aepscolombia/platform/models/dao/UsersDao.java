@@ -22,13 +22,6 @@ import org.aepscolombia.platform.models.entity.UserEntity;
  */
 public class UsersDao 
 {    
-    // Logger
-//    private static final Logger LOG = LoggerFactory.getLogger(UsuariosDao.class);
-//    private Usuarios userDAO;
-    
-//    public UsuariosDao(Usuarios userDAO) {
-//      this.userDAO = userDAO;
-//    }
     
     /**
      * Encargado de obtener verificar si un usuario ya se encuentra registrado en el sistema
@@ -42,7 +35,7 @@ public class UsersDao
         Transaction tx = null;
         String sql = "";        
 
-        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
+        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.country_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
         sql += " from users usr";
         sql += " where usr.name_user_usr='"+username+"'";
 //        System.out.println("sql->"+sql);
@@ -78,7 +71,6 @@ public class UsersDao
         String sql = "";        
         sql  = "select ue.id_usr_ent, ue.id_project_usr_ent, ue.id_user_usr_ent, ue.id_entity_usr_ent, ue.status";
         sql += " from user_entity ue";
-//		sql += " inner join users u on u.id_usr=ue.id_user_usr_ent"; 
 		sql += " where ue.status=1";		
         sql += " and ue.id_user_usr_ent="+idUser;
 //        System.out.println("sql->"+sql);
@@ -113,7 +105,7 @@ public class UsersDao
         Transaction tx = null;
         String sql = "";        
 
-        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
+        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.country_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
         sql += " from users usr";
 //        sql += " where usr.status=1";
         sql += " where usr.status<>0";
@@ -154,7 +146,7 @@ public class UsersDao
         Transaction tx = null;
         String sql = "";        
 
-        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
+        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.country_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
         sql += " from users usr ";
         sql += " where usr.status=2 ";
         if (username!=null) {
@@ -191,15 +183,12 @@ public class UsersDao
      * @param password:  Contraseña del usuario
      * @return Objeto del usuario o vacio (NULL) en caso de no encontrar nada
      */
-//    @Override
     public Users login(String username, String password) {
       if ((username != null || username.isEmpty()) && (password != null || password.isEmpty())) {
 //        System.out.println("md5->"+password);  
 //        Users userFound = this.getUserByLogin(username, GlobalFunctions.generateMD5(password));
         Users userFound = this.getUserByLogin(username, password);
-//        Usuarios userFound = this.getUserByLogin(username, password);
         if (userFound != null) {
-//          Usuarios temp = new Usuarios();
 //          temp.setPasswordUsr(GlobalFunctions.generateMD5(password));
 //          if (userFound.getPasswordUsr().equals(temp.getPasswordUsr())) {
             return userFound;
@@ -208,28 +197,6 @@ public class UsersDao
       }
       return null;
     }
-
-//    @Override
-//    public boolean saveLastLogin(Usuarios user) {
-//      Map<String, String> userData = new HashMap<>();
-//      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//
-//      userData.put("user_id", String.valueOf(user.getId()));
-//      userData.put("last_login", sdf.format(user.getLastLogin()));
-//      return userDAO.saveLastLogin(userData);
-//    }
-//
-////    @Override
-//    public boolean saveUsuarios(Usuarios user) {
-//      Map<String, String> userData = new HashMap<>();
-//      userData.put("name", user.getName());
-//      userData.put("email", user.getEmail());
-//      userData.put("password", MD5Convert.stringToMD5(user.getPassword()));
-//      userData.put("activity_leader_id", String.valueOf(user.getLeader().getId()));
-//      userData.put("role", String.valueOf(user.getRole()));
-//
-//      return userDAO.saveUsuarios(userData);
-//    }
 
     public List findByParams(HashMap args) {
         return null;
@@ -263,7 +230,7 @@ public class UsersDao
         String sql  = "";        
         Users event = null;
         Transaction tx = null;
-        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
+        sql += "select usr.id_usr, usr.name_user_usr, usr.salt_usr, usr.password_usr, usr.country_usr, usr.last_in_usr, usr.cod_validation_usr, usr.status, usr.created_by";
         sql += " from users usr";
         sql += " where usr.id_usr="+id;
         try {

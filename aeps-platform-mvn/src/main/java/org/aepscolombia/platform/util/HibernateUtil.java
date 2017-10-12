@@ -1,25 +1,19 @@
 package org.aepscolombia.platform.util;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
 import java.sql.*;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 
 public class HibernateUtil {
 
     private static final SessionFactory sessionFactory = buildSessionFactory();
 
+    /**
+     * Metodo encargado de crear la sesion con el ORM de Hibernate
+     */
     private static SessionFactory buildSessionFactory() {
         try {
-            // Create the SessionFactory from hibernate.cfg.xml
-//            return new Configuration().configure().bu;
             return new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
 //            return new AnnotationConfiguration().configure().buildSessionFactory();
         } catch (Throwable ex) {
@@ -33,7 +27,7 @@ public class HibernateUtil {
         return sessionFactory;
     }
 
-    // Database configuration
+    // Configuracion de la base de datos
     public static String url = "jdbc:mysql://localhost:3306/ciat_ext";
     public static String dbdriver = "com.mysql.jdbc.Driver";
     public static String username = "ciat";
@@ -41,6 +35,10 @@ public class HibernateUtil {
     static Connection conn;
     static Statement st;
     
+    /**
+     * Metodo encargado de obtener una coneccion ya establecida con la base de datos con los datos ya
+     * pre-establecidos
+     */
     public static Connection getInstanceConnection() {
         if (!(conn instanceof Connection)) {
 //            System.out.println("Conectando a la BD.");
@@ -50,7 +48,6 @@ public class HibernateUtil {
             } catch (ClassNotFoundException ex) {
 //                System.out.println(ex.getMessage());
             } catch (SQLException e) {
-                // TODO Auto-generated catch block
 //                System.out.println(e.getMessage());
             }
         }
@@ -58,6 +55,9 @@ public class HibernateUtil {
         return conn;
     }
     
+    /**
+     * Metodo encargado de cerrar la coneccion preestablecida
+     */
     public static void closeConnection() {
         try {
             if (conn instanceof Connection) {
@@ -68,11 +68,14 @@ public class HibernateUtil {
 
         } catch (SQLException se) {
 //            System.out.println(se.toString());
-//            System.err.println("Se ha producido un error al cerrar la conexi�n de BD.");
+//            System.err.println("Se ha producido un error al cerrar la conexion de BD.");
 //            System.err.println(se.getMessage());
         }
     }
 
+    /**
+     * Metodo encargado de realizar la consulta SQL ya establecida
+     */
     public static void setup(String sql) {
         try {
             createStatement();
@@ -107,7 +110,6 @@ public class HibernateUtil {
 
     public static void checkData(String sql) {
         String[] starray = sql.split(" ");
-//        System.out.println("\n******** Table: " + starray[starray.length - 1] + " *******");
         try {
             createStatement();
             ResultSet r = st.executeQuery(sql);
@@ -129,7 +131,7 @@ public class HibernateUtil {
         linewidth = 1;
         for (int i = 0; i < numcols; i++) {
             colpos[i] = linewidth;
-            labels[i] = metadata.getColumnLabel(i + 1); // get its label
+            labels[i] = metadata.getColumnLabel(i + 1); 
             int size = metadata.getColumnDisplaySize(i + 1);
             if (size > 30 || size == -1) {
                 size = 30;
@@ -148,15 +150,13 @@ public class HibernateUtil {
             divider.insert(i, '-');
             blankline.insert(i, " ");
         }
-        // Put special marks in the divider line at the column positions
+				
         for (int i = 0; i < numcols; i++) {
             divider.setCharAt(colpos[i] - 1, '+');
         }
         divider.setCharAt(linewidth - 1, '+');
 
         // Begin the table output with a divider line
-//        System.out.println(divider);
-
         // The next line of the table contains the column labels.
         // Begin with a blank line, and put the column names and column
         // divider characters "|" into it. overwrite() is defined below.
@@ -167,8 +167,6 @@ public class HibernateUtil {
             overwrite(line, pos, labels[i]);
             overwrite(line, colpos[i] + colwidths[i], " |");
         }
-//        System.out.println(line);
-//        System.out.println(divider);
 
         while (rs.next()) {
             line = new StringBuffer(blankline.toString());

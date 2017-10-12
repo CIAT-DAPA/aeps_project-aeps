@@ -17,38 +17,17 @@
         <div class="container">
             <nav>
                 <ul id="menu" class="nav">
-                    <li id="nav1" class="separate"><s:a href="getting" cssClass="btn" targets="divBodyLayout">Recolección</s:a></li>
-                    <li id="nav2" class="separate"><s:a href="reports" cssClass="btn" targets="divBodyLayout">Reportes</s:a></li>
-                    <li id="nav3"><s:a href="viewIssue" cssClass="btn" targets="divBodyLayout">Reportar problema</s:a></li>
+                    <li id="nav1" class="col-sm-6 col-md-2 space-group"><s:a href="getting" cssClass="btn" targets="divBodyLayout"><s:property value="getText('link.recollect.general')" /></s:a></li>
+                    <li id="nav2" class="col-sm-6 col-md-2 space-group"><s:a href="reports" cssClass="btn" targets="divBodyLayout"><s:property value="getText('link.reports.general')" /></s:a></li>
+                    <li id="nav4" class="col-sm-6 col-md-2 space-group"><s:a href="viewIndicators" cssClass="btn" targets="divBodyLayout"><s:property value="getText('link.applications.general')" /></s:a></li>
+                    <li id="nav3" class="col-sm-6 col-md-2 space-group"><s:a href="viewIssue" cssClass="btn" targets="divBodyLayout"><s:property value="getText('link.sendissue.general')" /></s:a></li>
                 </ul>
             </nav>
         </div>
-<!--        <div class="container">
-            <ul class="thumbnails">
-                <li class="span4">
-                    <div class="thumbnail">
-                        <h3 align="center">Recolección de datos</h3>
-                        <img src="http://placehold.it/320x200">
-                        <div class="caption">
-                            <a href="http://bootsnipp.com/" class="btn btn-primary btn-block">Abrir</a>
-                        </div>
-                    </div>
-                </li>
-                <li class="span4">
-                    <div class="thumbnail">
-                        <h3 align="center">Reportes</h3>
-                        <img src="http://placehold.it/320x200">
-                        <div class="caption">
-                            <a href="http://bootsnipp.com/" class="btn btn-primary btn-block">Abrir</a>
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>-->
         <div class="container">
             <div class="row">
-                <div class="span12">
-                    <h3>Resumen General</h3>
+                <div class="col-md-12">
+                    <h3><s:property value="getText('title.summary.general')" /></h3>
                 </div>
             </div>
             <div class="panel">
@@ -61,33 +40,33 @@
                     
                     <% request.setAttribute("dateLast", user.getLastInUsr()); %>
                     <% request.setAttribute("dateIngress", dateIngress); %>
-                    <!-- <p>Reportes Generales</p> -->
-                    <s:date name="%{#attr.dateLast}" format="dd/MM/yyyy" var="dateTransformLastlogin"/>
-                    <s:date name="%{#attr.dateIngress}" format="dd/MM/yyyy" var="dateTransformIngress"/>
-                    <h4>Ultima fecha de acceso: <s:property value="%{#dateTransformLastlogin}" /></h4>
-                    <h4>Fecha de inscripcion al sistema: <s:property value="%{#dateTransformIngress}" /></h4>
-<!--                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi elit dui, porta ac scelerisque placerat, rhoncus vitae sem. Nulla eget libero enim, facilisis accumsan eros.
-                    </p>-->
+                    <s:date name="%{#attr.dateLast}" format="MM/dd/yyyy" var="dateTransformLastlogin"/>
+                    <s:date name="%{#attr.dateIngress}" format="MM/dd/yyyy" var="dateTransformIngress"/>
+                    <h4><s:property value="getText('title.lastdate.general')" />: <s:property value="%{#dateTransformLastlogin}" /></h4>
+                    <h4><s:property value="getText('title.registerdate.general')" />: <s:property value="%{#dateTransformIngress}" /></h4>
                 </div>
-            </div>				
-            <!-- Example row of columns -->
-            <!-- <div class="row">
-                <div class="span4">
-                    <img src="img/logo-google-play-vetor.png"/>
-                    <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-                    <p><a class="btn btn-primary" href="#" role="button">View details Â»</a></p>
-                </div>
-                <div class="span4">
-                    <h2>Heading</h2>
-                    <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-                    <p><a class="btn btn-primary" href="#" role="button">View details Â»</a></p>
-             </div>
-                <div class="span4">
-                    <h2>Heading</h2>
-                    <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa.</p>
-                    <p><a class="btn btn-primary" href="#" role="button">View details Â»</a></p>
-                </div>
-            </div> -->            
+            </div>				     
         </div>        
     </body>
+    <script>
+        var valUser = <s:property value="dataUser" />;
+        if (valUser == '0') {
+            bootbox.dialog({
+                message: "Este usuario no cuenta con un nombre diligenciado por favor ingresarlo",
+                title:   "Completar informacion del usuario",
+                buttons: {
+                    main: {
+                        label : "Ir",
+                        className : "btn btn-initial",
+                        callback : function() {
+                            document.location = "/configuration.action";
+                        }                                
+    //                "Ir": function() {                    
+    //                    document.location = "/configuration.action";
+    //                }
+                    }
+                }
+            });
+        }
+    </script>
 </html>

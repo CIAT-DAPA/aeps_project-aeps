@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -49,13 +46,13 @@ import org.hibernate.Transaction;
  */
 public class ActionPrep extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
     private int idCrop;    
     private int idPrep;    
     private int typeCrop;
+    private int costCrop;
     private List<HashMap> listPrep;
     private Users user;
     private Integer idEntSystem;    
@@ -66,8 +63,8 @@ public class ActionPrep extends BaseAction {
     private List<PreparationsTypes> type_prep_typ;
     private List<ResidualsClasification> type_res_clas;
     private UsersDao usrDao;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -127,6 +124,15 @@ public class ActionPrep extends BaseAction {
         this.typeCrop = typeCrop;
     }
 
+    public int getCostCrop() {
+        return costCrop;
+    }
+
+    public void setCostCrop(int costCrop) {
+        this.costCrop = costCrop;
+    }
+
+    
     public Users getUser() {
         return user;
     }
@@ -139,7 +145,6 @@ public class ActionPrep extends BaseAction {
         return listPrep;
     }
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
      */
@@ -152,7 +157,6 @@ public class ActionPrep extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -161,7 +165,6 @@ public class ActionPrep extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -199,13 +202,19 @@ public class ActionPrep extends BaseAction {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
+//        coCode = (String) user.getCountryUsr().getAcronymIdCo();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -249,13 +258,13 @@ public class ActionPrep extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.preparation"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.preparation"));
             }
             
             Date dateSowing = null;
@@ -267,20 +276,20 @@ public class ActionPrep extends BaseAction {
 //                if (sowing.getDateSow()!=null && prep.getDatePrep()!=null) {
                 if (!dmySow.equals("") && prep.getDatePrep()!=null) {
 
-                    Integer valDiffAff = GlobalFunctions.compareDateBeforeSowing(prep.getDatePrep(), sowing.getDateSow());
+                    Integer valDiffAff = GlobalFunctions.compareDateBeforeSowing(prep.getDatePrep(), sowing.getDateSow(), 0);
                     if (valDiffAff==2) {
         //				$fails[]  = $prefix.'date_harvest_crop';
-                        addFieldError("prep.datePrep", "Dato invalido");                
-                        addActionError("Se ingreso una fecha de trabajo de mas de 6 meses antes de la siembra ("+dmySow+")");
+                        addFieldError("prep.datePrep", getText("message.preparationdateinvalidrank.preparation"));                
+                        addActionError(getText("desc.preparationdateinvalidrank.preparation")+" ("+dmySow+")");
                     }
 
                 }
             }
 
             if (prep.getDepthPrep()!=null) {
-                if (prep.getDepthPrep()<0 || prep.getDepthPrep()>200) {
-                    addFieldError("prep.depthPrep", "Dato invalido valor entre 0 y 200");
-                    addActionError("Se ingreso una profundidad del trabajo invalida, por favor ingresar un valor entre 0 y 200");
+                if (prep.getDepthPrep()<0.1 || prep.getDepthPrep()>200) {
+                    addFieldError("prep.depthPrep", getText("message.invaliddatadepth.preparation"));
+                    addActionError(getText("desc.invaliddatadepth.preparation"));
                 }
             }
             sowing=null;            
@@ -334,6 +343,9 @@ public class ActionPrep extends BaseAction {
         
         HashMap prod  = cropDao.findById(idCrop);
         Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
+        Boolean costRes = Boolean.valueOf(String.valueOf(prod.get("costCrop")));
+        if (costRes) setCostCrop(1);
+        else setCostCrop(2);
 //        System.out.println("tyCro=>"+tyCro);
         
         try {
@@ -343,7 +355,7 @@ public class ActionPrep extends BaseAction {
             this.setIdPrep(-1);
         }
 
-        this.setType_prep_typ(new PreparationsTypesDao().findAllByTypeCrop(tyCro));
+        this.setType_prep_typ(new PreparationsTypesDao().findAllByTypeCrop(tyCro, coCode));
         this.setType_res_clas(new ResidualsClasificationDao().findAllByTypeCrop(tyCro));
         if (this.getIdPrep()!= -1) {
             prep = prepDao.objectById(this.getIdPrep());
@@ -395,21 +407,25 @@ public class ActionPrep extends BaseAction {
             prep.setStatus(true);
             session.saveOrUpdate(prep);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(prep.getIdPrep());
-            log.setTableLogEnt("preparations");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);       
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, prep.getIdPrep(), "preparations", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(prep.getIdPrep());
+                log.setTableLogEnt("preparations");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }      
             tx.commit();           
             state = "success";            
             if (action.equals("C")) {
-                info  = "La preparación ha sido agregada con exito";
+                info  = getText("message.successadd.preparation");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "La preparación ha sido modificada con exito";
+                info  = getText("message.successedit.preparation");
 //                return "list";
             }
             
@@ -417,7 +433,7 @@ public class ActionPrep extends BaseAction {
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -425,7 +441,11 @@ public class ActionPrep extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar una preparación";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.preparation");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.preparation");
+            }            
         } catch (ParseException e) { 
         
         } finally {
@@ -454,7 +474,7 @@ public class ActionPrep extends BaseAction {
         
         if (idPrep==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.preparation");
             return "states";
         }
         
@@ -480,20 +500,19 @@ public class ActionPrep extends BaseAction {
 //            logDao.save(log);
             tx.commit();         
             state = "success";
-            info  = "La preparación ha sido borrada con exito";
+            info  = getText("message.successdelete.preparation");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar una preparación";
+            info  = getText("message.faildelete.preparation");
         } finally {
             session.close();
         }      
         
         return "states";
-//        return SUCCESS;
     }
     
 }

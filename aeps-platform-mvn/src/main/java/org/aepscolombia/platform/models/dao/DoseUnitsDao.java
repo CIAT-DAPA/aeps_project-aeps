@@ -8,6 +8,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.DoseUnits;
+import org.aepscolombia.platform.models.entity.IdiomCountry;
 import org.aepscolombia.platform.util.HibernateUtil;
 
 /**
@@ -42,16 +43,19 @@ public class DoseUnitsDao {
         return event;
     }
 
-    public List<DoseUnits> findByParams(String exclude) {
+    public List<DoseUnits> findByParams(String exclude, String countryCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         List<DoseUnits> events = null;
         Transaction tx = null;
-//        events.toArray();
         try {
             tx = session.beginTransaction();
-            String sql  = "select p.id_dos_uni, p.name_dos_uni, p.status_dos_uni from dose_units p";
-            sql += " where p.id_dos_uni not in ("+exclude+")";
+            String sql  = "select p.id_dos_uni, p.name_dos_uni, p.status_dos_uni, p.country_dos_uni from dose_units p";
+            sql += " where p.status_dos_uni=1";
+            if (countryCode!=null && !countryCode.equals("")) {
+                if (countryCode.equals("CO")) sql += " and p.id_dos_uni not in ("+exclude+")";
+                sql += " and p.country_dos_uni='"+countryCode+"'";
+            } 
 //            sql += " where p.name_dos_uni not in ("+exclude+")";
 //            sql += " and p.id_dos_uni in ("+include+")";
             Query query = session.createSQLQuery(sql).addEntity("p", DoseUnits.class);
@@ -68,14 +72,15 @@ public class DoseUnitsDao {
         return events;
     }
 
-    public List<DoseUnits> findAll() {
+    public List<DoseUnits> findAll(String countryCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         List<DoseUnits> events = null;
         Transaction tx = null;
         try {
             tx = session.beginTransaction();
-            Query query = session.createQuery("from DoseUnits");
+            Query query = session.createQuery("from DoseUnits WHERE countryDosUni.acronymIdCo = :country_code");
+            query.setParameter("country_code", countryCode);
             events = query.list();
             tx.commit();
         } catch (HibernateException e) {
@@ -88,6 +93,33 @@ public class DoseUnitsDao {
         }
         return events;
     }
+    
+    public DoseUnits objectById(Integer id) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+
+        String sql  = "";        
+        DoseUnits event = null;
+        Transaction tx = null;
+				
+        sql += "select p.id_dos_uni, p.name_dos_uni, p.country_dos_uni, p.status_dos_uni";
+        sql += " from dose_units p";
+        sql += " where p.id_dos_uni="+id;
+        try {
+            tx = session.beginTransaction();
+            Query query = session.createSQLQuery(sql).addEntity("p", DoseUnits.class);
+            event = (DoseUnits)query.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return event;
+    }    
 
     public void save(DoseUnits event) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();

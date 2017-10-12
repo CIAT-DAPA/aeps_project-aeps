@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -51,7 +48,6 @@ import org.hibernate.Transaction;
  */
 public class ActionMon extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
@@ -69,8 +65,8 @@ public class ActionMon extends BaseAction {
     private List<Pests> type_pest_con;
     private List<Weeds> type_weeds_con;
     private List<Diseases> type_dis_con;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -151,7 +147,6 @@ public class ActionMon extends BaseAction {
     }
     
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
      */
@@ -164,7 +159,6 @@ public class ActionMon extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -173,7 +167,6 @@ public class ActionMon extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -201,13 +194,19 @@ public class ActionMon extends BaseAction {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr()); 
+//        coCode = (String) user.getCountryUsr().getAcronymIdCo();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -248,26 +247,34 @@ public class ActionMon extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.monitoring"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.monitoring"));
             }
             
             Date dateSowing = null;
 //            if (sowing.getDateSow()!=null) {
+            HashMap prod  = cropDao.findById(idCrop);
+            Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             if (sowing != null) {
                 dateSowing = sowing.getDateSow();
                 String dmySow  = new SimpleDateFormat("dd/MM/yyyy").format(sowing.getDateSow());
 
                 if (!dmySow.equals("") && mon.getDateMon()!=null) {
-                    Integer valDiffAff = GlobalFunctions.compareDateAfterSowing(mon.getDateMon(), sowing.getDateSow(), 0);
+                    Integer valDiffAff = GlobalFunctions.compareDateAfterSowingByAction(mon.getDateMon(), sowing.getDateSow(), tyCro, 4);
                     if (valDiffAff==2) {
-                        addFieldError("mon.dateMon", "Dato invalido");                
-                        addActionError("Se ingreso una fecha de monitoreo que no se encuentra dentro de los 10 meses despues de la siembra ("+dmySow+")");
+                        addFieldError("mon.dateMon", getText("message.monitoringdateinvalidrank.monitoring"));
+                        if (tyCro==1) {
+                            addActionError(getText("desc.monitoringdateinvalidrankmaize.monitoring")+" ("+dmySow+")");
+                        } else if (tyCro==2) {
+                            addActionError(getText("desc.monitoringdateinvalidrankbeans.monitoring")+" ("+dmySow+")");
+                        } else if (tyCro==4) {
+                            addActionError(getText("desc.monitoringdateinvalidrankrice.monitoring")+" ("+dmySow+")");
+                        }
                     }
 
                 }
@@ -277,7 +284,7 @@ public class ActionMon extends BaseAction {
                 addFieldError("mon.monitorPestsMon", "");
                 addFieldError("mon.monitorDiseasesMon", "");
                 addFieldError("mon.monitorWeedsMon", "");
-                addActionError("Se debe seleccionar por lo menos alguna de las opciones a las cuales realiza un monitoreo");
+                addActionError(getText("desc.selectsomemonitoring.monitoring"));
             }
             sowing=null;            
         }
@@ -330,9 +337,9 @@ public class ActionMon extends BaseAction {
         HashMap prod  = cropDao.findById(idCrop);
         Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
 //        System.out.println("tyCro=>"+tyCro);
-        this.setType_dis_con(new DiseasesDao().findAllByTypeCrop(tyCro));
-        this.setType_pest_con(new PestsDao().findAllByTypeCrop(tyCro));
-        this.setType_weeds_con(new WeedsDao().findAllByTypeCrop(tyCro));
+        this.setType_dis_con(new DiseasesDao().findAllByTypeCrop(tyCro, coCode));
+        this.setType_pest_con(new PestsDao().findAllByTypeCrop(tyCro, coCode));
+        this.setType_weeds_con(new WeedsDao().findAllByTypeCrop(tyCro, coCode));
         try {
             this.setIdMon(Integer.parseInt(this.getRequest().getParameter("idMon")));
         } catch (NumberFormatException e) {
@@ -401,28 +408,32 @@ public class ActionMon extends BaseAction {
             mon.setStatus(true);
             session.saveOrUpdate(mon);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(mon.getIdMon());
-            log.setTableLogEnt("monitoring");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);           
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, mon.getIdMon(), "monitoring", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(mon.getIdMon());
+                log.setTableLogEnt("monitoring");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }           
             tx.commit();           
             state = "success";            
             if (action.equals("C")) {
-                info  = "El monitoreo ha sido agregado con exito";
+                info  = getText("message.successadd.monitoring");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "El monitoreo ha sido modificado con exito";
+                info  = getText("message.successedit.monitoring");
 //                return "list";
             }
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -430,7 +441,11 @@ public class ActionMon extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar un monitoreo";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.monitoring");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.monitoring");
+            }
         } catch (ParseException e) { 
         
         } finally {
@@ -459,7 +474,7 @@ public class ActionMon extends BaseAction {
         
         if (idMon==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.monitoring");
             return "states";
         }
         
@@ -485,20 +500,19 @@ public class ActionMon extends BaseAction {
 //            logDao.save(log);
             tx.commit();         
             state = "success";
-            info  = "El monitoreo ha sido borrado con exito";
+            info  = getText("message.successdelete.monitoring");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar un monitoreo";
+            info  = getText("message.faildelete.monitoring");
         } finally {
             session.close();
         }      
         
         return "states";
-//        return SUCCESS;
     }
     
 }

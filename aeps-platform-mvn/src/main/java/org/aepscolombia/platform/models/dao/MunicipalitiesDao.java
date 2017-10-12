@@ -17,7 +17,7 @@ import org.aepscolombia.platform.models.entity.Municipalities;
 import org.aepscolombia.platform.util.HibernateUtil;
 
 /**
- * Clase LotsDao
+ * Clase MunicipalitiesDao
  *
  * Contiene los metodos para interactuar con la tabla Municipalities de la base de datos (BD)
  *
@@ -39,7 +39,6 @@ public class MunicipalitiesDao {
             Query query = session.createQuery(hql);
             query.setParameter("id_mun", id);
             event = (Municipalities)query.uniqueResult();            
-//            event = (Municipalities) session.load(Municipalities.class, id);
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
@@ -92,7 +91,6 @@ public class MunicipalitiesDao {
                     "where m.id_department_mun = :depId";
             Query query = session.createSQLQuery(text).addEntity("m", Municipalities.class).setParameter("depId", depId);
 //            Query query = session.createQuery(text).setParameter("depId", depId);
-//            query.
             events = query.list();
             tx.commit();
         } catch (HibernateException e) {
@@ -111,7 +109,6 @@ public class MunicipalitiesDao {
         Session session = sessions.openSession();
         List<Object[]> events = null;
         Transaction tx = null;
-//        events.toArray();
         try {
             tx = session.beginTransaction();
             Query query = session.createSQLQuery("select id_mun, id_department_mun, code_mun, name_mun from municipalities");

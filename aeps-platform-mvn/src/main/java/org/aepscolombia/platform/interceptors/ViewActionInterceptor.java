@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.interceptors;
 
 import org.aepscolombia.platform.util.APConstants;
@@ -13,7 +10,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Clase ChangeI18n
+ * Clase ViewActionInterceptor
  *
  * Este interceptor se encarga de obtener la localizacion definido para el sistema en una variable de sesion y este
  * se reasigna automaticamente
@@ -30,12 +27,11 @@ public class ViewActionInterceptor extends AbstractInterceptor
   public String intercept(ActionInvocation invocation) throws Exception {    
     Map<String, Object> session = invocation.getInvocationContext().getSession();
     String actionActual = (String)invocation.getInvocationContext().getContext().get(invocation.getInvocationContext().ACTION_NAME);
-    String namespace = (String)invocation.getProxy().getNamespace();
+    String namespace = (String)invocation.getProxy().toString();
     
-//    System.out.println("values->"+invocation.getInvocationContext().);
+//    System.out.println("values->"+namespace);
     
     Map params = invocation.getInvocationContext().getParameters();
-// Getting all request parameters from jsp page on which you have called any
     String addValues = "";
     int i=0;
     
@@ -45,7 +41,6 @@ public class ViewActionInterceptor extends AbstractInterceptor
             Map.Entry entry = (Map.Entry) entries.next();
             String[] value = (String[]) entry.getValue();
             String valGet  = value[0];
-//            System.out.println("key->"+entry.getKey()+"value->"+valGet);
             if(i==0) {
                 addValues += "?"+entry.getKey()+ "=" + valGet;
             } else {
@@ -57,7 +52,7 @@ public class ViewActionInterceptor extends AbstractInterceptor
     
     String actionNext   = (String)session.get("action");       
     String result = "";
-    if (actionActual.equals(actionNext) && !actionActual.equals("dashboard") && !actionActual.equals("initial")) {
+    if (actionActual.equals(actionNext) && !actionActual.equals("dashboard") && !actionActual.equals("initial") && !actionActual.equals("initial")) {
         session.put("action", "");
         result = invocation.invoke();      
     } else if (actionActual.equals("home") || actionActual.equals("homePrivate")) {
@@ -69,7 +64,7 @@ public class ViewActionInterceptor extends AbstractInterceptor
         result = APConstants.ACTION_PAGE;     
     }
     
-    if(actionActual.equals("login") || actionActual.equals("signin") || actionActual.equals("initial")) result = invocation.invoke();
+    if(actionActual.equals("login") || actionActual.equals("signin") || actionActual.equals("initial") || actionActual.equals("principal")) result = invocation.invoke();
     
     return result;
   }

@@ -1,13 +1,8 @@
 package org.aepscolombia.platform.models.dao;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import org.aepscolombia.platform.models.entity.Entities;
 //import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
@@ -16,6 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.Sowing;
 import org.aepscolombia.platform.util.HibernateUtil;
+import org.hibernate.Criteria;
 
 /**
  * Clase SowingDao
@@ -81,12 +77,13 @@ public class SowingDao
         sql += " p.treated_seeds_sow, p.used_chemical_sow, p.reason_treatment_sow, p.seed_treatment_type_sow,";
         sql += " p.seed_treatment_dosis_sow, p.furrows_distance_sow, p.sites_distance_sow, p.genotyte_type_seed_sow,";
         sql += " p.seed_origin_sow, p.free_seed_origin_sow, p.other_genotype_sow, p.other_chemical_used_sow,";
-        sql += " p.dose_unit_sow, p.status, p.created_by"; 
+        sql += " p.dose_unit_sow,p.cost_sow,p.cost_seed_sow,p.comment_sow ,p.status, p.created_by, g.id_gen, g.name_gen, g.code_gen, g.status_gen, g.crop_type_gen, g.country_gen"; 
         sql += " from sowing p";
+        sql += " inner join genotypes g on g.id_gen=p.genotype_sow";
         sql += " where p.id_production_event_sow="+id;
         try {
             tx = session.beginTransaction();
-            Query query = session.createSQLQuery(sql).addEntity("p", Sowing.class);
+            Query query = session.createSQLQuery(sql).addEntity("p", Sowing.class).addJoin("g", "p.genotypes").addEntity("p", Sowing.class).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);;
             event = (Sowing)query.uniqueResult();
             tx.commit();
         } catch (HibernateException e) {

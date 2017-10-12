@@ -1,17 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
-import com.opensymphony.xwork2.ActionContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -24,7 +19,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.aepscolombia.platform.models.dao.AssociationDao;
-import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.models.dao.EntitiesDao;
 import org.aepscolombia.platform.models.dao.FarmsDao;
 
@@ -65,13 +59,12 @@ import org.hibernate.Transaction;
  */
 public class ActionField extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
     private int idProducer;
     private int idFarm;
-    private int idField;
+    private Integer idField;
     private String name_producer_lot;
     private String name_property_lot;
     private int typeLot;
@@ -96,9 +89,10 @@ public class ActionField extends BaseAction {
     private UsersDao usrDao;
     private List<Entities> list_agronomist;
     private AssociationDao assDao;
+    private String coCode;
+    private String points;
 
     
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -150,11 +144,11 @@ public class ActionField extends BaseAction {
         this.idProducer = idProducer;
     }   
 
-    public int getIdField() {
+    public Integer getIdField() {
         return idField;
     }
 
-    public void setIdField(int idField) {
+    public void setIdField(Integer idField) {
         this.idField = idField;
     }
     
@@ -282,7 +276,14 @@ public class ActionField extends BaseAction {
         return listLot;
     }   
     
-    //Atributos generales de clase
+    public String getCoCode() {
+        return coCode;
+    }
+
+    public String getPoints() {
+        return points;
+    }   
+    
     /**
      * Atributos generales de clase
      */
@@ -297,7 +298,6 @@ public class ActionField extends BaseAction {
     private String info  = "";
     private String valId ="", valName="", selected="";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */
@@ -385,6 +385,26 @@ public class ActionField extends BaseAction {
         this.lanSel = lanSel;
     }
     
+    private String date_ini;
+    
+    public String getDate_ini() {
+        return date_ini;
+    }
+
+    public void setDate_ini(String date_ini) {
+        this.date_ini = date_ini;
+    }
+    
+    private String date_end;
+    
+    public String getDate_end() {
+        return date_end;
+    }
+
+    public void setDate_end(String date_end) {
+        this.date_end = date_end;
+    }
+    
     @Override
     public String execute() throws Exception {
 //        this.setType_ident_producer(new TiposDocumentosDao().findAll());
@@ -393,18 +413,24 @@ public class ActionField extends BaseAction {
         return SUCCESS;
     }
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());
-        this.setType_property_lot(new FieldTypesDao().findAll());
+//        coCode = (String) user.getCountryUsr().getAcronymIdCo();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
+        this.setType_property_lot(new FieldTypesDao().findAll(coCode));
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
         EntitiesDao entDao = new EntitiesDao();
         Entities entTemp = entDao.findById(idEntSystem);
         typeEnt = entTemp.getEntitiesTypes().getIdEntTyp();
         assDao = new AssociationDao();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     private Map fieldError;
@@ -418,33 +444,41 @@ public class ActionField extends BaseAction {
     }
     
     
-    
+    /**
+     * Metodo encargado de validar la posicion geografica de un lote, y determinar si esta
+     * se encuentra en tierra. En caso de encontrarse en agua se le envia un mensaje de error al usuario
+     * @return Datos con errores
+     */
     public String viewPosition() {
         Double lonLot = (length_lot.equals("")) ? 0.0 : Double.parseDouble(length_lot.replace(',','.'));
         Double latLot = (latitude_lot.equals("")) ? 0.0 : Double.parseDouble(latitude_lot.replace(',','.'));
         info = "";
+        Double minlat = Double.parseDouble(getText("min.lat"));
+        Double maxlat = Double.parseDouble(getText("max.lat"));
+        Double minlon = Double.parseDouble(getText("min.lon"));
+        Double maxlon = Double.parseDouble(getText("max.lon"));
         if (latLot!=0) {
-            if (latLot < (-4.3) || latLot > (13.5)) {
-                addFieldError("latitude_lot", "Dato invalido valor entre -4.3 y 13.5");
+            if (latLot < (minlat) || latLot > (maxlat)) {
+                addFieldError("latitude_lot", getText("message.invalidranklatitude.field"));
                 state = "failure";
-                info  += "Dato invalido valor entre -4.3 y 13.5";
+                info  += getText("desc.invalidranklatitude.field");
             }
         } else {
-            addFieldError("latitude_lot", "Dato invalido valor entre -4.3 y 13.5");
+            addFieldError("latitude_lot", getText("message.invalidranklatitude.field"));
             state = "failure";
-            info  += "Dato invalido valor entre -4.3 y 13.5";
+            info  += getText("desc.invalidranklatitude.field");
         }
 
         if (lonLot!=0) {
-            if (lonLot < (-81.8) || lonLot > (-66)) {
-                addFieldError("length_lot", "Dato invalido valor entre -81.8 y -66");
+            if (lonLot < (minlon) || lonLot > (maxlon)) {
+                addFieldError("length_lot", getText("message.invalidranklongitude.field"));
                 state = "failure";
-                info  += "Dato invalido valor entre -81.8 y -66";
+                info  += getText("desc.invalidranklongitude.field");
             }
         } else {
-            addFieldError("length_lot", "Dato invalido valor entre -81.8 y -66");
+            addFieldError("length_lot", getText("message.invalidranklongitude.field"));
             state = "failure";
-            info  += "Dato invalido valor entre -81.8 y -66";
+            info  += getText("desc.invalidranklongitude.field");
         }
         fieldError = getFieldErrors();
         if (state.equals("failure")) return "states";
@@ -473,7 +507,7 @@ public class ActionField extends BaseAction {
             required.put("name_lot", name_lot);
             required.put("typeLot", typeLot);
             required.put("altitude_lot", altitude_lot);
-//            required.put("area_lot", area_lot);
+            required.put("area_lot", area_lot);
             boolean enter = false;
             
 //            if (option_geo_lot == 1) {
@@ -496,14 +530,23 @@ public class ActionField extends BaseAction {
 //                System.out.println(sK + " : " + sV);
 //                addFieldError(sK, "El campo es requerido");
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.field"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.field"));
             }
+            
+            Double minlat = Double.parseDouble(getText("min.lat"));
+            Double maxlat = Double.parseDouble(getText("max.lat"));
+            Double minlon = Double.parseDouble(getText("min.lon"));
+            Double maxlon = Double.parseDouble(getText("max.lon"));
+            Double minalt = Double.parseDouble(getText("min.alt"));
+            Double maxalt = Double.parseDouble(getText("max.alt"));
+            Double minarea = Double.parseDouble(getText("min.area"));
+            Double maxarea = Double.parseDouble(getText("max.area"));
             
             Double altLot = (altitude_lot.equals("")) ? 0.0 : Double.parseDouble(altitude_lot.replace(',','.'));
             Double latLot = (latitude_lot.equals("")) ? 0.0 : Double.parseDouble(latitude_lot.replace(',','.'));
@@ -515,39 +558,39 @@ public class ActionField extends BaseAction {
 //            Double areaLot = (area_lot.equals("")) ? 0.0 : Double.parseDouble(area_lot);
             
 //            if (altitude_property) {    
-            if (altLot<0 || altLot>9000) {
-                addFieldError("altitude_lot", "Dato invalido valor entre 0 y 9000");
-                addActionError("Se ingreso una altitud invalida, por favor ingresar un valor entre 0 y 9000");
+            if (altLot<minalt || altLot>maxalt) {
+                addFieldError("altitude_lot", getText("message.datainvalidaltitude.field"));
+                addActionError(getText("desc.datainvalidaltitude.field"));
             }
 //            }
                 
-            if (areaLot<0 || areaLot>3000) {
-                addFieldError("area_lot", "Dato invalido valor entre 0 y 3000");
-                addActionError("Se ingreso un area invalida, por favor ingresar un valor entre 0 y 3000");
+            if (areaLot<minarea || areaLot>maxarea) {
+                addFieldError("area_lot", getText("message.datainvalidarea.field"));
+                addActionError(getText("desc.datainvalidarea.field"));
             }
             
             if (latitude_lot.equals("") || latitude_lot==null) {
-                addFieldError("latitude_lot", "Debe ingresar alguno de estos datos");
+                addFieldError("latitude_lot", getText("message.putsomedatalatitude.field"));
                 addFieldError("latitude_degrees_lot", "");
                 addFieldError("latitude_minutes_lot", "");
                 addFieldError("latitude_seconds_lot", "");
-                addActionError("Debe ingresar la latitud en Decimales o en Grados");
+                addActionError(getText("desc.putsomedatalatitude.field"));
             }
             
             if (length_lot.equals("") || length_lot==null) {
-                addFieldError("length_lot", "Debe ingresar alguno de estos datos");
+                addFieldError("length_lot", getText("message.putsomedatalongitude.field"));
                 addFieldError("length_degrees_lot", "");
                 addFieldError("length_minutes_lot", "");
                 addFieldError("length_seconds_lot", "");
-                addActionError("Debe ingresar la longitud en Decimales o en Grados");
+                addActionError(getText("desc.putsomedatalongitude.field"));
             }
 
 //            if (option_geo_lot == 1) {
 //                if (latitude_property!=null) { 
             if (latLot!=0) {
-                if (latLot<(-4.3) || latLot>(13.5)) {
-                    addFieldError("latitude_lot", "Dato invalido valor entre -4.3 y 13.5");
-                    addActionError("Se ingreso una latitud invalida, por favor ingresar un valor entre -4.3 y 13.5");                        
+                if (latLot<(minlat) || latLot>(maxlat)) {
+                    addFieldError("latitude_lot", getText("message.invalidvalueranklatitude.field"));
+                    addActionError(getText("desc.invalidvalueranklatitude.field"));                        
                 }
 //                }
 
@@ -579,9 +622,9 @@ public class ActionField extends BaseAction {
             
             if (lonLot!=0) {
                 
-                if (lonLot<(-81.8) || lonLot>(-66)) {
-                    addFieldError("length_lot", "Dato invalido valor entre -81.8 y -66");
-                    addActionError("Se ingreso una longitud invalida, por favor ingresar un valor entre -81.8 y -66");
+                if (lonLot<(minlon) || lonLot>(maxlon)) {
+                    addFieldError("length_lot", getText("message.invalidvalueranklongitude.field"));
+                    addActionError(getText("desc.invalidvalueranklongitude.field"));
                 }
 //                if (lonLot!=0) {
 ////                if (length_degrees_property && (length_degrees_property<(-82) || length_degrees_property>(-66))) {
@@ -604,10 +647,7 @@ public class ActionField extends BaseAction {
 //                }
             }
         }
-    }
-//    public String crear() {    
-//        return SUCCESS;
-//    }    
+    } 
     
     /**
      * Se obtiene la lista de opciones de cada uno de los tipos de lotes registrados en BD
@@ -615,7 +655,7 @@ public class ActionField extends BaseAction {
      */
     public String comboFieldTypes() {
         FieldTypesDao eventDao = new FieldTypesDao();
-        type_property_lot = eventDao.findAll();
+        type_property_lot = eventDao.findAll(coCode);
         return "combo";
     } 
     
@@ -685,14 +725,16 @@ public class ActionField extends BaseAction {
             search_field = "";
         }
         
-//        findParams.put("name_lot", this.getName_lot());
         findParams.put("idEntUser", idEntSystem);
         findParams.put("search_field", search_field);
+        findParams.put("date_ini", date_ini);
+        findParams.put("date_end", date_end);
         findParams.put("name_producer_lot", name_producer_lot);
         findParams.put("name_property_lot", name_property_lot);
         findParams.put("typeLot", typeLot);
         findParams.put("altitude_lot", altitude_lot);
         findParams.put("area_lot", area_lot);
+        findParams.put("name_lot", name_lot);
         findParams.put("latitude_property", latitude_lot);
         findParams.put("length_property", length_lot);
         int pageReq;
@@ -704,11 +746,11 @@ public class ActionField extends BaseAction {
         findParams.put("pageNow", pageReq);
         findParams.put("maxResults", this.getMaxResults());
         listLot = lotDao.findByParams(findParams);
-//        this.setCountTotal(100);
         this.setCountTotal(Integer.parseInt(String.valueOf(listLot.get(0).get("countTotal"))));
         this.setPage(page);
-        listLot.remove(0);
-//        System.out.println("countTotal->"+this.getCountTotal());
+        points = String.valueOf(listLot.get(listLot.size()-1).get("points"));
+        listLot.remove(0);       
+        listLot.remove(listLot.size()-1);       
         return SUCCESS;
     }
     
@@ -726,7 +768,19 @@ public class ActionField extends BaseAction {
         this.inputStream = inputStream;  
     }
     
-    public String getReport() throws Exception {
+    private String fileName;
+
+    public String getFileName() {
+        return fileName;
+    }
+    
+    /**
+     * Metodo encargado de generar el reporte en formato Excel de todos los lotes vinculados
+     * a un usuario del sistema
+     * @return String Estado del proceso
+     * @throws Exception
+     */
+    public String viewReport() throws Exception {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "field/list")) {
             return BaseAction.NOT_AUTHORIZED;
         }
@@ -742,12 +796,21 @@ public class ActionField extends BaseAction {
         Integer entTypeId = new EntitiesDao().getEntityTypeId(user.getIdUsr());
         findParams.put("entType", entTypeId);
         findParams.put("idEntUser", idEntSystem);
-        String fileName  = ""+getText("file.docfield");
+        String OS = System.getProperty("os.name").toLowerCase();
+        if (OS.indexOf("win") >= 0) {
+            fileName  = ""+getText("file.docfieldwin");
+            findParams.put("fileName", ""+getText("file.tempfieldwin"));
+        } else {
+            fileName  = ""+getText("file.docfieldunix");
+            findParams.put("fileName", ""+getText("file.tempfieldunix"));
+        }
+//        fileName  = ""+getText("file.docfield");
 //        String fileName  = "fieldsInfo.csv";
         lotDao.getFields(findParams, fileName);
   
         File f = new File(fileName);  
         inputStream = new FileInputStream(f);  
+//        f.delete();
         return "OUTPUTCSV"; 
     }
 
@@ -768,13 +831,14 @@ public class ActionField extends BaseAction {
             this.setPage(pageReq);
         }
         try {
-            this.setIdField(Integer.parseInt(this.getRequest().getParameter("idField")));
+            this.setIdField(Integer.parseInt(String.valueOf(this.getRequest().getParameter("idField"))));
+//            else this.setIdField(-1);
         } catch (NumberFormatException e) {
 //            LOG.error("There was an error trying to parse the activityId parameter");
             this.setIdField(-1);
         } 
 
-        this.setType_property_lot(new FieldTypesDao().findAll());
+        this.setType_property_lot(new FieldTypesDao().findAll(coCode));
 
         if (this.getIdField()!= -1) {
 //            LotsDao eventDao = new LotsDao();
@@ -782,7 +846,6 @@ public class ActionField extends BaseAction {
             HashMap fieldInfo = lotDao.findById(this.getIdField());
 //            System.out.println("valores->" + fieldInfo);
             
-            //Pasar la conversion a grados, min, seg por defecto ??
 //            this.setIdProductor(Integer.parseInt(String.valueOf(fieldInfo.get("id_productor"))));
             this.setIdFarm(Integer.parseInt(String.valueOf(fieldInfo.get("id_farm"))));
 //            this.setIdField(Integer.parseInt(String.valueOf(fieldInfo.get("id_lot"))));
@@ -796,7 +859,7 @@ public class ActionField extends BaseAction {
 //            this.setOption_geo(1);
             
             this.setAltitude_lot(String.valueOf(fieldInfo.get("altitude_lot")));
-            this.setArea_lot(String.valueOf(fieldInfo.get("area_lot")));
+            if (!String.valueOf(fieldInfo.get("area_lot")).equals("null")) this.setArea_lot(String.valueOf(fieldInfo.get("area_lot")));
         }
         return SUCCESS;
     }    
@@ -849,8 +912,8 @@ public class ActionField extends BaseAction {
 
         try {
             int idProOld = 0;
-            double availableArea = 0;
-            double areaOld = 0;
+            Double availableArea = null;
+            Double areaOld = null;
             tx = session.beginTransaction();
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
@@ -869,13 +932,13 @@ public class ActionField extends BaseAction {
             } else {
                 HashMap fieldInfo = lotDao.findById(idField);
                 idProOld = Integer.parseInt(String.valueOf(fieldInfo.get("id_producer")));
-                availableArea = Double.parseDouble(String.valueOf(fieldInfo.get("available_area")));
-                areaOld = Double.parseDouble(String.valueOf(fieldInfo.get("area_lot")));
+                availableArea = (!String.valueOf(fieldInfo.get("available_area")).equals("null")) ? Double.parseDouble(String.valueOf(fieldInfo.get("available_area"))) : 0.0;
+                areaOld = (!String.valueOf(fieldInfo.get("area_lot")).equals("null")) ? Double.parseDouble(String.valueOf(fieldInfo.get("area_lot"))) : 0.0;
                 double busy = areaOld-availableArea;
                 if (areaLot>=areaOld)  {
                     availableArea = areaLot-busy;
                 }
-                if (areaOld>areaLot) {
+                if (areaOld>0.0 && areaOld>areaLot) {
                     if (busy>areaLot) {
                         state = "success";
                         info  = "El lote cuenta con una area ocupada de "+busy+" ha por favor ingresar valores superiores a este";
@@ -884,7 +947,7 @@ public class ActionField extends BaseAction {
                         availableArea = areaLot-busy;
                     }
                 }
-                lot = lotDao.objectById(idField);                
+                lot = lotDao.objectById(idField);
             }
             lot.setAvailableAreaFie(availableArea);
 //            lot.setIdFarmFie(idFarm);
@@ -934,7 +997,7 @@ public class ActionField extends BaseAction {
             
             /*LogEntities log = new LogEntities();
             log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem); //Colocar el usuario registrado en el sistema
+            log.setIdEntityLogEnt(idEntSystem); 
             log.setIdObjectLogEnt(lot.getIdFie());
             log.setTableLogEnt("fields");
             log.setDateLogEnt(new Date());
@@ -968,7 +1031,7 @@ public class ActionField extends BaseAction {
             query.put("InsertedId", ""+lot.getIdFie());
             query.put("form_id", "5");
             
-            MongoClient mongo = null;
+            /*MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -980,27 +1043,27 @@ public class ActionField extends BaseAction {
             DBCursor cursor    = col.find(query);
             WriteResult result = null;
             BasicDBObject jsonField = null;
-            jsonField          = GlobalFunctions.generateJSONField(valInfo);
+//            jsonField          = GlobalFunctions.generateJSONField(valInfo);
             
             if (cursor.count()>0) {
                 System.out.println("actualizo mongo");
-                result = col.update(query, jsonField);
+//                result = col.update(query, jsonField);
             } else {
                 System.out.println("inserto mongo");
-                result = col.insert(jsonField);
+//                result = col.insert(jsonField);
             }
             
-            if (result.getError()!=null) {
-                throw new HibernateException("");
-            }
+//            if (result.getError()!=null) {
+//                throw new HibernateException("");
+//            }
             
-            mongo.close();
+            mongo.close();*/
             tx.commit();           
             state = "success";
             if (action.equals("C")) {
-                info = "El lote ha sido agregado con exito";
+                info  = getText("message.successadd.field");
             } else if (action.equals("M")) {
-                info  = "El lote ha sido modificado con exito";
+                info  = getText("message.successedit.field");
             }            
         } catch (HibernateException e) {
             if (tx != null) {
@@ -1008,7 +1071,11 @@ public class ActionField extends BaseAction {
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de agregar el lote";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.field");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.field");
+            }             
         } finally {
             session.close();
         }       
@@ -1026,16 +1093,16 @@ public class ActionField extends BaseAction {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "field/delete")) {
             return BaseAction.NOT_AUTHORIZED;
         }
-        Integer idField = 0;
+        idField = 0;
         try {
-            idField = Integer.parseInt(this.getRequest().getParameter("idFar"));
+            idField = Integer.parseInt(this.getRequest().getParameter("idField"));
         } catch (NumberFormatException e) {
             idField = -1;
         }
         
         if (idField==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.field");
             return "states";
         }
         
@@ -1048,12 +1115,11 @@ public class ActionField extends BaseAction {
             Fields lot = lotDao.objectById(idField);  
             lot.setStatus(false);     
             session.saveOrUpdate(lot);
-//            session.delete(lot);
-//            lotDao.delete(lot);            
+//            session.delete(lot); 
             
             LogEntities log = new LogEntities();
             log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem); //Colocar el usuario registrado en el sistema
+            log.setIdEntityLogEnt(idEntSystem); 
             log.setIdObjectLogEnt(lot.getIdFie());
             log.setTableLogEnt("fields");
             log.setDateLogEnt(new Date());
@@ -1065,7 +1131,7 @@ public class ActionField extends BaseAction {
             query.put("InsertedId", ""+lot.getIdFie());
             query.put("form_id", "5");
             
-            MongoClient mongo = null;
+            /*MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1081,30 +1147,29 @@ public class ActionField extends BaseAction {
             if (result.getError()!=null) {
                 throw new HibernateException("");
             }
-            mongo.close();
+            mongo.close();*/
             
-            ProductionEventsDao cropDao = new ProductionEventsDao();
-            cropDao.deleteCropsMongo(idField);
-
-            RastasDao rasDao = new RastasDao();
-            rasDao.deleteRastasMongo(idField);
+//            ProductionEventsDao cropDao = new ProductionEventsDao();
+//            cropDao.deleteCropsMongo(idField);
+//
+//            RastasDao rasDao = new RastasDao();
+//            rasDao.deleteRastasMongo(idField);
             
             tx.commit();         
             state = "success";
-            info  = "El lote ha sido borrado con exito";
+            info  = getText("message.successdelete.field");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar un lote";
+            info  = getText("message.faildelete.field");
         } finally {
             session.close();
         }      
         
         return "states";
-//        return SUCCESS;
     }
     
     /**
@@ -1125,15 +1190,15 @@ public class ActionField extends BaseAction {
         
         if (valSel.equals("-1")) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.field");
             return "states";
         }
         
         state = lotDao.deleteAllFields(valSel, idEntSystem);
         if (state.equals("success")) {
-            info  = "El o los lote(s) ha(n) sido borrado(s) con exito";
+            info  = getText("message.successalldelete.field");
         } else if (state.equals("failure")) {
-            info  = "Fallo al momento de borrar un lote";
+            info  = getText("message.failalldelete.field");
         }
         
         return "states";

@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import org.aepscolombia.platform.models.entity.Entities;
-//import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -79,7 +78,7 @@ public class AmendmentsFertilizationsDao
         Transaction tx = null;
 				
         sql += "select p.id_ame_fer, p.id_fertilization_ame_fer, p.id_product_ame_fer,";
-        sql += " p.other_product_ame_fer, p.amount_product_used_ame_fer, p.status, p.created_by"; 
+        sql += " p.other_product_ame_fer, p.amount_product_used_ame_fer, p.status,p.cost_app_ame_fer,p.cost_product_ame_fer,p.cost_form_app_ame_fer, p.created_by"; 
         sql += " from amendments_fertilizations p";
         sql += " where p.id_fertilization_ame_fer="+id;
         try {
@@ -98,7 +97,7 @@ public class AmendmentsFertilizationsDao
         return event;
     }
     
-    public List<AmendmentsFertilizations> getListAmeFert(Integer idFert) {
+    public List<AmendmentsFertilizations> getListAmeFert(Integer idFert, String coCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
         List<AmendmentsFertilizations> eventsTemp = null;
@@ -107,13 +106,16 @@ public class AmendmentsFertilizationsDao
         try {
             tx = session.beginTransaction();
             String sql = "select p.id_ame_fer, p.id_fertilization_ame_fer, p.id_product_ame_fer,";
-            sql += " p.other_product_ame_fer, p.amount_product_used_ame_fer, p.status, p.created_by"; 
+            sql += " p.other_product_ame_fer, p.amount_product_used_ame_fer, p.status, p.cost_app_ame_fer,p.cost_product_ame_fer,p.cost_form_app_ame_fer, p.created_by"; 
             sql += " from amendments_fertilizations p";
             sql += " where p.id_fertilization_ame_fer="+idFert;
             Query query = session.createSQLQuery(sql).addEntity("p", AmendmentsFertilizations.class);
             eventsTemp = query.list();
             for (AmendmentsFertilizations data : eventsTemp) {
-                if (data!=null && data.getOtherProductAmeFer()!=null && !data.getOtherProductAmeFer().equals("")) data.setAmendmentsFertilizers(new AmendmentsFertilizers(1000000, "Otro"));
+                if (coCode.equals("NI")) {
+                    data.setAmountProductUsedAmeFer(data.getAmountProductUsedAmeFer()*0.01522);
+                }
+//                if (data!=null && data.getAmendmentsFertilizers()==null && data.getOtherProductAmeFer()!=null && !data.getOtherProductAmeFer().equals("")) data.setAmendmentsFertilizers(new AmendmentsFertilizers(1000000, "Otro"));
                 result.add(data);
             }
             tx.commit();

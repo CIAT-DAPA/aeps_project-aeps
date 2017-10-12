@@ -1,7 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+//ActionFer.java
+
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -29,6 +28,7 @@ import org.aepscolombia.platform.models.dao.ProductionEventsDao;
 import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.SowingDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
+import org.aepscolombia.platform.models.dao.WetSoilsDao;
 import org.aepscolombia.platform.models.entity.AmendmentsFertilizations;
 import org.aepscolombia.platform.models.entity.AmendmentsFertilizers;
 import org.aepscolombia.platform.models.entity.ApplicationTypes;
@@ -36,8 +36,10 @@ import org.aepscolombia.platform.models.entity.ChemicalElements;
 import org.aepscolombia.platform.models.entity.ChemicalFertilizations;
 import org.aepscolombia.platform.models.entity.ChemicalFertilizerComposition;
 import org.aepscolombia.platform.models.entity.ChemicalFertilizers;
+import org.aepscolombia.platform.models.entity.ChemicalFertilizersCountry;
 import org.aepscolombia.platform.models.entity.Fertilizations;
 import org.aepscolombia.platform.models.entity.FertilizationsTypes;
+import org.aepscolombia.platform.models.entity.IdiomCountry;
 
 import org.aepscolombia.platform.models.entity.LogEntities;
 import org.aepscolombia.platform.models.entity.ProductionEvents;
@@ -45,6 +47,7 @@ import org.aepscolombia.platform.models.entity.OrganicFertilizations;
 import org.aepscolombia.platform.models.entity.OrganicFertilizers;
 import org.aepscolombia.platform.models.entity.Sowing;
 import org.aepscolombia.platform.models.entity.Users;
+import org.aepscolombia.platform.models.entity.WetSoils;
 import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.GlobalFunctions;
@@ -66,13 +69,13 @@ import org.hibernate.Transaction;
  */
 public class ActionFer extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
     private int idCrop;    
     private int idFer;    
     private int typeCrop;
+    private int costCrop;
     private List<HashMap> listFert;
     private Users user;
     private Integer idEntSystem;    
@@ -84,6 +87,7 @@ public class ActionFer extends BaseAction {
     private AmendmentsFertilizations ferAme = new AmendmentsFertilizations();
     private Sowing sowing = new Sowing();
     private List<FertilizationsTypes> type_fer_typ;
+    private List<WetSoils> type_wet_soils;
     private List<ApplicationTypes> list_app_typ;
     private List<ChemicalFertilizers> type_prod_che;
     private List<OrganicFertilizers> type_prod_org;
@@ -93,8 +97,8 @@ public class ActionFer extends BaseAction {
     private Double amountProductUsedOrg=null;
     private Double amountProductUsedAme=null;
     private UsersDao usrDao;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -170,6 +174,14 @@ public class ActionFer extends BaseAction {
         this.ferAme = ferAme;
     }
 
+    public List<WetSoils> getType_wet_soils() {
+        return type_wet_soils;
+    }
+
+    public void setType_wet_soils(List<WetSoils> type_wet_soils) {
+        this.type_wet_soils = type_wet_soils;
+    }  
+
     public List<FertilizationsTypes> getType_fer_typ() {
         return type_fer_typ;
     }
@@ -239,11 +251,9 @@ public class ActionFer extends BaseAction {
         return listFert;
     }   
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
-     */
-    
+     */    
     private ProductionEventsDao cropDao    = new ProductionEventsDao();
     private FertilizationsDao ferDao       = new FertilizationsDao();
     private SowingDao sowDao      = new SowingDao();
@@ -252,7 +262,6 @@ public class ActionFer extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -261,7 +270,6 @@ public class ActionFer extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -283,6 +291,14 @@ public class ActionFer extends BaseAction {
     public void setAppTyp(Integer appTyp) {
         this.appTyp = appTyp;
     }   
+    
+    public int getCostCrop() {
+        return costCrop;
+    }
+
+    public void setCostCrop(int costCrop) {
+        this.costCrop = costCrop;
+    }
     
     private List<ChemicalFertilizationsObj> chemFert; 
 
@@ -349,6 +365,9 @@ public class ActionFer extends BaseAction {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user   = (Users) this.getSession().get(APConstants.SESSION_USER);
@@ -356,9 +375,12 @@ public class ActionFer extends BaseAction {
         orgFert     = new ArrayList<OrganicFertilizations>();
         amenFert    = new ArrayList<AmendmentsFertilizations>();
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());  
+//        coCode = (String) user.getCountryUsr().getAcronymIdCo();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
         usrDao =  new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     /**
@@ -370,11 +392,12 @@ public class ActionFer extends BaseAction {
         appTyp = Integer.parseInt(this.getRequest().getParameter("appTyp"));
         this.setNumRows(Integer.parseInt((this.getRequest().getParameter("numRows")))+1);
         String resAdd = "";
-        this.setType_fer_typ(new FertilizationsTypesDao().findAll());
-        this.setList_app_typ(new ApplicationTypesDao().findAll());
-        this.setType_prod_che(new ChemicalFertilizersDao().findAllByStatus());
+        this.setType_fer_typ(new FertilizationsTypesDao().findAll(coCode));
+        this.setType_wet_soils(new WetSoilsDao().findAll(coCode));
+        this.setList_app_typ(new ApplicationTypesDao().findAll(coCode));
+        this.setType_prod_che(new ChemicalFertilizersDao().findAllByStatus(coCode));
         this.setType_prod_org(new OrganicFertilizersDao().findAllByStatus());
-        this.setType_prod_ame(new AmendmentsFertilizersDao().findAllByStatus());
+        this.setType_prod_ame(new AmendmentsFertilizersDao().findAllByStatus(coCode));
         
         if (appTyp==1) {
             ChemicalFertilizationsObj ferCheTemp = new ChemicalFertilizationsObj();
@@ -384,9 +407,7 @@ public class ActionFer extends BaseAction {
                 chemFert.add(ferCheTemp);
             }
                            
-//            additionalsElem = new ChemicalElementsDao().findByParams(ferCheTemp.getIdCheFer());
-//            System.out.println("tamaño=>"+chemFert.size());
-            
+//            System.out.println("tamaño=>"+chemFert.size());            
             resAdd = "chemical";
         } else if (appTyp==2) {
             OrganicFertilizations ferOrgTemp = new OrganicFertilizations();
@@ -420,11 +441,14 @@ public class ActionFer extends BaseAction {
             sowing = sowDao.objectById(this.getIdCrop());
             HashMap required = new HashMap();
             required.put("fer.dateFer", fer.getDateFer());      
+            if (coCode.equals("NI")) {
+                required.put("fer.wetSoils.idWeSo", fer.getWetSoils().getIdWeSo());      
+            }
 //            required.put("fer.amountProductUsedFer", fer.getAmountProductUsedFer());      
 //            required.put("fer.fertilizationsTypes.idFerTyp", fer.getFertilizationsTypes().getIdFerTyp());                  
             
-            if (chemFert.size()<0 && orgFert.size()<0 && amenFert.size()<0) {
-                addActionError("Se debe ingresar por lo menos alguna fertilizacion");
+            if (chemFert.size()<=0 && orgFert.size()<=0 && amenFert.size()<=0) {
+                addActionError(getText("message.insertsomefert.fertilization"));
             }
             
             Double amountTotal = 0.0;
@@ -471,7 +495,7 @@ public class ActionFer extends BaseAction {
                 }
                 contAme++;
             }               
-
+            
 //            System.out.println("amountTotal=>"+amountTotal);
 //            System.out.println("fer.getAmountProductUsedFer()=>"+fer.getAmountProductUsedFer());
             /*double sumTotal = amountTotal.doubleValue();
@@ -501,16 +525,18 @@ public class ActionFer extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.fertilization"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.fertilization"));
             }
             
             Date dateSowing = null;
+            HashMap prod  = cropDao.findById(idCrop);
+            Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
 //            if (sowing.getDateSow()!=null) {
             if (sowing != null) {
                 dateSowing = sowing.getDateSow();
@@ -518,11 +544,17 @@ public class ActionFer extends BaseAction {
 
                 if (!dmySow.equals("") && fer.getDateFer()!=null) {
 
-                    Integer valDiffBef = GlobalFunctions.compareDateBeforeSowing(fer.getDateFer(), sowing.getDateSow());
-                    Integer valDiffAff = GlobalFunctions.compareDateAfterSowing(fer.getDateFer(), sowing.getDateSow(), 0);
+                    Integer valDiffBef = GlobalFunctions.compareDateBeforeSowingByAction(fer.getDateFer(), sowing.getDateSow(), tyCro, 2);
+                    Integer valDiffAff = GlobalFunctions.compareDateAfterSowingByAction(fer.getDateFer(), sowing.getDateSow(), tyCro, 2);
                     if (valDiffBef==2 && valDiffAff==2) {
-                        addFieldError("fer.dateFer", "Dato invalido");                
-                        addActionError("Se ingreso una fecha de aplicación que no se encuentra 6 meses antes de la siembra o 10 meses despues de la siembra ("+dmySow+")");
+                        addFieldError("fer.dateFer", getText("message.fertilizationdateinvalidrank.fertilization"));    
+                        if (tyCro==1) {
+                            addActionError(getText("desc.fertilizationdateinvalidrankmaize.fertilization")+" ("+dmySow+")");
+                        } else if (tyCro==2) {
+                            addActionError(getText("desc.fertilizationdateinvalidrankbeans.fertilization")+" ("+dmySow+")");
+                        } else if (tyCro==4) {
+                            addActionError(getText("desc.fertilizationdateinvalidrankrice.fertilization")+" ("+dmySow+")");
+                        }
                     }
 
                 }
@@ -530,7 +562,6 @@ public class ActionFer extends BaseAction {
             
             if (chemFert!=null) {
 //                if (fer.getFertilizationsTypes().getIdFerTyp() == 1 && ferChe.getChemicalFertilizers().getIdCheFer() == 1000000 && ferChe.getApplicationTypes().getIdAppTyp()==1) {
-//                if (fer.getFertilizationsTypes().getIdFerTyp() == 1) {
                     
                     contFer = 0;
                     for (ChemicalFertilizationsObj ferCheTemp : chemFert) {
@@ -545,20 +576,20 @@ public class ActionFer extends BaseAction {
                                     }
 
                                     if (chem.getValueCheEle()!=null && (chem.getValueCheEle()<0 || chem.getValueCheEle()>100)) {
-                                        addFieldError("chemFert["+contFer+"].additionalsElem["+cont+"].valueCheEle", "Dato invalido");
+                                        addFieldError("chemFert["+contFer+"].additionalsElem["+cont+"].valueCheEle", getText("message.invalidcomposition.fertilization"));
                                         errorCom = true;
                                     }                                
                                 }
 
                                 if (errorCom) {
-                                    addActionError("Se ingresaron composiciones invalidas, por favor ingresar valores entre 0 y 100");
+                                    addActionError(getText("desc.invalidcomposition.fertilization"));
                                 }
 
                                 if (!entry) {
                                     for (int i=0; i<ferCheTemp.getAdditionalsElem().size(); i++) {                      
                                         addFieldError("chemFert["+contFer+"].additionalsElem["+i+"].valueCheEle", ""); 
                                     }
-                                    addActionError("Se debe ingresar por lo menos alguna de las composiciones");
+                                    addActionError(getText("desc.insertsomecomposition.fertilization"));
                                 }
                             }
                         }
@@ -592,6 +623,7 @@ public class ActionFer extends BaseAction {
         HashMap findParams = new HashMap();        
         findParams.put("idEntUser", idEntSystem);
         findParams.put("idEvent", this.getIdCrop());
+        findParams.put("coCode", coCode);
         listFert = ferDao.findByParams(findParams);
         return SUCCESS;
     }
@@ -625,17 +657,21 @@ public class ActionFer extends BaseAction {
             this.setIdFer(-1);
         }
 
-        this.setType_fer_typ(new FertilizationsTypesDao().findAll());
-        this.setList_app_typ(new ApplicationTypesDao().findAll());
-        this.setType_prod_che(new ChemicalFertilizersDao().findAllByStatus());
+        this.setType_fer_typ(new FertilizationsTypesDao().findAll(coCode));
+        this.setType_wet_soils(new WetSoilsDao().findAll(coCode));
+        this.setList_app_typ(new ApplicationTypesDao().findAll(coCode));
+        this.setType_prod_che(new ChemicalFertilizersDao().findAllByStatus(coCode));
         this.setType_prod_org(new OrganicFertilizersDao().findAllByStatus());
-        this.setType_prod_ame(new AmendmentsFertilizersDao().findAllByStatus());
+        this.setType_prod_ame(new AmendmentsFertilizersDao().findAllByStatus(coCode));
+        Boolean costRes = Boolean.valueOf(String.valueOf(prod.get("costCrop")));
+        if (costRes) setCostCrop(1);
+        else setCostCrop(2);
 //        additionalsElem = new ChemicalElementsDao().findByParams(this.getIdFer());
         if (this.getIdFer()!= -1) {
             fer      = ferDao.objectById(this.getIdFer());
-            chemFert = new ChemicalFertilizationsDao().getListChemFert(this.getIdFer());
-            orgFert  = new OrganicFertilizationsDao().getListOrgFert(this.getIdFer());
-            amenFert = new AmendmentsFertilizationsDao().getListAmeFert(this.getIdFer());
+            chemFert = new ChemicalFertilizationsDao().getListChemFert(this.getIdFer(), coCode);
+            orgFert  = new OrganicFertilizationsDao().getListOrgFert(this.getIdFer(), coCode);
+            amenFert = new AmendmentsFertilizationsDao().getListAmeFert(this.getIdFer(), coCode);
             
 //            ferChe = new ChemicalFertilizationsDao().objectById(this.getIdFer());            
 //            ferOrg = new OrganicFertilizationsDao().objectById(this.getIdFer());            
@@ -682,6 +718,13 @@ public class ActionFer extends BaseAction {
             fer.setProductionEvents(new ProductionEvents(idCrop));
             fer.setDateFer(dateFer);          
             fer.setFertilizationsTypes(null);
+            if (!coCode.equals("NI")) {
+                fer.setWetSoils(null);
+            } 
+//            else {
+//                fer.setWetSoils(new WetSoils());
+//            }
+            
 //            if (fer.getFertilizationsTypes().getIdFerTyp()==1) {
 //                fer.setAmountProductUsedFer(amountProductUsedChe);
 //            } else if (fer.getFertilizationsTypes().getIdFerTyp()==2) {
@@ -708,12 +751,12 @@ public class ActionFer extends BaseAction {
                         session.delete(ferCheOld);
                     }
                     
-                    List<OrganicFertilizations> orgFertOld = new OrganicFertilizationsDao().getListOrgFert(fer.getIdFer());
+                    List<OrganicFertilizations> orgFertOld = new OrganicFertilizationsDao().getListOrgFert(fer.getIdFer(), coCode);
                     for (OrganicFertilizations ferOrgOld : orgFertOld) {
                         session.delete(ferOrgOld);
                     }
                     
-                    List<AmendmentsFertilizations> ameFertOld = new AmendmentsFertilizationsDao().getListAmeFert(fer.getIdFer());
+                    List<AmendmentsFertilizations> ameFertOld = new AmendmentsFertilizationsDao().getListAmeFert(fer.getIdFer(), coCode);
                     for (AmendmentsFertilizations ferAmeOld : ameFertOld) {
                         session.delete(ferAmeOld);
                     }
@@ -740,15 +783,26 @@ public class ActionFer extends BaseAction {
             if (chemFert!=null) {                
                 for (ChemicalFertilizationsObj ferCheTemp : chemFert) {
                     ChemicalFertilizers cheFer = null;
+                    ChemicalFertilizersCountry chemFerCountry = null;
                     if (ferCheTemp!=null) {
-                        if (ferCheTemp.getOtherProductCheFer()!=null && !ferCheTemp.getOtherProductCheFer().equals("")) {
-                            cheFer = new ChemicalFertilizersDao().objectById(ferCheTemp.getIdCheFer());
-                            if (cheFer!=null) session.delete(cheFer);     
+                        if (ferCheTemp.getOtherProductCheFer()!=null && !ferCheTemp.getOtherProductCheFer().equals("") && ferCheTemp.getApplicationTypes().getIdAppTyp()==1 && ferCheTemp.getChemicalFertilizers().getIdCheFer()==1000000) {
+                            ChemicalFertilizations cheFerOld = new ChemicalFertilizationsDao().chemicalById(ferCheTemp.getIdCheFer());
+                            if (cheFerOld!=null && !cheFerOld.getOtherProductCheFer().equals("")) cheFer  = new ChemicalFertilizersDao().objectById(ferCheTemp.getIdCheFer());
+                            if (cheFer!=null) {
+                                chemFerCountry = new ChemicalFertilizersDao().fertilizerByCountry(cheFer.getIdCheFer(), coCode);
+                                if (chemFerCountry!=null) session.delete(chemFerCountry);     
+                                session.delete(cheFer);
+                            }
 
                             cheFer = new ChemicalFertilizers();
                             cheFer.setNameCheFer(ferCheTemp.getOtherProductCheFer());
                             cheFer.setStatusCheFer(false);
                             session.saveOrUpdate(cheFer);
+                            
+                            chemFerCountry = new ChemicalFertilizersCountry();
+                            chemFerCountry.setChemicalFertilizers(cheFer);
+                            chemFerCountry.setIdiomCountry(new IdiomCountry(coCode));
+                            session.saveOrUpdate(chemFerCountry);
 
                             ferCheTemp.setChemicalFertilizers(cheFer);
 
@@ -769,13 +823,31 @@ public class ActionFer extends BaseAction {
                         amountProduct += ferCheTemp.getAmountProductUsedCheFer();
                         ChemicalFertilizations chemFer = new ChemicalFertilizations();           
                         Integer idCheFer = ferCheTemp.getIdCheFer();
+//                        System.out.println("idCheFer=>"+idCheFer);
+//                        if (idCheFer!=null) {
+//                            chemFer.setIdCheFer(idCheFer);
+//                        } else {
+//                            chemFer.setIdCheFer(null);
+//                        }
+                        
 //                        chemFer.setIdCheFer(idCheFer);
-                        chemFer.setIdCheFer(null);
+//                        chemFer.setIdCheFer(null);
                         chemFer.setFertilizations(fer);
                         chemFer.setStatus(true);
-                        chemFer.setChemicalFertilizers(ferCheTemp.getChemicalFertilizers());
-                        chemFer.setOtherProductCheFer(ferCheTemp.getOtherProductCheFer());
+                        chemFer.setCostAppCheFer(ferCheTemp.getCostAppCheFer());
+                        chemFer.setCostFormAppCheFer(ferCheTemp.getCostFormAppCheFer());
+                        chemFer.setCostProductCheFer(ferCheTemp.getCostProductCheFer());
+                        if(ferCheTemp.getApplicationTypes().getIdAppTyp()==2){
+                            chemFer.setChemicalFertilizers(null);
+                            chemFer.setOtherProductCheFer(ferCheTemp.getOtherProductCheFer());
+                        } else {
+                            chemFer.setChemicalFertilizers(ferCheTemp.getChemicalFertilizers());
+                            chemFer.setOtherProductCheFer(ferCheTemp.getOtherProductCheFer());
+                        }                
                         chemFer.setApplicationTypes(ferCheTemp.getApplicationTypes());
+                        if (coCode.equals("NI")) {                
+                            if(ferCheTemp.getUnitCheFer()==12) ferCheTemp.setAmountProductUsedCheFer(ferCheTemp.getAmountProductUsedCheFer()*65.7143);
+                        } 
                         chemFer.setAmountProductUsedCheFer(ferCheTemp.getAmountProductUsedCheFer());
                         chemFer.setUnitCheFer(ferCheTemp.getUnitCheFer());
 
@@ -793,11 +865,14 @@ public class ActionFer extends BaseAction {
                         ferOrgNew.setIdOrgFer(null);
                         ferOrgNew.setFertilizations(fer);
                         ferOrgNew.setStatus(true);
-                        if (ferOrgNew.getOtherProductOrgFer()!=null && !ferOrgNew.getOtherProductOrgFer().equals("")) {
-                            ferOrgNew.setOrganicFertilizers(null);
-                        }
+//                        if (ferOrgNew.getOrganicFertilizers().getIdOrgFer()==1000000 && ferOrgNew.getOtherProductOrgFer()!=null && !ferOrgNew.getOtherProductOrgFer().equals("")) {
+//                            ferOrgNew.setOrganicFertilizers(null);
+//                        } 
                         ferOrgNew.setFertilizations(fer);
                         ferOrgNew.setStatus(true);
+                        if (coCode.equals("NI")) {                
+                            ferOrgNew.setAmountProductUsedOrgFer(ferOrgNew.getAmountProductUsedOrgFer()*65.7143);
+                        }
                         amountProduct += ferOrgNew.getAmountProductUsedOrgFer();
                         session.saveOrUpdate(ferOrgNew);    
                     }
@@ -810,11 +885,14 @@ public class ActionFer extends BaseAction {
                         ferAmeNew.setIdAmeFer(null);
                         ferAmeNew.setFertilizations(fer);
                         ferAmeNew.setStatus(true);
-                        if (ferAmeNew.getOtherProductAmeFer()!=null && !ferAmeNew.getOtherProductAmeFer().equals("")) {
-                            ferAmeNew.setAmendmentsFertilizers(null);
-                        }
+//                        if (ferAmeNew.getAmendmentsFertilizers().getIdAmeFer()==1000000 && ferAmeNew.getOtherProductAmeFer()!=null && !ferAmeNew.getOtherProductAmeFer().equals("")) {
+//                            ferAmeNew.setAmendmentsFertilizers(null);
+//                        }
                         ferAmeNew.setFertilizations(fer);
                         ferAmeNew.setStatus(true);
+                        if (coCode.equals("NI")) {                
+                            ferAmeNew.setAmountProductUsedAmeFer(ferAmeNew.getAmountProductUsedAmeFer()*65.7143);
+                        }
                         amountProduct += ferAmeNew.getAmountProductUsedAmeFer();
                         session.saveOrUpdate(ferAmeNew);  
                     }
@@ -824,28 +902,32 @@ public class ActionFer extends BaseAction {
             fer.setAmountProductUsedFer(amountProduct);
             session.saveOrUpdate(fer);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(fer.getIdFer());
-            log.setTableLogEnt("fertilizations");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);           
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, fer.getIdFer(), "fertilizations", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(fer.getIdFer());
+                log.setTableLogEnt("fertilizations");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }      
             tx.commit();           
             state = "success";            
             if (action.equals("C")) {
-                info  = "La fertilizacion ha sido agregada con exito";
+                info  = getText("message.successadd.fertilization");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "La fertilizacion ha sido modificada con exito";
+                info  = getText("message.successedit.fertilization");
 //                return "list";
             }
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -853,9 +935,13 @@ public class ActionFer extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar una fertilizacion";
-        } catch (ParseException e) { 
-        
+            if (action.equals("C")) {
+                info  = getText("message.failadd.fertilization");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.fertilization");
+            }
+        } catch (Exception e) { 
+            e.printStackTrace();
         } finally {
             session.close();
         }  
@@ -882,7 +968,7 @@ public class ActionFer extends BaseAction {
         
         if (idFer==-1) {
             state = "failure";
-            info  = "Fallo al momento de obtener la informacion a borrar";
+            info  = getText("message.failgetinfo.fertilization");
             return "states";
         }
         
@@ -908,20 +994,19 @@ public class ActionFer extends BaseAction {
 //            logDao.save(log);
             tx.commit();         
             state = "success";
-            info  = "La fertilizacion ha sido borrada con exito";
+            info  = getText("message.successdelete.fertilization");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = "Fallo al momento de borrar una fertilizacion";
+            info  = getText("message.faildelete.fertilization");
         } finally {
             session.close();
         }      
         
         return "states";
-//        return SUCCESS;
     }
     
 }

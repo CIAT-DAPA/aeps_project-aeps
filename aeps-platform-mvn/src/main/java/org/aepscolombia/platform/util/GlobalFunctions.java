@@ -11,11 +11,11 @@ import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
 import com.mongodb.util.JSON;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +24,7 @@ import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,10 +40,16 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import static javax.servlet.SessionTrackingMode.URL;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import org.aepscolombia.platform.controllers.ActionField;
+import org.aepscolombia.platform.controllers.BaseAction;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
+import org.aepscolombia.platform.models.dao.RastasDao;
 import org.hibernate.HibernateException;
+import org.renjin.sexp.ListVector;
+import org.renjin.sexp.StringArrayVector;
 
 /**
  * Clase GlobalFunctions
@@ -52,9 +59,19 @@ import org.hibernate.HibernateException;
  * @author Juan Felipe Rodriguez
  * @version 1.0
  */
-public class GlobalFunctions {
+public class GlobalFunctions extends BaseAction {
 
-    public static Integer check_in_range(Date start, Date end, Date evaluame, Integer whatIs) {
+    /**
+     * Metodo encargado de verificar si una fecha se encuentra en el rango antes o despues
+     * de realizar una siembra en un evento productivo
+     * @param start:  Fecha inicio
+     * @param end:    Fecha final
+     * @param evaluame: Fecha a evaluar
+     * @param whatIs: Que se evaluar (1-Antes de siembra, 2-Despues de siembra)
+     * @return Valida si una fecha se encuentra o no en ese rango
+     */
+    public static Integer check_in_range(Date start, Date end, Date evaluame, Integer whatIs) 
+    {
         Integer result = 2;
         if (evaluame.after(start) && evaluame.before(end)) {
             result = 1;
@@ -92,10 +109,23 @@ public class GlobalFunctions {
 //        }
     }
 
-    public static Integer compareDateBeforeSowing(Date date1, Date date2) {
+    /**
+     * Metodo encargado de establecer el rango que se encuentra antes de una fecha de siembra 
+     * (6 meses)
+     * @param date1:  Fecha inicio
+     * @param date2:  Fecha final
+     * @param cropType: Tipo de cultivo
+     * @return Llamada del metodo que comprueba el rango de fechas
+     */
+    public static Integer compareDateBeforeSowing(Date date1, Date date2, Integer cropType) 
+    {
         Date dateOld = (Date) date2.clone();
         Double numYearsMore = Math.abs(Math.floor((dateOld.getMonth() - 10) / 12));
-        dateOld.setMonth((dateOld.getMonth() - 1 - 6) % 12 + 1);
+        if (cropType == 3) {
+            dateOld.setMonth((dateOld.getMonth() - 1 - 6) % 12 + 1);
+        } else {
+            dateOld.setMonth((dateOld.getMonth() - 1 - 6) % 12 + 1);
+        }
         dateOld.setYear(dateOld.getYear() - numYearsMore.intValue());
         String dateAsign = "";
         Date dateBefore = null;
@@ -110,17 +140,24 @@ public class GlobalFunctions {
 //		return self::check_in_range($dateBefore, $date2, $date1);
     }
 
-    public static Integer compareDateAfterSowing(Date date1, Date date2, Integer tipoCul) {
+    /**
+     * Metodo encargado de establecer el rango que se encuentra despues de una fecha de siembra 
+     * (18 meses para la yuca y 10 meses para el resto de cultivos)
+     * @param date1:  Fecha inicio
+     * @param date2:  Fecha final
+     * @param cropType: Tipo de cultivo
+     * @return Llamada del metodo que comprueba el rango de fechas
+     */
+    public static Integer compareDateAfterSowing(Date date1, Date date2, Integer cropType) 
+    {
         Date dateOld = (Date) date2.clone();
         Double numYearsMore = Math.floor((dateOld.getMonth() + 10) / 12);
-        if (tipoCul == 3) {
+        if (cropType == 3) {
             dateOld.setMonth((dateOld.getMonth() - 1 + 18) % 12 + 1);
         } else {
             dateOld.setMonth((dateOld.getMonth() - 1 + 10) % 12 + 1);
         }
         dateOld.setYear(dateOld.getYear() + numYearsMore.intValue());
-//        System.out.println("numYearsMore->"+numYearsMore);
-//        System.out.println("dateConvert->"+date2);
         String dateAsign = "";
         Date dateAfter = null;
         try {
@@ -131,14 +168,129 @@ public class GlobalFunctions {
         } catch (IllegalArgumentException ex) {
         } catch (java.text.ParseException ex) {
         }
-//        System.out.println("date23->"+date2);
-//        System.out.println("dateAfter->"+dateAfter);
-//        System.out.println("date1->"+date1);
 //        Date dateAfter = new Date(dateAsign);
         return check_in_range(date2, dateAfter, date1, 2);
 
-//﻿  ﻿  $dateAfter = ''.$dateAfter->format('Y-m-d');        
-//﻿  ﻿  return self::check_in_range($date2, $dateAfter, $date1);
+//  $dateAfter = ''.$dateAfter->format('Y-m-d');        
+//  return self::check_in_range($date2, $dateAfter, $date1);
+    }
+    
+    /**
+     * Metodo encargado de obtener la diferencia de dias entre dos fechas
+     * @param date1:  Fecha uno
+     * @param date2:  Fecha dos
+     * @return Numero de días de diferencia entre dos fechas
+     */
+    public static Integer diffDays(Date date1, Date date2) 
+    {
+        Integer oneDay  = 24*60*60*1000;
+        Date firstDate  = date1;
+        Date secondDate = date2;
+
+        Integer diffDays = Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
+        return diffDays;
+    }
+    
+    /**
+     * Metodo encargado de establecer el rango que se encuentra antes de una fecha de siembra 
+     * dependiendo al tipo de accion que se realice un evento productivo
+     * @param date1:  Fecha inicio
+     * @param date2:  Fecha final
+     * @param cropType: Tipo de cultivo
+     * @param typeAction: Tipo de accion
+     * @return Llamada del metodo que comprueba el rango de fechas
+     */
+    public static Integer compareDateBeforeSowingByAction(Date date1, Date date2, Integer cropType, Integer typeAction) 
+    {
+        /*
+            Tipos de accion:
+            1-Irrigation
+            2-Fertilization
+            3-Control
+            4-Monitoring
+            5-Flowering
+            6-Emergency
+        */
+        Date dateOld = (Date) date2.clone();
+        Double numYearsMore = Math.abs(Math.floor((dateOld.getMonth() - 10) / 12));
+        if (typeAction==2 || typeAction==3) {
+            if (cropType == 1 || cropType == 2 || cropType == 4) {
+                dateOld.setMonth((dateOld.getMonth() - 1 - 1) % 12 + 1);
+            } else if (cropType == 3) {
+                dateOld.setMonth((dateOld.getMonth() - 1 - 6) % 12 + 1);
+            } 
+        } 
+        dateOld.setYear(dateOld.getYear() - numYearsMore.intValue());
+        String dateAsign = "";
+        Date dateBefore = null;
+        try {
+            dateAsign = new SimpleDateFormat("yyyy-MM-dd").format(dateOld);
+            dateBefore = new SimpleDateFormat("yyyy-MM-dd").parse(dateAsign);
+        } catch (IllegalArgumentException ex) {
+        } catch (java.text.ParseException ex) {
+        }
+//        Date dateBefore = new Date(dateAsign);
+        return check_in_range(dateBefore, date2, date1, 1);
+    }   
+
+    /**
+     * Metodo encargado de establecer el rango que se encuentra despues de una fecha de siembra 
+     * dependiendo al tipo de accion que se realice un evento productivo
+     * @param date1:  Fecha inicio
+     * @param date2:  Fecha final
+     * @param cropType: Tipo de cultivo
+     * @param typeAction: Tipo de accion
+     * @return Llamada del metodo que comprueba el rango de fechas
+     */
+    public static Integer compareDateAfterSowingByAction(Date date1, Date date2, Integer cropType, Integer typeAction) 
+    {
+        /*
+            typeAction:
+            1-Irrigation
+            2-Fertilization
+            3-Control
+            4-Monitoring
+            5-Flowering
+            6-Emergency
+            7-Harvest
+        */
+        Date dateOld = (Date) date2.clone();
+        Double numYearsMore = Math.floor((dateOld.getMonth() + 10) / 12);
+        if (typeAction==1 || typeAction==2 || typeAction==3 || typeAction==4) {
+            if (cropType == 1 || cropType == 2) {
+                dateOld.setMonth((dateOld.getMonth() - 1 + 5) % 12 + 1);
+            } else if (cropType == 4) {
+                dateOld.setMonth((dateOld.getMonth() - 1 + 4) % 12 + 1);
+            }   
+        } else if (typeAction==5) {
+            if (cropType == 1) {
+                dateOld.setMonth((dateOld.getMonth() - 1 + 5) % 12 + 1);
+            } else if (cropType == 2 || cropType == 4) {
+                dateOld.setMonth((dateOld.getMonth() - 1 + 4) % 12 + 1);
+            }          
+        } else if (typeAction==6) {
+            if (cropType == 1 || cropType == 2 || cropType == 4) {
+                dateOld.setMonth((dateOld.getMonth() - 1 + 2) % 12 + 1);
+            }
+        } else if (typeAction==7) {
+            if (cropType == 1 || cropType == 2 || cropType == 4) {
+                dateOld.setMonth((dateOld.getMonth() - 1 + 6) % 12 + 1);
+            }
+        } 
+        
+        dateOld.setYear(dateOld.getYear() + numYearsMore.intValue());
+        String dateAsign = "";
+        Date dateAfter = null;
+        try {
+            dateAsign = new SimpleDateFormat("yyyy-MM-dd").format(dateOld);
+            dateAfter = new SimpleDateFormat("yyyy-MM-dd").parse(dateAsign);
+            dateAsign = new SimpleDateFormat("yyyy-MM-dd").format(date2);
+            date2 = new SimpleDateFormat("yyyy-MM-dd").parse(dateAsign);
+        } catch (IllegalArgumentException ex) {
+        } catch (java.text.ParseException ex) {
+        }
+        
+        return check_in_range(date2, dateAfter, date1, 2);
     }
 
     /**
@@ -150,7 +302,8 @@ public class GlobalFunctions {
      * @param subject Asunto del correo
      * @param subjectMsg Descripcion general del correo
      */
-    public static void sendEmail(String toAdress, String fromAdress, String fromAdressPass, String subject, String subjectMsg) {
+    public static void sendEmail(String toAdress, String fromAdress, String fromAdressPass, String subject, String subjectMsg, File archivo) 
+    {
 //        String host = "localhost";
         Properties props = new Properties();
 //        props.setProperty("mail.smtp.host", host); 
@@ -179,11 +332,16 @@ public class GlobalFunctions {
 //            BodyPart messageBodyPart = new MimeBodyPart();
             messageBodyPart.setText(msgBody, "UTF-8", "html");
             multipart.addBodyPart(messageBodyPart);
+            if (archivo!=null) {
+                MimeBodyPart attachPart = new MimeBodyPart();
+                attachPart.attachFile(archivo);            
+                multipart.addBodyPart(attachPart);
+            }            
 
             MimeMessage msg = new MimeMessage(session);
             msg.setFrom(new InternetAddress(fromAdress, ""));
             msg.addRecipient(Message.RecipientType.TO,
-                    new InternetAddress(toAdress, ""));
+                    new InternetAddress(toAdress, ""));            
             msg.setSubject(subject);
 //            msg.setContent(multipart, "text/html; charset=utf-8"); 
 //            msg.setContent(multipart, "text/html"); 
@@ -199,13 +357,12 @@ public class GlobalFunctions {
 //            Transport.send(msg);
         } catch (AddressException e) {
             e.printStackTrace();
-            // ...
         } catch (MessagingException e) {
             e.printStackTrace();
-            // ...
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-            // ...
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -215,7 +372,8 @@ public class GlobalFunctions {
      * @param password Password en formato original
      * @return contraseña transformado en formato MD5
      */
-    public static String generateMD5(String password) {
+    public static String generateMD5(String password) 
+    {
         String passwordToHash = password;
         String generatedPassword = null;
         try {
@@ -246,7 +404,8 @@ public class GlobalFunctions {
      * @param salt Semilla ingresada
      * @return contraseña transformado en formato MD5
      */
-    public static String generateSHA1(String password) {
+    public static String generateSHA1(String password) 
+    {
         String passwordToHash = password;
         String generatedPassword = null;
         try {
@@ -266,17 +425,31 @@ public class GlobalFunctions {
         return generatedPassword;
     }
 
-    public static String getRandomKey() {
+    /**
+     * Metodo encargado de generar una llave aleatoria cuando una persona se registro en el sistema con un numero de celular,
+     * para luego ser enviado como mensaje de texto
+     *
+     * @return llave aleatoria de 5 caracteres
+     */
+    public static String getRandomKey() 
+    {
         String[] vocabulary = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
         String randomKey = "";
         for (int i = 0; i < 5; i++) {
-            int numRandom = (int) Math.round(Math.random() * vocabulary.length);
+            int numRandom = (int) Math.round(Math.random() * vocabulary.length-1);
             randomKey += vocabulary[numRandom];
         }
         return randomKey;
     }
 
-    public static String getSalt() throws NoSuchAlgorithmException, NoSuchProviderException {
+    /**
+     * Metodo encargado de generar una llave aleatoria cuando una persona se registro en el sistema con un correo electrónico
+     *
+     * @return llave aleatoria de 5 caracteres
+     * @throws NoSuchAlgorithmException, NoSuchProviderException 
+     */
+    public static String getSalt() throws NoSuchAlgorithmException, NoSuchProviderException 
+    {
         SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
         byte[] salt = new byte[16];
         sr.nextBytes(salt);
@@ -323,6 +496,7 @@ public class GlobalFunctions {
                 + "<p>Bienvenido a la plataforma AEPS.</p> \n"
                 + "<p>Para validar su registro por favor dar click en el siguiente enlace:</p> "
                 + "<a href='http://" + host + ":8080/verifyUser.action?codVal=" + codValidation + "&nameUser=" + nameUser + "'>http://" + host + ":8080/verifyUser.action?codVal=" + codValidation + "&nameUser=" + nameUser + "</a>\n"
+//                + "<a href='http://" + host + ":8080/aeps/verifyUser.action?codVal=" + codValidation + "&nameUser=" + nameUser + "'>http://" + host + ":8080/aeps/verifyUser.action?codVal=" + codValidation + "&nameUser=" + nameUser + "</a>\n"
                 //                + "http://"+host+":8083/verifyUser.action?codVal=" + codValidation + "&nameUser=" + nameUser + " \n"
                 + "<p>Si usted no se ha registrado a este sistema por favor ignorar este mensaje</p> "
                 + "</body> \n"
@@ -349,6 +523,7 @@ public class GlobalFunctions {
                 + "<h3>Hola Usuario: " + nameUser + "</h3> \n"
                 + "<p>Para poder realizar el cambio de contraseña por favor dar click en el siguiente enlace:</p> "
                 + "<a href='http://" + host + ":8080/verifyUserToRestore.action?codVal=" + codValidation + "&nameUser=" + nameUser + "'>http://" + host + ":8080/verifyUserToRestore.action?codVal=" + codValidation + "&nameUser=" + nameUser + "</a> \n"
+//                + "<a href='http://" + host + ":8080/aeps/verifyUserToRestore.action?codVal=" + codValidation + "&nameUser=" + nameUser + "'>http://" + host + ":8080/aeps/verifyUserToRestore.action?codVal=" + codValidation + "&nameUser=" + nameUser + "</a> \n"
                 + "</body> \n"
                 + "</html>";
         return msg;
@@ -392,7 +567,7 @@ public class GlobalFunctions {
                 + "<h3>El usuario: <b>" + nameUser + "</b></h3> \n"
                 + "<p>Que cuenta con el correo: " + emailUser + "</p> \n"
                 + "<p>Tiene el asunto: <b> " + subMessageUser + "</b></p> \n"
-                + "<p>Con lo siguiente: <br /> " + textMessageUser + "</p> \n"
+                + "<p>Con lo siguiente: <br /> <b>" + textMessageUser + "</b></p> \n"
                 + "</body> \n"
                 + "</html>";
         return msg;
@@ -418,13 +593,26 @@ public class GlobalFunctions {
         return output;
     }
 
+    /**
+     * Metodo encargado de verificar por cada campo si este es numerico para luego añadir un que elimina acentos y caracteres especiales de una cadena de
+     * texto.
+     *
+     * @param input
+     * @return cadena de texto limpia de acentos y caracteres especiales.
+     */
     public static String checkDataRasta(String input) {
         String result = "";
-        if (input.matches("[0-9]*") || input.equals("ND") || input.equals("NA")) {
+        if (input.matches("[0-9]*") || input.equals("ND") || input.equals("NA") || input.equals("null")) {
             if (input.matches("[0-9]*")) {
                 input = input.replace(",", ".");
             }
-            result = input;
+            
+            if (input.equals("null")) {
+                result = "NA";
+            } else {
+                result = input;
+            }
+            
         } else {
             result = "'" + GlobalFunctions.remove(input) + "'";
         }
@@ -969,7 +1157,7 @@ public class GlobalFunctions {
          "88": "-30.9866133,-64.10017753,596" Capturar posicion => lat, lng, alt
          "89": "Área del Lote" => areaField
          */
-        //Limite 3100 Lineas
+				 
         info.put("85", "" + data.get("farmId"));
         info.put("86", "" + data.get("typeField"));
         info.put("87", "" + data.get("nameField"));
@@ -1766,7 +1954,6 @@ public class GlobalFunctions {
     }
 
     public static void sendSms(String telDes, String mess) {
-        // TODO code application logic here
         try {
             java.lang.String user = "ciatsms";
             java.lang.String password = "ciat001";
@@ -1774,7 +1961,6 @@ public class GlobalFunctions {
             java.lang.String mensaje = mess;
 //            com.sigmamovil.smsapp.soap.sigmamovilservice.SigmaMovilService service = new com.sigmamovil.smsapp.soap.sigmamovilservice.SigmaMovilService(new URL("http://www.open-aeps.org/sigmaservices.wsdl"));
 //            com.sigmamovil.smsapp.soap.sigmamovilservice.SigmaMovilServicePortType port = service.getSigmaMovilServicePort();
-//            //            System.out.println("port=>"+port);
 //            // TODO process result here
 //            com.sigmamovil.smsapp.soap.sigmamovilservice.WSResSendSMS result = port.newSendSMS(user, password, teldestino, mensaje);
 //            System.out.println("Result = " + result);
@@ -1788,6 +1974,108 @@ public class GlobalFunctions {
         long difference = (one.getTime()-two.getTime())/86400000; 
         return Math.abs(difference); 
     }
-
+    
+    // Obtiene el lenguaje para un pais seleccionado
+    public static String getLanguageByCountryCode(String code) 
+    { 
+	Locale[] locales = Locale.getAvailableLocales();
+        String language  = ""; 
+	for (Locale obj : locales) { 
+            String codeTemp = obj.getCountry();
+            if (codeTemp.equals(code)) {
+                language = obj.getLanguage();
+            } 
+	}
+        return language; 
+    }
+    
+    public HashMap getResultRasta(Integer idRasta) throws ScriptException, FileNotFoundException
+    {
+        String info = "";
+        ScriptEngineManager manager = new ScriptEngineManager();
+        RastasDao rastaDao    = new RastasDao();
+        // create a Renjin engine:
+        ScriptEngine engine = manager.getEngineByName("Renjin");
+				
+        if(engine == null) {
+//            throw new RuntimeException("Renjin Script Engine not found on the classpath.");
+            info  = getText("message.packagedontwork.soil");
+        }
+        
+        if (idRasta==-1) {
+            info  = getText("message.failtogetrasta.soil");
+        }
+        
+        HashMap valInf = new HashMap();
+        try {            
+            String vec = "vec <- "+rastaDao.getInfoToReport(idRasta);    
+            engine.eval(vec);
+            
+            Object dataRes = engine.eval(new java.io.FileReader("inferidas.R"));    
+            StringArrayVector resString = null;
+            ListVector resList     = null;
+            String depthEffective  = "";
+            String organicMaterial = "";
+            String internalDrain   = "";
+            String externalDrain   = "";
+            if (dataRes instanceof StringArrayVector) {       
+                resString = (StringArrayVector) dataRes;
+                depthEffective  = resString.getElementAsString(0);
+                organicMaterial = resString.getElementAsString(1);
+                internalDrain   = resString.getElementAsString(2);
+                externalDrain   = resString.getElementAsString(3);
+            } else if (dataRes instanceof ListVector) {
+                resList = (ListVector) dataRes;
+                depthEffective  = resList.getElementAsString(0);
+                organicMaterial = resList.getElementAsString(1);
+                internalDrain   = resList.getElementAsString(2);
+                externalDrain   = resList.getElementAsString(3);
+            }
+            String[] infoMaterials = organicMaterial.split(",");     
+//            System.out.println("infoMaterials->"+organicMaterial);            
+            
+            valInf.put("depth", depthEffective);
+            valInf.put("organic", organicMaterial);
+            valInf.put("internal", internalDrain);
+            valInf.put("external", externalDrain);
+            
+            Integer errorDep = null;            
+            Integer errorOrg = null;            
+            Integer errorInt = null;            
+            Integer errorExt = null;            
+            if (depthEffective.equals("Error") || depthEffective.equals("Error.nd") || depthEffective.equals("ERROR.ND") || depthEffective.equals("NO CLASIFICADO")) {
+                errorDep = 1;
+            }            
+            
+            for (int i = 0; i < infoMaterials.length; i++) {
+                String temp = infoMaterials[i];
+                if (temp.equals("ERROR.ND") || internalDrain.equals("NO CLASIFICADO")) {
+                    errorOrg = 2;
+                }
+            }            
+            
+            if (internalDrain.equals("ERROR.ND") || internalDrain.equals("NO CLASIFICADO estruc") || internalDrain.equals("NO CLASIFICADO bueno") || internalDrain.equals("NO CLASIFICADO excesivo")) {
+                errorInt = 3;
+            }
+            
+            if (externalDrain.equals("ERROR.ND") || externalDrain.equals("NO CLASIFICADO estruc") || externalDrain.equals("NO CLASIFICADO bueno") || externalDrain.equals("NO CLASIFICADO excesivo")) {
+                errorExt = 4;
+            }
+            
+            if (errorDep!=null || errorOrg!=null || errorInt!=null || errorExt!=null) {
+                if (errorDep==1) info += getText("message.failtogetprofundidad.soil");
+                if (errorOrg==2) info += getText("message.failtogetmateria.soil");
+                if (errorInt==3) info += getText("message.failtogetdrenajein.soil");
+                if (errorExt==4) info += getText("message.failtogetdrenajeext.soil");
+//                return "states";
+            }            
+        } catch (ScriptException ex) {
+            info  = getText("message.failtoshowinfo.soil");
+        } catch (FileNotFoundException ex) {
+            info  = getText("message.failtoloadscript.soil");
+        }
+        valInf.put("info", info);
+        return valInf;
+    }
 
 }

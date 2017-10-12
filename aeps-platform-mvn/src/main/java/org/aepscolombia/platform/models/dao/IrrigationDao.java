@@ -1,16 +1,11 @@
 package org.aepscolombia.platform.models.dao;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.aepscolombia.platform.models.entity.Entities;
 //import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
@@ -59,7 +54,6 @@ public class IrrigationDao
             events = query.list();         
             
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("idCrop", data[0]);
                 temp.put("idField", data[1]);
@@ -115,7 +109,8 @@ public class IrrigationDao
         String sql = "";     
         String sqlAdd = "";     
                       
-        sql += "select p.id_irr, p.date_irr, p.amount_irr, tp.name_irr_typ, p.irrigation_type_irr, p.use_irrigation_irr";
+        sql += "select p.id_irr, p.date_irr, p.amount_irr, tp.name_irr_typ, p.irrigation_type_irr, p.use_irrigation_irr,";
+        sql += " p.thickness_sheet_irr, p.date_wet_irr, p.duration_irr, p.what_do_you_use_irr, p.comment_irr";
         sql += " from irrigation p"; 
         sql += " inner join production_events ep on ep.id_pro_eve=p.id_production_event_irr";    
         sql += " left join irrigations_types tp on tp.id_irr_typ=p.irrigation_type_irr and tp.status_irr_typ=1";    
@@ -124,9 +119,9 @@ public class IrrigationDao
         if (args.containsKey("idEvent")) { 
             sql += " and p.id_production_event_irr="+args.get("idEvent");
         }
-		if (args.containsKey("idEntUser")) {
-			sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
-		}
+//		if (args.containsKey("idEntUser")) {
+//			sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
+//		}
 		sqlAdd += " order by p.id_irr ASC";
 		sql += sqlAdd;
         
@@ -158,6 +153,11 @@ public class IrrigationDao
                     } else {
                         temp.put("useDesIrr", "No");        
                     }
+                    temp.put("thickness", data[6]);        
+                    temp.put("dateWetIrr", data[7]);        
+                    temp.put("duration", data[8]);        
+                    temp.put("useIrr", data[9]); 
+                    temp.put("commentIrr", data[10]);     
                     result.add(temp);
             }
             tx.commit();
@@ -170,7 +170,7 @@ public class IrrigationDao
             session.close();
 		}
         return result;
-    }  
+    }    
     
     public String getIrrigationsInfo(Integer idEvent) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();

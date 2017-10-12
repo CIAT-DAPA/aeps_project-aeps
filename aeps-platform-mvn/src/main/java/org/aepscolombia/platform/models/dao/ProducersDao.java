@@ -1,26 +1,20 @@
 package org.aepscolombia.platform.models.dao;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
-import java.io.FileWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.aepscolombia.platform.controllers.ActionField;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import org.aepscolombia.platform.models.entity.Entities;
 //import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
@@ -30,6 +24,10 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.Producers;
 import org.aepscolombia.platform.util.HibernateUtil;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
 
 /**
  * Clase ProducersDao
@@ -81,7 +79,6 @@ public class ProducersDao
             events = query.list();         
             
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("id_producer", data[0]);
                 temp.put("id_entity", data[1]);
@@ -131,23 +128,6 @@ public class ProducersDao
             session.close();
         }
         return result;
-
-//        Productores event = null;
-//        Transaction tx = null;
-//
-//        try {
-//            tx = session.beginTransaction();
-//            event = (Productores) session.load(Productores.class, id);
-//            tx.commit();
-//        } catch (HibernateException e) {
-//            if (tx != null) {
-//                tx.rollback();
-//            }
-//            e.printStackTrace();
-//        } finally {
-//            session.close();
-//        }
-//        return event;
     }
     
     public List<Producers> findAll() {
@@ -181,7 +161,7 @@ public class ProducersDao
         
         String sql = "";
         String entType = String.valueOf(args.get("entType"));
-        
+        String selAll  = String.valueOf(args.get("selAll"));
 //        sql += "select p.*, e.* from productores p";
         sql += "select p.id_pro, e.id_ent, e.document_number_ent, e.document_type_ent, e.name_ent, e.document_issue_place_ent,";
         sql += " e.cellphone_ent, e.cellphone2_ent, e.phone_ent, e.address_ent, m.name_mun, e.email_ent,";
@@ -197,15 +177,17 @@ public class ProducersDao
         sql += " inner join log_entities le on (le.id_object_log_ent=p.id_pro and le.table_log_ent='producers' and le.action_type_log_ent='C')";
         if (entType.equals("3")) {
             sql += " inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)"; 
-            sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            if (selAll.equals("true")) {
+                sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
+                sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+                sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
+            }
         }
         sql += " where e.status=1 and e.entity_type_ent=2";        
         
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
             sql += " and le.id_entity_log_ent="+args.get("idEntUser");
         } else {
-            String selAll  = String.valueOf(args.get("selAll"));
             if (selAll.equals("true")) {
                 sql += " and ass.id_entity_asc="+args.get("idEntUser");
             } else {
@@ -240,6 +222,17 @@ public class ProducersDao
                 sql += " or (m.name_mun like '%"+valIdent+"%'))";
             }
         }
+        
+        if (args.containsKey("date_ini") && args.containsKey("date_end")) {
+            String valIni = String.valueOf(args.get("date_ini"));            
+            String valEnd = String.valueOf(args.get("date_end"));            
+            if((!valIni.equals(" ") && !valIni.equals("") && !valIni.equals("null")) && (!valEnd.equals(" ") && !valEnd.equals("") && !valEnd.equals("null"))) {
+                String dateIni = new SimpleDateFormat("yyyy-MM-dd").format(new Date(valIni));
+                String dateEnd = new SimpleDateFormat("yyyy-MM-dd").format(new Date(valEnd));
+                sql += " and le.date_log_ent >= '"+dateIni+"' and le.date_log_ent <= '"+dateEnd+"'";
+            }
+        }
+        
 //        args.get("countTotal");
         
         int valIni = Integer.parseInt(String.valueOf(args.get("pageNow")));
@@ -297,7 +290,7 @@ public class ProducersDao
         sql += " order by e.name_ent ASC";
 //        events.toArray();
 //        System.out.println("valIni->"+valIni);
-//        System.out.println("sql->"+sql);
+        System.out.println("sql->"+sql);
         try {
             tx = session.beginTransaction();
 //            Query query = session.createSQLQuery(sql);
@@ -381,7 +374,8 @@ public class ProducersDao
         if (entType.equals("3")) {
             sql += " inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)"; 
             sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += " where e.status=1 and e.entity_type_ent=2";       
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
@@ -510,7 +504,7 @@ public class ProducersDao
         String sql = "";
         String entType = String.valueOf(args.get("entType"));
 
-        sql += "select p.id_pro as ID_PROD, e.name_ent as USUARIO, ent.name_ent as PRODUCTOR, concat(ent.document_type_ent, ':', ent.document_number_ent) as CEDULA, ";
+        sql += "select p.id_pro as ID_PROD, IF(e.name_ent is null,e.email_ent,e.name_ent) as USUARIO, ent.name_ent as PRODUCTOR, concat(ent.document_type_ent, ':', ent.document_number_ent) as CEDULA, ";
         sql += "ent.cellphone_ent as CELULAR, ent.phone_ent as TELEFONO, ent.email_ent as CORREO_ELE, dep.name_dep as DEPARTAMENTO";
         sql += " from producers p";
         sql += " inner join entities ent on ent.ID_ENT = p.id_entity_pro";
@@ -518,7 +512,8 @@ public class ProducersDao
         sql += " inner join entities e on le.id_entity_log_ent = e.ID_ENT";
         if (entType.equals("3")) {
             sql += " inner join extension_agents ext on (ext.id_entity_ext_age=e.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += " inner join municipalities m on m.id_mun = ent.id_municipality_ent";
         sql += " inner join departments dep on dep.id_dep=m.id_department_mun";
@@ -539,7 +534,8 @@ public class ProducersDao
         if (entType.equals("3")) {
             sql += "  inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)";
             sql += "  inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += "  inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += "  where le.action_type_log_ent = 'D' AND le.table_log_ent = 'producers'";
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
@@ -558,10 +554,18 @@ public class ProducersDao
         
         try {
             tx = session.beginTransaction();
-            CSVWriter writer = new CSVWriter(new FileWriter(fileName), ';');
+            String nameFile = String.valueOf(args.get("fileName"));
+            File myFileTemp = new File(nameFile);
+            FileInputStream fis = new FileInputStream(myFileTemp);
+            
+            HSSFWorkbook workbook = new HSSFWorkbook(fis);            
+            HSSFSheet sheet = workbook.getSheetAt(0);
+            
+            Map<String, Object[]> dataSheet = new TreeMap<String, Object[]>();
+//            CSVWriter writer = new CSVWriter(new FileWriter(fileName), ';');
             Query query  = session.createSQLQuery(sql);
             events = query.list();  
-            String[] val = {
+            Object[] val = {
                 "ID_PROD",
                 "USUARIO",
                 "PRODUCTOR",
@@ -571,23 +575,58 @@ public class ProducersDao
                 "CORREO_ELE",
                 "DEPARTAMENTO"
             };
-            writer.writeNext(val);
+//            writer.writeNext(val);
+            dataSheet.put("1", val);
+            Integer cont = 2;
             for (Object[] data : events) {
-                String[] valTemp = {
-                    String.valueOf(data[0]),
-                    String.valueOf(data[1]),
-                    String.valueOf(data[2]),
-                    String.valueOf(data[3]),
-                    String.valueOf(data[4]),
-                    String.valueOf(data[5]),
-                    String.valueOf(data[6]),
-                    String.valueOf(data[7])
+                Object[] valTemp = {
+                    data[0],
+                    data[1],
+                    data[2],
+                    data[3],
+                    data[4],
+                    data[5],
+                    data[6],
+                    data[7]
                 };
-                writer.writeNext(valTemp);
+//                writer.writeNext(valTemp);
+                dataSheet.put(""+cont, valTemp);
+                cont++;
             }
-            writer.close();
-//            stmt   = con.prepareStatement(sql);     
-//            result = stmt.executeQuery();
+//            writer.close();
+            Set<String> keyset = dataSheet.keySet();
+            int rownum = 0;
+            for (String key : keyset)
+            {
+                Row row = sheet.createRow(rownum++);
+                Object [] objArr = dataSheet.get(key);
+                int cellnum = 0;
+                for (Object obj : objArr)
+                {
+//                    obj.getClass();
+                    Cell cell = row.createCell(cellnum++);
+                    if (obj instanceof String) {
+                        cell.setCellValue((String) obj);
+                    } else if (obj instanceof Boolean) {
+                        cell.setCellValue((Boolean) obj);
+                    } else if (obj instanceof Timestamp) {
+                        cell.setCellValue((Timestamp) obj);
+                    } else if (obj instanceof Date) {
+                        cell.setCellValue((Date) obj);
+                    } else if (obj instanceof Double) {
+                        cell.setCellValue((Double) obj);
+                    } else if (obj instanceof Integer) {
+                        cell.setCellValue((Integer) obj);
+                    } else if (obj instanceof BigInteger) {   
+                        cell.setCellValue((String) obj.toString());
+                    } 
+                }
+            }
+            File myFile = new File(fileName);
+            if (!myFile.exists()) myFile.createNewFile();
+            FileOutputStream out = new FileOutputStream(myFile);
+            workbook.write(out);
+            out.close();
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
@@ -626,7 +665,7 @@ public class ProducersDao
             Query query = session.createSQLQuery(sql).addEntity("usr", Entities.class);
             events = query.list();
             Producers pTemp   = null;
-            MongoClient mongo = new MongoClient("localhost", 27017);
+//            MongoClient mongo = new MongoClient("localhost", 27017);
             for (Entities ent : events) {
                 pTemp = this.objectByEntityId(ent.getIdEnt());  
 //                System.out.println("entId->"+ent.getIdEnt());
@@ -638,7 +677,7 @@ public class ProducersDao
                 queryMongo.put("InsertedId", ""+ent.getIdEnt());
                 queryMongo.put("form_id", "4");
                 
-                DB db = mongo.getDB("ciat");
+                /*DB db = mongo.getDB("ciat");
                 DBCollection col = db.getCollection("log_form_records");
                 WriteResult result = null;
 
@@ -647,12 +686,12 @@ public class ProducersDao
 
                 if (result.getError()!=null) {
                     throw new HibernateException("");
-                }                
+                }*/              
 
-                FarmsDao farDao = new FarmsDao();
-                farDao.deleteFarmsMongo(pTemp.getIdPro());
+//                FarmsDao farDao = new FarmsDao();
+//                farDao.deleteFarmsMongo(pTemp.getIdPro());
             }
-            mongo.close();
+//            mongo.close();
             tx.commit();
             state = "success";
         } catch (HibernateException e) {
@@ -660,8 +699,8 @@ public class ProducersDao
                 tx.rollback();
             }
             e.printStackTrace();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (UnknownHostException ex) {
+//            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             session.close();
         } 

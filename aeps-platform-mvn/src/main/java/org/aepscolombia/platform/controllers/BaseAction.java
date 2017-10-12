@@ -10,7 +10,6 @@ import org.aepscolombia.platform.models.entity.Users;
 import org.aepscolombia.platform.util.APConstants;
 import org.apache.struts2.interceptor.ServletRequestAware;
 import org.apache.struts2.interceptor.SessionAware;
-//import org.apache.struts2.interceptor.SessionAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +26,6 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
     private static final long serialVersionUID = -740360140511380630L;
     private static final Logger LOG = LoggerFactory.getLogger(BaseAction.class);
     
-    //Estado de accion
     /**
      * Estado que se puede encontrar un usuario al momento de interactuar con la plataforma
      */
@@ -38,7 +36,6 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
     public static final String NOT_FOUND = "404";
     public static final String NOT_POSSIBLE = "400";    
     
-    //Botones de accion
     /**
      * Botones que contienen acciones comunes entre modulos
      */
@@ -48,7 +45,6 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
     protected boolean cancel;    
    
 
-    //Metodos getter y setter por cada boton de accion
     /**
      * Metodos getter y setter por cada boton de accion
      */
@@ -84,7 +80,6 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
         this.next = true;
     }
     
-    //Propiedades de estado de las peticiones que se manejan a traves de AJAX
     /**
      * Propiedades de estado de las peticiones que se manejan a traves de AJAX
      */
@@ -93,7 +88,6 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
     public String actExe = "";   
     public String viewInfo;
 
-    //Metodos getter y setter por cada propiedad de estado de las peticiones
     /**
      * Metodos getter y setter por cada propiedad de estado de las peticiones
      */
@@ -129,7 +123,6 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
         this.viewInfo = viewInfo;
     }
     
-    //Variable para el manejo de peticiones del cliente
     /**
      * Variable para el manejo de peticiones del cliente
      */
@@ -147,6 +140,11 @@ public class BaseAction extends ActionSupport implements Preparable, SessionAwar
     public BaseAction() {
     }    
 
+    /**
+     * Metodo encargado de arrojar el resultado por cada accion realizada por el usuario
+     *
+     * @return Estado de la acción
+     */
     @Override
     public String execute() throws Exception {
         if (save) {

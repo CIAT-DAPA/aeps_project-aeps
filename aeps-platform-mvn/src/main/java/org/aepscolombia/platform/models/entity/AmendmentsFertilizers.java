@@ -8,6 +8,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -21,13 +23,14 @@ public class AmendmentsFertilizers  implements java.io.Serializable {
 
      private Integer idAmeFer;
      private String nameAmeFer;
+     private IdiomCountry countryAmeFer;
      private Boolean statusAmeFer;
 
     public AmendmentsFertilizers() {
     }
     
     public AmendmentsFertilizers(Integer idAmeFer, String nameAmeFer) {
-       this.idAmeFer = idAmeFer;
+       this.idAmeFer = idAmeFer;       
        this.nameAmeFer = nameAmeFer;
     }
 
@@ -54,6 +57,16 @@ public class AmendmentsFertilizers  implements java.io.Serializable {
     
     public void setNameAmeFer(String nameAmeFer) {
         this.nameAmeFer = nameAmeFer;
+    }
+    
+    @ManyToOne
+    @JoinColumn(name="country_ame_fer")
+    public IdiomCountry getCountryAmeFer() {
+        return this.countryAmeFer;
+    }
+    
+    public void setCountryAmeFer(IdiomCountry countryAmeFer) {
+        this.countryAmeFer = countryAmeFer;
     }
     
     @Column(name="status_ame_fer")

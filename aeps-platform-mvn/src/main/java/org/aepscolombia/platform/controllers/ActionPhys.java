@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -44,7 +41,6 @@ import org.hibernate.Transaction;
  */
 public class ActionPhys extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
@@ -57,8 +53,8 @@ public class ActionPhys extends BaseAction {
     private PhysiologicalMonitoring phys = new PhysiologicalMonitoring();
     private Sowing sowing = new Sowing();
     private UsersDao usrDao;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */    
@@ -103,7 +99,6 @@ public class ActionPhys extends BaseAction {
         this.user = user;
     }       
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
      */
@@ -116,7 +111,6 @@ public class ActionPhys extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */
@@ -125,7 +119,6 @@ public class ActionPhys extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -153,13 +146,18 @@ public class ActionPhys extends BaseAction {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());  
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -181,29 +179,28 @@ public class ActionPhys extends BaseAction {
             sowing = sowDao.objectById(this.getIdCrop());
             
             HashMap required = new HashMap();
-            required.put("phys.emergencePhyMon", phys.getEmergencePhyMon());
+//            required.put("phys.emergencePhyMon", phys.getEmergencePhyMon());
 //            required.put("phys.daysPopulationMonFis", phys.getDaysPopulationMonFis());
-            required.put("phys.floweringDatePhyMon", phys.getFloweringDatePhyMon());            
+//            required.put("phys.floweringDatePhyMon", phys.getFloweringDatePhyMon());            
             
             for (Iterator it = required.keySet().iterator(); it.hasNext();) {
                 String sK = (String) it.next();
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.physiological"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.physiological"));
             }
             
             Date dateSowing = null;
 //            if (sowing.getDateSow().compareTo(dateSowing)==0) {
             if (sowing != null && !enter) {
                 try {
-                    //            } else {
                     String dmySow  = new SimpleDateFormat("dd/MM/yyyy").format(sowing.getDateSow());
                     dateSowing = sowing.getDateSow();
 
@@ -216,27 +213,57 @@ public class ActionPhys extends BaseAction {
                     
     //                $fechaSiembra = date('m-d-Y', strtotime($params['fecha_siembra']));
     //                try {
-    //                    String dateAsign = new SimpleDateFormat("yyyy-dd-MM").format(new Date(fechaSiembra));
+    //                    String dateAsign = new SimpleDateFormat("yyyy-MM-dd").format(new Date(fechaSiembra));
     //                } catch (IllegalArgumentException ex) {
     //                }
 //                    System.out.println("dates->"+dateEme);
 //                    System.out.println("dates1->"+dateSow);
 
+                    HashMap prod  = cropDao.findById(idCrop);
+                    Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
+                    
                     if (!dmySow.equals("") && phys.getEmergencePhyMon()!=null) {
-//                        System.out.println("fechaSie->"+sowing.getDateSow());
-                        Integer valDiffAff = GlobalFunctions.compareDateAfterSowing(phys.getEmergencePhyMon(), sowing.getDateSow(), 0);
-                        if (valDiffAff==2) {
-                            addFieldError("phys.emergencePhyMon", "Dato invalido");
-                            addActionError("Se ingreso una fecha de emergencia que no se encuentra dentro de los 10 meses despues de la siembra ("+dmySow+")");
+                        Integer diffDays   = GlobalFunctions.diffDays(phys.getEmergencePhyMon(), sowing.getDateSow());
+                        if (diffDays<1 || diffDays>40) {
+                            addFieldError("phys.emergencePhyMon", getText("message.emergencedateinvalidrank.physiological"));
+                            if (tyCro==1) {
+                                addActionError(getText("desc.emergencedateinvalidrankmaize.physiological")+" ("+dmySow+")");
+                            } else if (tyCro==2) {
+                                addActionError(getText("desc.emergencedateinvalidrankbeans.physiological")+" ("+dmySow+")");
+                            } else if (tyCro==4) {
+                                addActionError(getText("desc.emergencedateinvalidrankrice.physiological")+" ("+dmySow+")");
+                            }
                         }
                     }
 
                     if (!dmySow.equals("") && phys.getFloweringDatePhyMon()!=null) {
-//                        System.out.println("fechaSie1->"+sowing.getDateSow());
-                        Integer valDiffAff = GlobalFunctions.compareDateAfterSowing(phys.getFloweringDatePhyMon(), sowing.getDateSow(), 0);
-                        if (valDiffAff==2) {
-                            addFieldError("phys.floweringDatePhyMon", "Dato invalido");
-                            addActionError("Se ingreso una fecha de floración que no se encuentra dentro de los 10 meses despues de la siembra ("+dmySow+")");
+                        Integer diffDays   = GlobalFunctions.diffDays(phys.getFloweringDatePhyMon(), sowing.getDateSow());
+                        Integer valDiffAff = GlobalFunctions.compareDateAfterSowingByAction(phys.getFloweringDatePhyMon(), sowing.getDateSow(), tyCro, 5);
+                        if (diffDays<15 || valDiffAff==2) {
+                            addFieldError("phys.floweringDatePhyMon", getText("message.floweringdateinvalidrank.physiological"));
+                            if (tyCro==1) {
+                                addActionError(getText("desc.floweringdateinvalidrankmaize.physiological")+" ("+dmySow+")");
+                            } else if (tyCro==2) {
+                                addActionError(getText("desc.floweringdateinvalidrankbeans.physiological")+" ("+dmySow+")");
+                            } else if (tyCro==4) {
+                                addActionError(getText("desc.floweringdateinvalidrankrice.physiological")+" ("+dmySow+")");
+                            }
+                        }
+                    }
+                    
+                    if (coCode.equals("NI")) {
+                        if (!dmySow.equals("") && phys.getIniPrimorPhyMon()!=null) {
+                            Integer diffDays   = GlobalFunctions.diffDays(phys.getIniPrimorPhyMon(), sowing.getDateSow());
+                            if (diffDays<30 || diffDays>60) {
+                                addFieldError("phys.iniPrimorPhyMon", getText("message.primordateinvalidrank.physiological"));
+                                if (tyCro==1) {
+                                    addActionError(getText("desc.primordateinvalidrankmaize.physiological")+" ("+dmySow+")");
+                                } else if (tyCro==2) {
+                                    addActionError(getText("desc.primordateinvalidrankbeans.physiological")+" ("+dmySow+")");
+                                } else if (tyCro==4) {
+                                    addActionError(getText("desc.primordateinvalidrankrice.physiological")+" ("+dmySow+")");
+                                }
+                            }
                         }
                     }
                 } catch (ParseException ex) {
@@ -248,9 +275,9 @@ public class ActionPhys extends BaseAction {
 //            if (phys.getDaysPopulationMonFis()!=0) {
             if (phys.getDaysPopulationMonFis() != null) {
 //                System.out.println("values=>"+phys.getDaysPopulationMonFis());
-              if (phys.getDaysPopulationMonFis()<0 || phys.getDaysPopulationMonFis()>300000) {
-                  addFieldError("phys.daysPopulationMonFis", "Dato invalido valor entre 0 y 300000");
-                  addActionError("Se ingreso una poblacion invalida, por favor ingresar un valor entre 0 y 300000");
+              if (phys.getDaysPopulationMonFis()<200 || phys.getDaysPopulationMonFis()>300000) {
+                  addFieldError("phys.daysPopulationMonFis", getText("message.invaliddatapopulation.physiological"));
+                  addActionError(getText("desc.invaliddatapopulation.physiological"));
               }
             }
             sowing=null;
@@ -303,6 +330,13 @@ public class ActionPhys extends BaseAction {
                 phys.setFloweringDatePhyMon(dateFlow);
             }
             
+            if (phys.getIniPrimorPhyMon()!=null) {                
+                System.out.println("phys.getIniPrimorPhyMon()=>"+phys.getIniPrimorPhyMon());
+                dmyEmer = new SimpleDateFormat("yyyy-MM-dd").format(phys.getIniPrimorPhyMon());            
+                Date dateIniPrimor = new SimpleDateFormat("yyyy-MM-dd").parse(dmyEmer);
+                phys.setIniPrimorPhyMon(dateIniPrimor);
+            }
+            
             if (phys.getIdPhyMon()==null) {
                 PhysiologicalMonitoring physTemp = physDao.objectById(idCrop);
                 if (physTemp!=null) {
@@ -314,28 +348,32 @@ public class ActionPhys extends BaseAction {
             phys.setStatus(true);
             session.saveOrUpdate(phys);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(phys.getIdPhyMon());
-            log.setTableLogEnt("physiological_monitoring");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);           
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, phys.getIdPhyMon(), "physiological_monitoring", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(phys.getIdPhyMon());
+                log.setTableLogEnt("physiological_monitoring");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }           
             tx.commit();                  
             state = "success";            
             if (action.equals("C")) {
-                info  = "El monitoreo fisiologíco ha sido agregado con exito";
+                info  = getText("message.successadd.physiological");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "El monitoreo fisiologíco ha sido modificado con exito";
+                info  = getText("message.successedit.physiological");
 //                return "list";
             }
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
@@ -343,7 +381,11 @@ public class ActionPhys extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar un monitoreo fisiologíco";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.physiological");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.physiological");
+            }
         } catch (ParseException e) { 
         
         } finally {

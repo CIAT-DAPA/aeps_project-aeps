@@ -41,7 +41,7 @@ public class ChemicalsControlsDao
         return events;
     }
     
-    public List<ChemicalsControls> findAllByTargetType(Integer idTargetType, Integer idTypeCrop) {
+    public List<ChemicalsControls> findAllByTargetType(Integer idTargetType, Integer idTypeCrop, String countryCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
 
@@ -49,16 +49,19 @@ public class ChemicalsControlsDao
         List<ChemicalsControls> event = null;
         Transaction tx = null;
 				
-//        if (idTargetType>0) {
             sql += "select ms.id_che_con, ms.name_che_con, ms.comer_name_che_con, ms.target_name_che_con from chemicals_controls ms";
+            sql += " inner join chemicals_controls_country cheCon on cheCon.id_selche_che_con_co=ms.id_che_con";
             sql += " inner join chemicals_controls_crops_types t on t.id_che_controls_che_con_cro_typ=ms.id_che_con";
-    //        sql += " where ms.status_dis=1";            
             if (idTypeCrop!=null) {
                 sql += " where t.id_crop_type_che_con_cro_typ="+idTypeCrop;
             }
             if (idTargetType!=null && idTargetType!=0) {
                 sql += " and ms.target_name_che_con="+idTargetType;
             }
+            if (countryCode!=null && !countryCode.equals("")) {
+                sql += " and cheCon.country_che_con_co='"+countryCode+"'";
+            }             
+            
             sql += " order by ms.name_che_con ASC";
 
             try {
@@ -78,12 +81,33 @@ public class ChemicalsControlsDao
             } finally {
                 session.close();
             }
-//        }
         return event;
     }
     
     public ChemicalsControls objectById(Integer id) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+
+        String sql  = "";        
         ChemicalsControls event = null;
+        Transaction tx = null;
+				
+        sql += "select p.id_che_con, p.name_che_con, p.comer_name_che_con, p.target_name_che_con";
+        sql += " from chemicals_controls p";
+        sql += " where p.id_che_con="+id;
+        try {
+            tx = session.beginTransaction();
+            Query query = session.createSQLQuery(sql).addEntity("p", ChemicalsControls.class);
+            event = (ChemicalsControls)query.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
         return event;
     }    
 

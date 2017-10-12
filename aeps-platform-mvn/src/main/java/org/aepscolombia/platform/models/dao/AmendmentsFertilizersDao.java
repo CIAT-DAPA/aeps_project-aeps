@@ -1,7 +1,6 @@
 package org.aepscolombia.platform.models.dao;
 
 import java.util.List;
-//import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -41,7 +40,7 @@ public class AmendmentsFertilizersDao
         return events;
     }
     
-    public List<AmendmentsFertilizers> findAllByStatus() {
+    public List<AmendmentsFertilizers> findAllByStatus(String countryCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
 
@@ -49,19 +48,22 @@ public class AmendmentsFertilizersDao
         List<AmendmentsFertilizers> event = null;
         Transaction tx = null;
         
-        sql += "select cr.id_ame_fer, cr.name_ame_fer, cr.status_ame_fer from amendments_fertilizers cr";
+        sql += "select cr.id_ame_fer, cr.name_ame_fer, cr.status_ame_fer, cr.country_ame_fer from amendments_fertilizers cr";
 		sql += " where cr.status_ame_fer=1";
 //        if (idTypeCrop!=null) {
             //sql += " and t.id_crop_type_irr_typ_cro="+idTypeCrop;
 //        }
+        /*if (countryCode!=null && !countryCode.equals("")) {
+            sql += " and cy.country_ame_fer='"+countryCode+"'";
+        }*/
         try {
             tx = session.beginTransaction();
-            Query query = session.createSQLQuery(sql).addEntity("p", AmendmentsFertilizers.class);
+            Query query = session.createSQLQuery(sql).addEntity("cr", AmendmentsFertilizers.class);
             event = query.list();
-            AmendmentsFertilizers temp = new AmendmentsFertilizers();
-            temp.setIdAmeFer(1000000);
-            temp.setNameAmeFer("Otro");
-            event.add(temp);
+//            AmendmentsFertilizers temp = new AmendmentsFertilizers();
+//            temp.setIdAmeFer(1000000);
+//            temp.setNameAmeFer("Otro");
+//            event.add(temp);
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
@@ -82,7 +84,7 @@ public class AmendmentsFertilizersDao
         AmendmentsFertilizers event = null;
         Transaction tx = null;
 				
-        sql += "select p.id_ame_fer, p.name_ame_fer, p.status_ame_fer";
+        sql += "select p.id_ame_fer, p.name_ame_fer, p.status_ame_fer, p,country_ame_fer";
         sql += " from amendments_fertilizers p";
         sql += " inner join amendments_fertilizations fq on fq.id_product_ame_fer=p.id_ame_fer";
         sql += " where fq.id_fertilization_ame_fer="+id;

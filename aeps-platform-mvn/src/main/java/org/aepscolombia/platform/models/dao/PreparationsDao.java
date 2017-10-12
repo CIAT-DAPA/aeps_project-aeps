@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.aepscolombia.platform.models.entity.Entities;
 //import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
@@ -59,7 +57,6 @@ public class PreparationsDao
             events = query.list();         
             
             for (Object[] data : events) {
-//                System.out.println(data);
                 HashMap temp = new HashMap();
                 temp.put("idCrop", data[0]);
                 temp.put("idField", data[1]);
@@ -115,7 +112,7 @@ public class PreparationsDao
         String sql = "";     
         String sqlAdd = "";     
                       
-        sql  += "select p.id_prep, p.date_prep, tp.name_pre_typ, p.other_preparation_type_prep, p.depth_prep, p.passings_number_prep";
+        sql  += "select p.id_prep, p.date_prep, tp.name_pre_typ, p.other_preparation_type_prep, p.depth_prep, p.comment_prep, p.cost_prep, p.passings_number_prep";
         sql += " from preparations p"; 
         sql += " inner join production_events ep on ep.id_pro_eve=p.id_production_event_prep";    
         sql += " left join preparations_types tp on tp.id_pre_typ=p.preparation_type_prep and tp.status_pre_typ=1";     
@@ -124,9 +121,9 @@ public class PreparationsDao
         if (args.containsKey("idEvent")) {
             sql += " and p.id_production_event_prep="+args.get("idEvent");
         }
-		if (args.containsKey("idEntUser")) {
-			sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
-		}
+//		if (args.containsKey("idEntUser")) {
+//			sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
+//		}
 		sqlAdd += " order by p.id_prep ASC";
 		sql += sqlAdd;
 //        args.get("countTotal");
@@ -150,7 +147,8 @@ public class PreparationsDao
                 temp.put("namePrep", data[2]);             
                 temp.put("otherNamePrep", data[3]);                
                 temp.put("depthPrep", data[4]);            
-                temp.put("passNum", data[5]);            
+                temp.put("passNum", data[7]);      
+                temp.put("costPrep", data[6]);   
                 result.add(temp);
             }
             tx.commit();
@@ -163,8 +161,7 @@ public class PreparationsDao
             session.close();
 		}
         return result;
-    }    
-    
+    }        
     
     public boolean haveDirectSowing(HashMap args) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
@@ -200,6 +197,39 @@ public class PreparationsDao
             check = true;
         }
         return check;
+    }
+    
+    public Double getMaxDepth(HashMap args) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+        Object[] events = null;
+        Transaction tx  = null;
+        Double result   = 0.0;
+        
+        String sql = "";     
+        sql  += "select MAX(p.depth_prep), p.id_prep";
+        sql += " from preparations p"; 
+        sql += " where p.status=1";
+        if (args.containsKey("idEvent")) {
+            sql += " and p.id_production_event_prep="+args.get("idEvent");
+        }
+//        System.out.println("sql=>"+sql);
+        
+        try {
+            tx = session.beginTransaction();
+            Query query  = session.createSQLQuery(sql);
+            events = (Object[])query.uniqueResult();
+            if(events[0]!=null) result = Double.parseDouble(String.valueOf(events[0]));
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return result;
     }
     
     public String getPrep(Integer idEvent) {
@@ -256,7 +286,7 @@ public class PreparationsDao
 				
         sql += "select p.id_prep, p.id_production_event_prep, p.date_prep, p.preparation_type_prep,";
         sql += " p.depth_prep, p.id_residuals_prep, p.use_hills_prep, p.other_preparation_type_prep,";
-        sql += " p.passings_number_prep, p.status, p.created_by";
+        sql += " p.passings_number_prep, p.comment_prep,p.cost_prep,p.status, p.created_by";
         sql += " from preparations p";
         sql += " where p.status=1 and p.id_production_event_prep="+id;
         try {
@@ -324,7 +354,7 @@ public class PreparationsDao
         String result = "[";
         
         String sql = "";                   
-        sql += "select DATE_FORMAT(p.date_prep,'%Y-%m-%d') as datePrep, p.preparation_type_prep, p.other_preparation_type_prep, FORMAT(p.depth_prep,0),";
+        sql += "select DATE_FORMAT(p.date_prep,'%Y-%m-%d') as datePrep, p.preparation_type_prep, p.comment_prep,p.cost_prep,p.other_preparation_type_prep, FORMAT(p.depth_prep,0),";
         sql += " FORMAT(p.passings_number_prep,0), p.id_prep";
         sql += " from preparations p"; 
         sql += " where p.status=1";
@@ -380,7 +410,7 @@ public class PreparationsDao
         String result = "[";
         
         String sql = "";                   
-        sql += "select DATE_FORMAT(p.date_prep,'%Y-%m-%d') as datePrep, p.preparation_type_prep, p.other_preparation_type_prep, FORMAT(p.depth_prep,0),";
+        sql += "select DATE_FORMAT(p.date_prep,'%Y-%m-%d') as datePrep, p.preparation_type_prep,p.comment_prep,p.cost_prep, p.other_preparation_type_prep, FORMAT(p.depth_prep,0),";
         sql += " FORMAT(p.passings_number_prep,0), p.id_prep";
         sql += " from preparations p"; 
         sql += " where p.status=1";

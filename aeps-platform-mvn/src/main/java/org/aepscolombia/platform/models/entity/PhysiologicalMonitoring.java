@@ -28,21 +28,24 @@ public class PhysiologicalMonitoring  implements java.io.Serializable {
      private Monitoring monitoring;
      private Date emergencePhyMon;
      private Integer daysPopulationMonFis;
+     private Date iniPrimorPhyMon;
      private Date floweringDatePhyMon;
      private Boolean status;
      private Integer createdBy;
      private Double percentageReseedingPhyMon;
+     private String commentPhyMon;
 
     public PhysiologicalMonitoring() {
     }
 
-    public PhysiologicalMonitoring(ProductionEvents productionEvents, Monitoring monitoring, Date emergencePhyMon, Integer daysPopulationMonFis, Date floweringDatePhyMon, Double percentageReseedingPhyMon, Boolean status, Integer createdBy) {
+    public PhysiologicalMonitoring(ProductionEvents productionEvents, Monitoring monitoring, Date emergencePhyMon, Integer daysPopulationMonFis, Date floweringDatePhyMon,String commentPhyMon ,Double percentageReseedingPhyMon, Boolean status, Integer createdBy) {
        this.productionEvents = productionEvents;
        this.monitoring = monitoring;
        this.emergencePhyMon = emergencePhyMon;
        this.daysPopulationMonFis = daysPopulationMonFis;
        this.floweringDatePhyMon = floweringDatePhyMon;
        this.percentageReseedingPhyMon = percentageReseedingPhyMon;
+       this.commentPhyMon=commentPhyMon;
        this.status = status;
        this.createdBy = createdBy;
     }
@@ -112,6 +115,15 @@ public class PhysiologicalMonitoring  implements java.io.Serializable {
         this.percentageReseedingPhyMon = percentageReseedingPhyMon;
     }
     
+    @Column(name="comment_phy_mon")
+    public String getCommentPhyMon() {
+        return this.commentPhyMon;
+    }
+    
+    public void setCommentPhyMon(String commentPhyMon) {
+        this.commentPhyMon = commentPhyMon;
+    }
+    
     @Column(name="status")
     public Boolean getStatus() {
         return this.status;
@@ -129,8 +141,16 @@ public class PhysiologicalMonitoring  implements java.io.Serializable {
     public void setCreatedBy(Integer createdBy) {
         this.createdBy = createdBy;
     }
-
-
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name="ini_primor_phy_mon", length=19)
+    public Date getIniPrimorPhyMon() {
+        return this.iniPrimorPhyMon;
+    }
+    
+    public void setIniPrimorPhyMon(Date iniPrimorPhyMon) {
+        this.iniPrimorPhyMon = iniPrimorPhyMon;
+    }
 
 
 }

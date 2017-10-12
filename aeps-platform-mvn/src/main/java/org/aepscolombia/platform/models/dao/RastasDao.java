@@ -1,26 +1,31 @@
 package org.aepscolombia.platform.models.dao;
 
-import au.com.bytecode.opencsv.CSVWriter;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteResult;
-import java.io.FileWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.aepscolombia.platform.controllers.ActionField;
 import org.aepscolombia.platform.models.entity.HorizontesRasta;
 import org.aepscolombia.platform.models.entity.LogEntities;
-//import org.aepscolombia.plataforma.models.dao.IEventoDao;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -30,11 +35,16 @@ import org.aepscolombia.platform.models.entity.Rastas;
 import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.hibernate.Criteria;
 
 /**
  * Clase RastasDao
  *
- * Contiene los metodos para interactuar con la tabla Lots de la base de datos (BD)
+ * Contiene los metodos para interactuar con la tabla Rastas de la base de datos (BD)
  *
  * @author Juan Felipe Rodriguez
  * @version 1.0
@@ -70,9 +80,10 @@ public class RastasDao
         sql += " from rastas r";
         sql += " inner join log_entities le on le.id_object_log_ent=r.id_ras and le.table_log_ent='rastas' and le.action_type_log_ent='C'";   
         sql += " inner join fields l on r.id_lote_ras=l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro=l.id_fie";
+//        sql += " inner join fields_producers lp on lp.id_field_fie_pro=l.id_fie";
         sql += " left join farms f on f.id_far=l.id_farm_fie";
-        sql += " inner join producers p on p.id_pro=lp.id_producer_fie_pro"; 
+        sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
+        sql += " inner join producers p on p.id_pro = fp.id_producer_far_pro";
         sql += " inner join entities e on e.id_ent=p.id_entity_pro"; 
         sql += " where l.status=1 and f.status=1";
         sql += " and r.status=1 and e.status=1";
@@ -150,6 +161,7 @@ public class RastasDao
         String sql = "";     
         String sqlAdd = "";     
         String entType = String.valueOf(args.get("entType"));
+        String selAll  = String.valueOf(args.get("selAll"));
         
         sql += "select r.id_ras, r.id_lote_ras, l.name_fie, e.name_ent, f.name_far, r.fecha_ras, r.numero_cajuela_ras, r.altitud_ras, r.latitud_ras, r.longitud_ras,";
         sql += " r.pendiente_terreno_ras, r.terreno_circundante_ras, r.posicion_perfil_ras, r.numero_capas_ras,";
@@ -169,13 +181,17 @@ public class RastasDao
         sql += " inner join log_entities le on le.id_object_log_ent=r.id_ras and le.table_log_ent='rastas' and le.action_type_log_ent='C'";   
         if (entType.equals("3")) {
             sql += " inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)"; 
-            sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            if (selAll.equals("true")) {
+                sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
+                sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+                sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
+            }
         }
         sql += " inner join fields l on r.id_lote_ras=l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro=l.id_fie";
+//        sql += " inner join fields_producers lp on lp.id_field_fie_pro=l.id_fie";
         sql += " left join farms f on f.id_far=l.id_farm_fie";
-        sql += " inner join producers p on p.id_pro=lp.id_producer_fie_pro"; 
+        sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
+        sql += " inner join producers p on p.id_pro = fp.id_producer_far_pro";
         sql += " inner join entities e on e.id_ent=p.id_entity_pro"; 
         sql += " where l.status=1 and f.status=1";
         sql += " and r.status=1 and e.status=1";    
@@ -184,7 +200,6 @@ public class RastasDao
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
             sqlAdd += " and le.id_entity_log_ent="+args.get("idEntUser");
         } else {
-            String selAll  = String.valueOf(args.get("selAll"));
             if (selAll.equals("true")) {
                 sqlAdd += " and ass.id_entity_asc="+args.get("idEntUser");
             } else {
@@ -213,6 +228,16 @@ public class RastasDao
                 sql += " or (r.posicion_perfil_ras='"+valIdent+"')";
                 sql += " or (r.ph_ras like '%"+valIdent+"%')";
                 sql += " or (r.carbonatos_ras='"+valIdent+"'))";
+            }
+        }
+        
+        if (args.containsKey("date_ini") && args.containsKey("date_end")) {
+            String valIni = String.valueOf(args.get("date_ini"));            
+            String valEnd = String.valueOf(args.get("date_end"));            
+            if((!valIni.equals(" ") && !valIni.equals("") && !valIni.equals("null")) && (!valEnd.equals(" ") && !valEnd.equals("") && !valEnd.equals("null"))) {
+                String dateIni = new SimpleDateFormat("yyyy-MM-dd").format(new Date(valIni));
+                String dateEnd = new SimpleDateFormat("yyyy-MM-dd").format(new Date(valEnd));
+                sql += " and le.date_log_ent >= '"+dateIni+"' and le.date_log_ent <= '"+dateEnd+"'";
             }
         }
         
@@ -271,7 +296,6 @@ public class RastasDao
             String valIdent = String.valueOf(args.get("carbonates"));
             if(!valIdent.equals(" ") && !valIdent.equals("") && !valIdent.equals("-1") && !valIdent.equals("null")) sql += " and r.carbonatos_ras='"+args.get("carbonates")+"'";
         }
-        // if ($identProductor!='' ) sql += "where";
         sql += sqlAdd;
 
 //        if (args.containsKey("idFin")) {
@@ -313,18 +337,7 @@ public class RastasDao
                 query.setFirstResult(valIni);
                 query.setMaxResults(maxResults);      
             }
-            events = query.list();     
-//        num_rasta        
-//        date
-//        pendant
-//        altitude
-//        latitude
-//        length
-//        ground
-//        position
-//        ph
-//        carbonates
-//        
+            events = query.list();  
             for (Object[] data : events) {
                 HashMap temp = new HashMap();
                 temp.put("id_ras", data[0]);
@@ -386,12 +399,14 @@ public class RastasDao
         if (entType.equals("3")) {
             sql += " inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)"; 
             sql += " inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += " inner join fields l on r.id_lote_ras=l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro=l.id_fie";
+//        sql += " inner join fields_producers lp on lp.id_field_fie_pro=l.id_fie";
         sql += " inner join farms f on f.id_far=l.id_farm_fie";
-        sql += " inner join producers p on p.id_pro=lp.id_producer_fie_pro"; 
+        sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
+        sql += " inner join producers p on p.id_pro = fp.id_producer_far_pro";
         sql += " inner join entities e on e.id_ent=p.id_entity_pro";
         
         sql += " where l.status=1 and f.status=1";
@@ -430,9 +445,12 @@ public class RastasDao
             tx = session.beginTransaction();
             String sql  = "select h.id_hor_ras, h.id_rasta_hor_ras, h.numero_horizonte_hor_ras, h.espesor_hor_ras,";
             sql += " h.color_seco_hor_ras, h.color_humedo_hor_ras, h.textura_hor_ras, h.resistencia_rompimiento_hor_ras,";
-            sql += " h.status, h.created_by";
-            sql += " from horizontes_rasta h where h.id_rasta_hor_ras = "+idRas;
-            Query query = session.createSQLQuery(sql).addEntity("h", HorizontesRasta.class);
+            sql += " h.status, h.created_by, r.id_res_rom, r.nombre_res_rom, t.id_tex, t.name_tex, t.prefix_tex";
+            sql += " from horizontes_rasta h";     
+            sql += " inner join textures t on t.id_tex = h.textura_hor_ras";
+            sql += " inner join resistencias_rompimiento r on r.id_res_rom = h.resistencia_rompimiento_hor_ras";
+            sql += " where h.id_rasta_hor_ras = "+idRas;     
+            Query query = session.createSQLQuery(sql).addEntity("h", HorizontesRasta.class).addJoin("t", "h.textures").addJoin("r", "h.resistenciasRompimiento").addEntity("h", HorizontesRasta.class).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 //            Query query = session.createQuery("from HorizontesRasta where Rastas = :id_ras");
 //            query.setParameter("id_ras", idRas);
 //            query.setParameter("id_ras", new Rastas(idRas));
@@ -461,6 +479,31 @@ public class RastasDao
             String hql  = "FROM Rastas E WHERE E.idRas = :id_ras";
             Query query = session.createQuery(hql);
             query.setParameter("id_ras", id);
+            event = (Rastas)query.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return event;
+    }    
+    
+    public Rastas getRastaByField(Integer idField) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+
+        Rastas event = null;
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+            Query query = session.createQuery("from Rastas WHERE fields.idFie = :id_field AND status=true ORDER BY idRas");
+            query.setParameter("id_field", idField);
+            query.setMaxResults(1);
             event = (Rastas)query.uniqueResult();
             tx.commit();
         } catch (HibernateException e) {
@@ -522,7 +565,7 @@ public class RastasDao
 
         try {
             tx = session.beginTransaction();
-            String sql  = "delete from horizontes_rasta where id_hor_ras="+id;
+            String sql  = "delete from horizontes_rasta where id_rasta_hor_ras="+id;
             Query query = session.createSQLQuery(sql);
             numDelete   = query.executeUpdate();
 //            String hql  = "FROM HorizontesRasta E WHERE E.idRas = :id_ras";
@@ -562,7 +605,7 @@ public class RastasDao
         sql += "IF(r.CERCA_RIOS_QUEBRADAS_RAS=1,'SI','NO'), UPPER(r.RECUBRIMIENTO_VEGETAL_RAS)";
         sql += " from fields l";
         sql += " inner join rastas r on r.id_lote_ras = l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
+//        sql += " left join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
         sql += " inner join farms f on l.id_farm_fie=f.id_far";
         sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
         sql += " inner join producers p on p.id_pro = fp.id_producer_far_pro";
@@ -578,8 +621,6 @@ public class RastasDao
 //        args.get("countTotal");
 //        events.toArray();
 //        System.out.println("sql->"+sql);        
-//        try {
-//            tx = session.beginTransaction();
             Query query  = session.createSQLQuery(sql);            
             events = query.list();         
             
@@ -594,15 +635,7 @@ public class RastasDao
                 }
                 result += ")";
             }
-//            tx.commit();
-//        } catch (HibernateException e) {
-//            if (tx != null) {
-//                tx.rollback();
-//            }
-//            e.printStackTrace();
-//        } finally {
             session.close();
-//        }
         return result;
     }
     
@@ -617,7 +650,7 @@ public class RastasDao
         sql += "select ent.name_ent, r.ph_ras, r.estructura_ras, r.exposicion_sol_ras, r.recubrimiento_vegetal_ras, r.pendiente_terreno_ras";
         sql += " from rastas r";
         sql += " inner join fields l on r.id_lote_ras = l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
+//        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
         sql += " inner join farms f on l.id_farm_fie=f.id_far";
         sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
         sql += " inner join producers p on p.id_pro = fp.id_producer_far_pro";
@@ -653,7 +686,8 @@ public class RastasDao
                 dataGeneral   += "\"valIn\": \""+data[5]+"\"";
             }           
             dataGeneral   += "}],";    
-            String[] infoMaterials = (String[])valInf.get("organic");
+            String valOrganic      = (String) valInf.get("organic");
+            String[] infoMaterials = valOrganic.split(",");     
             dataGeneral   += this.getInfoHorizontes(id, infoMaterials);    
             dataGeneral   += "}";                      
             tx.commit();
@@ -702,7 +736,6 @@ public class RastasDao
 //        args.get("countTotal");
 //        events.toArray();
 //        System.out.println("sql->"+sql);        
-//        String[] colors = {"#99A52D","#F5B304","#C68628","#B4CA29","#E4DE2C"};
         String[] colors = {"#311A0E", "#311B05", "#322012", "#3E3222", "#311A0E", "#695341", "#705A44", "#6C5C44", "#87775F", "#A2927A", "#605C53", "#868375", "#7A735C", "#5A3117", "#6A3003",
         "#5D3F03", "#6B4400", "#7F5B08", "#785306", "#6A3003", "#FEFEFE", "#8B492D", "#90320C", "#975717", "#A6580F", "#986F37", "#A94F0F", "#A6640D", "#BA3215", "#D05A0F",
         "#7F5B08", "#8D5F0A", "#A6640D", "#BA772A", "#BC7908", "#CB7908", "#E39647", "#D19554", "#D19554", "#F5AA8C", "#EBB300", "#FCD18A", "#A79742", "#B8A776", "#B7BA8C",
@@ -774,7 +807,7 @@ public class RastasDao
         String sql = "";
         String entType = String.valueOf(args.get("entType"));
         
-        sql += "select r.ID_RAS as ID_RASTA, l.id_fie as ID_LOTE, f.id_far as ID_FINCA, p.id_pro as ID_PROD, e.name_ent as USUARIO, r.PENDIENTE_TERRENO_RAS as PENDIENTE,";
+        sql += "select r.ID_RAS as ID_RASTA, l.id_fie as ID_LOTE, f.id_far as ID_FINCA, p.id_pro as ID_PROD, IF(e.name_ent is null,e.email_ent,e.name_ent) as USUARIO, r.PENDIENTE_TERRENO_RAS as PENDIENTE,";
         sql += "UPPER(r.TERRENO_CIRCUNDANTE_RAS) as TERRENO, UPPER(r.POSICION_PERFIL_RAS) as POSICION, r.NUMERO_CAPAS_RAS as CAPAS, espesorRasta(r.ID_RAS, le.id_entity_log_ent) as ESPESORES, cSecoRasta(r.ID_RAS, le.id_entity_log_ent) as COLORES_SECOS, cHumedoRasta(r.ID_RAS, le.id_entity_log_ent) as COLORES_HUMEDOS, ";
         sql += "texturaRasta(r.ID_RAS, le.id_entity_log_ent) as TEXTURAS, resistenciaRasta(r.ID_RAS, le.id_entity_log_ent) as RESISTENCIAS, r.PH_RAS as PH, UPPER(r.CARBONATOS_RAS) as CARBONATOS, IF(r.CARBONATOS_RAS='no tiene','NA',r.PROFUNDIDAD_CARBONATOS_RAS) as PROF_CARBONATOS, UPPER(r.PIEDRAS_SUPERFICIE_RAS) as PIEDRAS_SUPERFICIE,";
         sql += "UPPER(r.ROCAS_SUPERFICIE_RAS) as ROCAS_SUPERFICIE, UPPER(r.PIEDRAS_PERFIL_RAS) as PIEDRAS_PERFIL, UPPER(r.ROCAS_PERFIL_RAS) as ROCAS_PERFIL, IF(r.HORIZONTE_PEDROGOSO_ROCOSO_RAS=1,'SI','NO') as HORIZONTE_PEDREGOSO, ";
@@ -786,7 +819,7 @@ public class RastasDao
         sql += "IF(r.CERCA_RIOS_QUEBRADAS_RAS=1,'SI','NO') as CERCA_RIOS_QUEBRADAS, UPPER(r.RECUBRIMIENTO_VEGETAL_RAS) as RECUBRIMIENTO_VEGETAL";
         sql += " from rastas r";
         sql += " inner join fields l on r.id_lote_ras = l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
+//        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
         sql += " inner join farms f on l.id_farm_fie=f.id_far";
         sql += " inner join farms_producers fp on f.id_far = fp.id_farm_far_pro";
         sql += " inner join producers p on p.id_pro = fp.id_producer_far_pro";
@@ -795,7 +828,8 @@ public class RastasDao
         sql += " inner join entities e on le.id_entity_log_ent = e.id_ent";
         if (entType.equals("3")) {
             sql += " inner join extension_agents ext on (ext.id_entity_ext_age=e.id_ent)";
-            sql += " inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += " where le.action_type_log_ent = 'C'";
         sql += " and r.status=1 and l.status=1 and f.status=1 and ent.status=1";
@@ -814,7 +848,8 @@ public class RastasDao
         if (entType.equals("3")) {
             sql += "	inner join entities entLe on (le.id_entity_log_ent=entLe.id_ent)";
             sql += "	inner join extension_agents ext on (ext.id_entity_ext_age=entLe.id_ent)";
-            sql += "	inner join association ass on (ass.id_asc=ext.id_asso_ext_age)";
+            sql += " inner join agents_association agAsc on (agAsc.id_agent_age_asc=ext.id_ext_age)";
+            sql += " inner join association ass on (ass.id_asc=agAsc.id_asso_age_asc)";
         }
         sql += "	where le.action_type_log_ent = 'D' AND le.table_log_ent = 'rastas'";
         if (!entType.equals("3") && args.containsKey("idEntUser")) {
@@ -833,11 +868,19 @@ public class RastasDao
 //        System.out.println("sql=>"+sql);
         try {
             tx = session.beginTransaction();
-            CSVWriter writer = new CSVWriter(new FileWriter(fileName), ';');
+            String nameFile = String.valueOf(args.get("fileName"));
+            File myFileTemp = new File(nameFile);
+            FileInputStream fis = new FileInputStream(myFileTemp);
+            
+            HSSFWorkbook workbook = new HSSFWorkbook(fis);            
+            HSSFSheet sheet = workbook.getSheetAt(0);
+            
+            Map<String, Object[]> dataSheet = new TreeMap<String, Object[]>();
+//            CSVWriter writer = new CSVWriter(new FileWriter(fileName), ';');
             Query query  = session.createSQLQuery(sql);
             events = query.list();
         
-            String[] val = {
+            Object[] val = {
                 "ID_RASTA",
                 "ID_LOTE",
                 "ID_FINCA",
@@ -886,62 +929,96 @@ public class RastasDao
                 "CERCA_RIOS_QUEBRADAS",
                 "RECUBRIMIENTO_VEGETAL"
             };
-            writer.writeNext(val);
+//            writer.writeNext(val);
+            dataSheet.put("1", val);
+            Integer cont = 2;
             for (Object[] data : events) {
-                String[] valTemp = {
-                    String.valueOf(data[0]),
-                    String.valueOf(data[1]),
-                    String.valueOf(data[2]),
-                    String.valueOf(data[3]),
-                    String.valueOf(data[4]),
-                    String.valueOf(data[5]),
-                    String.valueOf(data[6]),
-                    String.valueOf(data[7]),
-                    String.valueOf(data[8]),
-                    String.valueOf(data[9]),
-                    String.valueOf(data[10]),
-                    String.valueOf(data[11]),
-                    String.valueOf(data[12]),
-                    String.valueOf(data[13]),
-                    String.valueOf(data[14]),
-                    String.valueOf(data[15]),
-                    String.valueOf(data[16]),
-                    String.valueOf(data[17]),
-                    String.valueOf(data[18]),
-                    String.valueOf(data[19]),
-                    String.valueOf(data[20]),
-                    String.valueOf(data[21]),
-                    String.valueOf(data[22]),
-                    String.valueOf(data[23]),
-                    String.valueOf(data[24]),
-                    String.valueOf(data[25]),
-                    String.valueOf(data[26]),
-                    String.valueOf(data[27]),
-                    String.valueOf(data[28]),
-                    String.valueOf(data[29]),
-                    String.valueOf(data[30]),
-                    String.valueOf(data[31]),
-                    String.valueOf(data[32]),
-                    String.valueOf(data[33]),
-                    String.valueOf(data[34]),
-                    String.valueOf(data[35]),
-                    String.valueOf(data[36]),
-                    String.valueOf(data[37]),
-                    String.valueOf(data[38]),
-                    String.valueOf(data[39]),
-                    String.valueOf(data[40]),
-                    String.valueOf(data[41]),
-                    String.valueOf(data[42]),
-                    String.valueOf(data[43]),
-                    String.valueOf(data[44]),
-                    String.valueOf(data[45]),
-                    String.valueOf(data[46])
+                Object[] valTemp = {
+                    data[0],
+                    data[1],
+                    data[2],
+                    data[3],
+                    data[4],
+                    data[5],
+                    data[6],
+                    data[7],
+                    data[8],
+                    data[9],
+                    data[10],
+                    data[11],
+                    data[12],
+                    data[13],
+                    data[14],
+                    data[15],
+                    data[16],
+                    data[17],
+                    data[18],
+                    data[19],
+                    data[20],
+                    data[21],
+                    data[22],
+                    data[23],
+                    data[24],
+                    data[25],
+                    data[26],
+                    data[27],
+                    data[28],
+                    data[29],
+                    data[30],
+                    data[31],
+                    data[32],
+                    data[33],
+                    data[34],
+                    data[35],
+                    data[36],
+                    data[37],
+                    data[38],
+                    data[39],
+                    data[40],
+                    data[41],
+                    data[42],
+                    data[43],
+                    data[44],
+                    data[45],
+                    data[46]
                 };
-                writer.writeNext(valTemp);
+//                writer.writeNext(valTemp);
+                dataSheet.put(""+cont, valTemp);
+                cont++;
             }
-            writer.close();
-//            stmt   = con.prepareStatement(sql);     
-//            result = stmt.executeQuery();
+//            writer.close();
+            Set<String> keyset = dataSheet.keySet();
+            int rownum = 0;
+            for (String key : keyset)
+            {
+                Row row = sheet.createRow(rownum++);
+                Object [] objArr = dataSheet.get(key);
+                int cellnum = 0;
+                for (Object obj : objArr)
+                {
+                    Cell cell = row.createCell(cellnum++);
+                    if (obj instanceof String) {
+                        cell.setCellValue((String) obj);
+                    } else if (obj instanceof Boolean) {
+                        cell.setCellValue((Boolean) obj);
+                    } else if (obj instanceof Timestamp) {
+                        cell.setCellValue((Timestamp) obj);
+                    } else if (obj instanceof Date) {
+                        cell.setCellValue((Date) obj);
+                    } else if (obj instanceof Double) {
+                        cell.setCellValue((Double) obj);
+                    } else if (obj instanceof Integer) {
+                        cell.setCellValue((Integer) obj);
+                    } else if (obj instanceof BigInteger) {   
+                        cell.setCellValue((String) obj.toString());
+                    } 
+                }
+            }
+            File myFile = new File(fileName);
+            if (!myFile.exists()) myFile.createNewFile();
+            FileOutputStream out = new FileOutputStream(myFile);
+            workbook.write(out);
+            out.close();
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
@@ -1026,7 +1103,7 @@ public class RastasDao
         sql += "select l.id_fie, r.id_ras, l.name_fie, e.email_ent";
         sql += " from rastas r";
         sql += " inner join fields l on r.id_lote_ras = l.id_fie";
-        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
+//        sql += " inner join fields_producers lp on lp.id_field_fie_pro = l.id_fie";
         sql += " inner join farms f on l.id_farm_fie=f.id_far";
         sql += " inner join log_entities le on le.id_object_log_ent = r.ID_RAS AND le.table_log_ent = 'rastas'";
         sql += " inner join entities e on le.id_entity_log_ent = e.id_ent";
@@ -1250,7 +1327,7 @@ public class RastasDao
             tx = session.beginTransaction();
             Query query = session.createSQLQuery(sql).addEntity("r", Rastas.class);
             events = query.list();
-            MongoClient mongo = new MongoClient("localhost", 27017);
+//            MongoClient mongo = new MongoClient("localhost", 27017);
             for (Rastas ras : events) {
 //                System.out.println("rasId->"+ras.getIdRas());
                 ras.setStatus(false);     
@@ -1265,7 +1342,7 @@ public class RastasDao
                 log.setActionTypeLogEnt("D");
                 session.saveOrUpdate(log);
 
-                BasicDBObject queryMongo = new BasicDBObject();
+                /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+ras.getIdRas());
                 queryMongo.put("form_id", "6");
 
@@ -1278,9 +1355,9 @@ public class RastasDao
 
                 if (result.getError()!=null) {
                     throw new HibernateException("");
-                }
+                }*/
             }
-            mongo.close();
+//            mongo.close();
             tx.commit();
             state = "success";
         } catch (HibernateException e) {
@@ -1288,8 +1365,8 @@ public class RastasDao
                 tx.rollback();
             }
             e.printStackTrace();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (UnknownHostException ex) {
+//            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             session.close();
         } 

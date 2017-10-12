@@ -4,22 +4,16 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
-	<head>							
-        <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="scripts/js/flot-charts/excanvas.min.js"></script><![endif]-->
-		
-        <!--<script type="text/javascript" src="/js/flot/jshashtable-2.1.js"></script>-->    
-        <!--<script type="text/javascript" src="/js/flot/jquery.numberformatter-1.2.3.min.js"></script>--> 
-		<script type="text/javascript" src="scripts/js/generals/reportPro.js"></script>
-	</head>
-	<body>		
+    <body>		
         <s:hidden name="info"/>
-        <div style="width:auto;height:300px;text-align:center;margin:10px">        
+        <div style="width:auto; height:300px; text-align:center; margin: auto;">        
             <div id="flot-placeholder" style="width:100%;height:100%;"></div>        
         </div>
-		<script>
+        <script type="text/javascript" src="scripts/js/generals/reportPro.js"></script>
+        <script>
 //            alert($("#info").val());
             objResult = JSON.parse($("#info").val());
-			chargeInfographic();
-		</script>
-	</body>
+            chargeInfographic();
+        </script>
+    </body>
 </html>

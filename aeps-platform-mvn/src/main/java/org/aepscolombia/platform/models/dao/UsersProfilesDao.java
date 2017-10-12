@@ -1,7 +1,6 @@
 package org.aepscolombia.platform.models.dao;
 
 import java.sql.PreparedStatement;
-//import java.sql.ResultSet;
 import java.util.List;
 import org.hibernate.Transaction;
 import org.hibernate.HibernateException;
@@ -15,7 +14,6 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-//import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

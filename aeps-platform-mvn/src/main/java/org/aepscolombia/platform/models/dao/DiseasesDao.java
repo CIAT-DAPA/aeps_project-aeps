@@ -41,7 +41,7 @@ public class DiseasesDao
         return events;
     }
     
-    public List<Diseases> findAllByTypeCrop(Integer idTypeCrop) {
+    public List<Diseases> findAllByTypeCrop(Integer idTypeCrop, String countryCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
 
@@ -50,11 +50,16 @@ public class DiseasesDao
         Transaction tx = null;
 				
         sql += "select ms.id_dis, ms.name_dis, ms.status_dis from diseases ms";
+        sql += " inner join diseases_country cheCon on cheCon.id_seldis_dis_co=ms.id_dis";
         sql += " inner join diseases_crops_types t on t.id_disease_dis_cro_typ=ms.id_dis";
         sql += " where ms.status_dis=1";
         if (idTypeCrop!=null) {
             sql += " and t.id_crop_type_dis_cro_typ="+idTypeCrop;
         }
+        if (countryCode!=null && !countryCode.equals("")) {
+            sql += " and cheCon.country_dis_co='"+countryCode+"'";
+        } 
+        
         sql += " order by ms.name_dis ASC";
 				
         try {
@@ -78,7 +83,29 @@ public class DiseasesDao
     }
     
     public Diseases objectById(Integer id) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+
+        String sql  = "";        
         Diseases event = null;
+        Transaction tx = null;
+				
+        sql += "select p.id_dis, p.name_dis, p.status_dis";
+        sql += " from diseases p";
+        sql += " where p.id_dis="+id;
+        try {
+            tx = session.beginTransaction();
+            Query query = session.createSQLQuery(sql).addEntity("p", Diseases.class);
+            event = (Diseases)query.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
         return event;
     }    
 

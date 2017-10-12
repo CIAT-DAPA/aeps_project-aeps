@@ -14,71 +14,61 @@
             <div class="panel">
                 <div class="panel-body">
                     <div class="row">
-                        <div class="span4">
+                        <div class="col-xs-12 col-md-4">
                             <div class="panel">
                                 <div class="panel-heading">
-                                    <h3><i class="icon-pushpin main-color"></i> Nuestra Oficina</h3>
+                                    <h3><i class="icon-pushpin main-color"></i> <s:property value="getText('title.ouroffice.contact')" /></h3>
                                 </div>
                                 <div class="panel-body">
                                     <address>
-                                        <strong>CIAT</strong><br>
-                                        Km 17, Recta Cali-Palmira<br>
-                                        Apartado Aéreo 6713<br>
-                                        Cali, Colombia<br>
-                                        Telefono: <i class="icon-phone-sign"></i> (+57) 2 445-0000
+                                        <strong><s:property value="getText('title.namecompany.contact')" /></strong><br>
+                                        <s:text name="%{getText('area.locationcompany.contact')}"/>
                                     </address>
                                 </div>
                             </div>
                         </div>
-                        <div class="span7">
+                        <div class="col-xs-12 col-md-8">
                             <div class="panel">
                                 <div class="panel-heading">                                    
-                                    <h3><i class="icon-envelope main-color"></i> <s:property value="getText('text.titlecontact.contact')" /></h3>
+                                    <h3><i class="icon-envelope main-color"></i> <s:property value="getText('title.contactus.contact')" /></h3>
                                 </div>
                                 <div class="panel-body">
                                     <s:form id="formContact" action="sendInformation.action" method="post">
                                         <s:hidden name="actExe" value="contact"/>
-                                            <div class="control-group required_field_mark">
-                                                <label for="formContact_nameUser" class="control-label"><s:property value="getText('text.name.contact')" /> <span>*</span>:</label>
-                                                <div class="controls">
+                                            <div class="form-group required_field_mark">
+                                                <label for="formContact_nameUser" class="col-sm-3 control-label"><s:property value="getText('text.name.contact')" /> <span>*</span>:</label>
+                                                <div class="controls col-sm-10">
                                                     <s:textfield cssClass="form-control" id="formContact_nameUser" name="nameUser"/>
                                                 </div>
                                             </div>
-                                            <div class="control-group required_field_mark">
-                                                <label for="formContact_emailUser" class="control-label"><s:property value="getText('text.email.contact')" /> <span>*</span>:</label>
-                                                <div class="controls">
+                                            <div class="form-group required_field_mark">
+                                                <label for="formContact_emailUser" class="col-sm-3 control-label"><s:property value="getText('text.email.contact')" /> <span>*</span>:</label>
+                                                <div class="controls col-sm-10">
                                                     <s:textfield cssClass="form-control" id="formContact_emailUser" name="emailUser" placeholder="%{getText('text.ingressemial.contact')}"/>
                                                 </div>
                                             </div>
                                             <div class="row">
-                                                <div class="span3 control-group">
-                                                    <label for="formContact_celphone" class="control-label"><s:property value="getText('text.cellphone.contact')" /> :</label>
-                                                    <div class="controls">
+                                                <div class="col-sm-6 form-group">
+                                                    <label for="formContact_celphone" class="col-sm-5 control-label"><s:property value="getText('text.cellphone.contact')" /> :</label>
+                                                    <div class="controls col-sm-8">
                                                         <s:textfield cssClass="form-control" id="formContact_celphone" name="celphone"/>
                                                     </div>
                                                 </div>
-                                                <div class="span3 control-group">
-                                                    <label for="formContact_telephone" class="control-label"><s:property value="getText('text.phone.contact')" /> :</label>
-                                                    <div class="controls">
+                                                <div class="col-sm-6 form-group">
+                                                    <label for="formContact_telephone" class="col-sm-5 control-label"><s:property value="getText('text.phone.contact')" /> :</label>
+                                                    <div class="controls col-sm-8">
                                                         <s:textfield cssClass="form-control" id="formContact_telephone" name="telephone"/>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="control-group required_field_mark">
-                                                <label for="formContact_whatneed" class="control-label"><s:property value="getText('text.whatneed.contact')" /> <span>*</span>:</label>
-                                                <div class="controls">
-                                                    <s:textarea rows="5" cssClass="span6" name="whatneed"></s:textarea>
-                                                    <!--<textarea rows="5" class="span6" id="formContact_whatneed" name="whatneed"></textarea>-->
+                                            <div class="form-group required_field_mark">
+                                                <label for="formContact_whatneed" class="col-sm-4 control-label"><s:property value="getText('text.whatneed.contact')" /> <span>*</span>:</label>
+                                                <div class="controls col-sm-9">
+                                                    <s:textarea rows="5" cssClass="form-control" name="whatneed"></s:textarea>
                                                 </div>					 
-                                            </div>					 
-                                            <div class="row">
-                                                <div class="span6">
-                                                    <!--<button type="submit" class="btn btn-initial">Enviar</button>-->
-                                                    <!-- <button class="btn btn-default" data-href="home.action">Volver</button> -->
-                                                    <%--<sj:a href="home.action" cssClass="btn btn-default" targets="divBodyLayout">Volver</sj:a>--%>
-                                                    <!--<a href="home.action" class="btn btn-default">Volver</a>-->
-                                                    <sj:submit cssClass="btn btn-large btn-initial" onclick="addMessageProcess()" targets="divMessage" onCompleteTopics="completeContact" value="Enviar informacion" validate="true" validateFunction="validationForm"/>
-                                                </div>  
+                                            </div>			
+                                            <div class="col-md-6">
+                                                <sj:submit cssClass="btn btn-lg btn-initial" onclick="addMessageProcess()" targets="divMessage" onCompleteTopics="completeContact" value="%{getText('button.sendinfo.contact')}" validate="true" validateFunction="validationForm"/>
                                             </div>  
                                             <script>
                                                 $.subscribe('completeContact', function(event, data) {

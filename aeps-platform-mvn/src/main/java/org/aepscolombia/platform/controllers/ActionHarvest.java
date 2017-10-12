@@ -1,7 +1,4 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -44,12 +41,12 @@ import org.hibernate.Transaction;
  */
 public class ActionHarvest extends BaseAction {
     
-    //Atributos del formulario 
     /**
      * Atributos provenientes del formulario
      */
     private int idCrop;    
-    private int typeCrop;
+    private int typeCrop; 
+    private int costCrop;
     private Users user;
     private Integer idEntSystem;    
     private Integer idUsrSystem;    
@@ -57,8 +54,8 @@ public class ActionHarvest extends BaseAction {
     private Harvests harv  = new Harvests();
     private Sowing sowing = new Sowing();
     private UsersDao usrDao;
+    private String coCode;
 
-    //Metodos getter y setter por cada variable del formulario 
     /**
      * Metodos getter y setter por cada variable del formulario
      */
@@ -93,6 +90,15 @@ public class ActionHarvest extends BaseAction {
     public void setTypeCrop(int typeCrop) {
         this.typeCrop = typeCrop;
     }
+    
+    public int getCostCrop() {
+        return costCrop;
+    }
+
+    public void setCostCrop(int costCrop) {
+        this.costCrop = costCrop;
+    }
+
 
     public Users getUser() {
         return user;
@@ -102,11 +108,9 @@ public class ActionHarvest extends BaseAction {
         this.user = user;
     }       
     
-    //Atributos generales de clase
     /**
      * Atributos generales de clase
-     */
-    
+     */    
     private ProductionEventsDao cropDao    = new ProductionEventsDao();
     private HarvestsDao harDao    = new HarvestsDao();
     private SowingDao sowDao      = new SowingDao();
@@ -115,7 +119,6 @@ public class ActionHarvest extends BaseAction {
     private String state = "";
     private String info  = "";
     
-    //Metodos getter y setter por cada variable general de la clase
     /**
      * Metodos getter y setter por cada variable general de la clase
      */    
@@ -124,7 +127,6 @@ public class ActionHarvest extends BaseAction {
         return state;
     }
 
-//    @Override
     public String getInfo() {
         return info;
     }
@@ -152,13 +154,18 @@ public class ActionHarvest extends BaseAction {
         return SUCCESS;
     }       
     
+    /**
+     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     */
     @Override
     public void prepare() throws Exception {
         user = (Users) this.getSession().get(APConstants.SESSION_USER);
         idEntSystem = UsersDao.getEntitySystem(user.getIdUsr());  
         usrDao = new UsersDao();
         idUsrSystem = user.getIdUsr();
-        lanSel  = ActionContext.getContext().getLocale().getLanguage();
+        coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
+        String lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
     }
     
     
@@ -201,7 +208,7 @@ public class ActionHarvest extends BaseAction {
                 
 //                if (harv.getResultingProducts().getIdResPro()==1 || harv.getResultingProducts().getIdResPro()==4) {
 //                    required.put("harv.humidityPercentageHar", harv.getHumidityPercentageHar());
-//                }﻿  ﻿  
+//                }
             } 
             
 //            System.out.println("value=>"+harv.getYieldHar());
@@ -219,13 +226,13 @@ public class ActionHarvest extends BaseAction {
                 String sV = String.valueOf(required.get(sK));
 //                System.out.println(sK + " : " + sV);
                 if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
-                    addFieldError(sK, "El campo es requerido");
+                    addFieldError(sK, getText("message.fieldsrequired.harvest"));
                     enter = true;
                 }
             }
             
             if (enter) {
-                addActionError("Faltan campos por ingresar por favor digitelos");
+                addActionError(getText("message.missingfields.harvest"));
             }
             
             Date dateSowing = null;
@@ -235,7 +242,7 @@ public class ActionHarvest extends BaseAction {
                 String dmySow  = new SimpleDateFormat("dd/MM/yyyy").format(sowing.getDateSow());
 //                $fechaSiembra = date('m-d-Y', strtotime($params['fecha_siembra']));
 //                try {
-//                    String dateAsign = new SimpleDateFormat("yyyy-dd-MM").format(new Date(fechaSiembra));
+//                    String dateAsign = new SimpleDateFormat("yyyy-MM-dd").format(new Date(fechaSiembra));
 //                } catch (IllegalArgumentException ex) {
 //                }
 //            }
@@ -243,14 +250,14 @@ public class ActionHarvest extends BaseAction {
 //                if (sowing.getDateSow()!=null && harv.getDateHar()!=null) {
                 if (!dmySow.equals("") && harv.getDateHar()!=null) {
 
-                    Integer valDiffAff = GlobalFunctions.compareDateAfterSowing(harv.getDateHar(), sowing.getDateSow(), typeCrop);
+                    Integer valDiffAff = GlobalFunctions.compareDateAfterSowingByAction(harv.getDateHar(), sowing.getDateSow(), typeCrop, 7);
                     if (valDiffAff==2) {
         //				$fails[]  = $prefix.'date_harvest_crop';
-                        addFieldError("harv.dateHar", "Dato invalido");                
+                        addFieldError("harv.dateHar", getText("message.harvestdateinvalidrank.harvest"));                
                         if (typeCrop==3) {
-                            addActionError("Se ingreso una fecha de la cosecha que no se encuentra dentro de los 18 meses despues de la siembra ("+dateSowing+")");
+                            addActionError(getText("desc.harvestdateinvalidrankcassava.harvest")+" ("+dmySow+")");
                         } else {
-                            addActionError("Se ingreso una fecha de la cosecha que no se encuentra dentro de los 10 meses despues de la siembra ("+dateSowing+")");
+                            addActionError(getText("desc.harvestdateinvalidrankother.harvest")+" ("+dmySow+")");
                         }
                     }
 
@@ -258,32 +265,57 @@ public class ActionHarvest extends BaseAction {
             }
 
             if (harv.getProductionHar()!=null && harv.getProductionHar()!=0) {
-                if (harv.getProductionHar()<0) {
-                    addFieldError("harv.productionHar", "Dato invalido valor mayor a 0");
-                    addActionError("Se ingreso una cantidad de produccion invalida, por favor ingresar un valor mayor a 0");
+                if (harv.getProductionHar()<200) {
+                    addFieldError("harv.productionHar", getText("message.invaliddataproduction.harvest"));
+                    addActionError(getText("desc.invaliddataproduction.harvest"));
                 }
             }
-
+            
             if (harv.getYieldHar()!=null && harv.getYieldHar()!=0) {
                 if (typeCrop==1) {
-                    if (harv.getYieldHar()<800 || harv.getYieldHar()>30000) {
-                        addFieldError("harv.yieldHar", "Dato invalido valor entre 800 y 30000");
-                        addActionError("Se ingreso un rendimiento invalido, por favor ingresar un valor entre 800 y 30000");
+                    if (harv.getYieldHar()<800 || harv.getYieldHar()>70000) {
+                        addFieldError("harv.yieldHar", "Dato invalido valor entre 800 y 70000");
+                        addActionError("Se ingreso un rendimiento invalido, por favor ingresar un valor entre 800 y 70000");
                     }
                 }
                 
                 if (typeCrop==2) {
-                    if (harv.getYieldHar()<200 || harv.getYieldHar()>30000) {
-                        addFieldError("harv.yieldHar", "Dato invalido valor entre 200 y 30000");
-                        addActionError("Se ingreso un rendimiento invalido, por favor ingresar un valor entre 200 y 30000");
+                    if (harv.getYieldHar()<200 || harv.getYieldHar()>8000) {
+                        addFieldError("harv.yieldHar", "Dato invalido valor entre 200 y 8000");
+                        addActionError("Se ingreso un rendimiento invalido, por favor ingresar un valor entre 200 y 8000");
                     }                    
                 }                
             }
             
+            /*if (harv.getResultingProducts().getIdResPro()!=0 && (harv.getYieldHar()!=null && harv.getYieldHar()!=0)) {
+//            1 Grano seco a min 100 max 20000
+//            4 Ensilaje min 1000 max 60000
+//            3 Fresco min 1000 max 60000 
+                if (harv.getResultingProducts().getIdResPro()==1 || harv.getResultingProducts().getIdResPro()==2 || harv.getResultingProducts().getIdResPro()==5) {
+                    if (harv.getYieldHar()<100 || harv.getYieldHar()>20000) {
+                        addFieldError("harv.yieldHar", getText("message.invaliddatayielddry.harvest"));
+                        addActionError(getText("desc.invaliddatayielddry.harvest"));
+                    }
+                } else if (harv.getResultingProducts().getIdResPro()==3 || harv.getResultingProducts().getIdResPro()==4) {
+                    if (harv.getYieldHar()<1000 || harv.getYieldHar()>60000) {
+                        addFieldError("harv.yieldHar", getText("message.invaliddatayieldsilage.harvest"));
+                        addActionError(getText("desc.invaliddatayieldsilage.harvest"));
+                    }
+                }
+                
+            }*/
+
+//            if (harv.getYieldHar()!=null && harv.getYieldHar()!=0) {
+//                if (harv.getYieldHar()<0 || harv.getYieldHar()>30000) {
+//                    addFieldError("harv.yieldHar", getText("message.invaliddatayield.harvest"));
+//                    addActionError(getText("desc.invaliddatayield.harvest"));
+//                }
+//            }
+            
             if (harv.getHumidityPercentageHar() != null) {
-                if (harv.getHumidityPercentageHar()<0 || harv.getHumidityPercentageHar()>100) {
-                    addFieldError("harv.humidityPercentageHar", "Dato invalido valor entre 0 y 100");
-                    addActionError("Se ingreso un porcentaje de humedad invalido, por favor ingresar un valor entre 0 y 100");
+                if (harv.getHumidityPercentageHar()<1 || harv.getHumidityPercentageHar()>80) {
+                    addFieldError("harv.humidityPercentageHar", getText("message.invaliddatahumidity.harvest"));
+                    addActionError(getText("desc.invaliddatahumidity.harvest"));
                 }
             }
             sowing=null;
@@ -292,14 +324,13 @@ public class ActionHarvest extends BaseAction {
 
     /**
      * Encargado de guardar la informacion suministrada por el usuario para una cosecha
-     * @return Estado del proceso
+     * @return String Estado del proceso
      */
     public String saveData() {
         if (!usrDao.getPrivilegeUser(idUsrSystem, "crop/create") || !usrDao.getPrivilegeUser(idUsrSystem, "crop/modify")) {
             return BaseAction.NOT_AUTHORIZED;
         }
         String action = "";
-//        System.out.println("Entre a guardar la info");
         /*
          * Se evalua dependiendo a la accion realizada:
          * 1) create: Al momento de guardar un registro por primera ves
@@ -330,6 +361,17 @@ public class ActionHarvest extends BaseAction {
                 }
             }           
             
+            if (coCode.equals("NI")) {
+                Double yieldHar = harv.getYieldHar()*65.71;
+                Integer proHar  = harv.getProductionHar()*46;
+                harv.setYieldHar(yieldHar);            
+                harv.setProductionHar(proHar);
+            }
+            
+            if (harv.getResultingProducts().getIdResPro()==3) {
+                harv.setYieldHar(harv.getNumberSacksSow()*harv.getWeightAvgSacksSow());
+            }
+            
             harv.setProductionEvents(new ProductionEvents(idCrop));
 //            harv.setDateHar(new Date());
 //            harv.setProductionHar(14);
@@ -338,29 +380,33 @@ public class ActionHarvest extends BaseAction {
             harv.setStatus(true);
             session.saveOrUpdate(harv);
             
-            LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(idEntSystem);
-            log.setIdObjectLogEnt(harv.getIdHar());
-            log.setTableLogEnt("harvests");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);            
+            LogEntities log = null;            
+            log = LogEntitiesDao.getData(idEntSystem, harv.getIdHar(), "harvests", action);
+            if ((log==null && action.equals("C")) || action.equals("M")) {
+                log = new LogEntities();
+                log.setIdLogEnt(null);
+                log.setIdEntityLogEnt(idEntSystem);
+                log.setIdObjectLogEnt(harv.getIdHar());
+                log.setTableLogEnt("harvests");
+                log.setDateLogEnt(new Date());
+                log.setActionTypeLogEnt(action);
+                session.saveOrUpdate(log);
+            }                        
             
             tx.commit();           
             state = "success";            
             if (action.equals("C")) {
-                info  = "La cosecha ha sido agregada con exito";
+                info  = getText("message.successadd.harvest");
 //                return "list";
             } else if (action.equals("M")) {
-                info  = "La cosecha ha sido modificada con exito";
+                info  = getText("message.successedit.harvest");
 //                return "list";
             }
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
             SfGuardUserDao sfDao = new SfGuardUserDao();
             SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
-            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
+//            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
             
         } catch (HibernateException e) {
             if (tx != null) {
@@ -369,7 +415,11 @@ public class ActionHarvest extends BaseAction {
             e.printStackTrace();
 //            System.out.println("error->"+e.getMessage());
             state = "failure";
-            info  = "Fallo al momento de agregar una cosecha";
+            if (action.equals("C")) {
+                info  = getText("message.failadd.harvest");
+            } else if (action.equals("M")) {
+                info  = getText("message.failedit.harvest");
+            }
         } catch (ParseException e) { 
         
         } finally {

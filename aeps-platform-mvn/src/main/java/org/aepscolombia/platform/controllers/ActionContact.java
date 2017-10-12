@@ -1,14 +1,12 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.aepscolombia.platform.controllers;
 
+import com.opensymphony.xwork2.ActionContext;
 import org.aepscolombia.platform.models.dao.EntitiesDao;
 import org.aepscolombia.platform.models.dao.FarmsDao;
 import org.aepscolombia.platform.models.dao.FieldsDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
 import org.aepscolombia.platform.models.dao.RastasDao;
+import org.aepscolombia.platform.util.APConstants;
 
 
 /**
@@ -21,96 +19,40 @@ import org.aepscolombia.platform.models.dao.RastasDao;
  */
 public class ActionContact extends BaseAction {
     
+    private String lanSel;      
+
+    public String getLanSel() {
+        return lanSel;
+    }
+
+    public void setLanSel(String lanSel) {
+        this.lanSel = lanSel;
+    }
+    
     public ActionContact() {
 //        super();
     }
 
+    /**
+     * Metodo encargado de validar la información de un producto de control que se va
+     * a adicionar a un control
+     * @param prod Objeto de un producto
+     * @return String Resultado de la validacion
+     * @throws Exception
+     */
     @Override
     public String execute() throws Exception {
+        String coCode  = (String) ActionContext.getContext().getSession().get(APConstants.COUNTRY_CODE);
+        String lanTemp = (String) ActionContext.getContext().getSession().get(APConstants.SESSION_LANG);
+        lanSel = lanTemp.replace(coCode.toLowerCase(), "");
         return SUCCESS;
     }
     
-    public String getReport() {        
-        /*ScriptEngineManager manager = new ScriptEngineManager();
-        // create a Renjin engine:
-        ScriptEngine engine = manager.getEngineByName("Renjin");
-        // check if the engine has loaded correctly:
-               
-        if(engine == null) {
-            throw new RuntimeException("Renjin Script Engine not found on the classpath.");
-        }
-        try {
-//                engine.eval("df <- data.frame(x=1:10, y=(1:10)+rnorm(n=10))");
-//                engine.eval("print(df)");
-//                engine.eval("print(lm(y ~ x, df))");
-//                engine.eval("print('Hello, World')");
-            engine.eval("vec <- data.frame(971,1057,27,\"ONDULADO\",\"LADERA CONVEXA\",2,\"18,52\",\"3,35\",\"ND,ND\",\"FL,FAr\",\"BLANDO,DURO\",4.5,\n" +
-                    "\"NO TIENE\",NA,\"SIN PIEDRAS\",\"SIN ROCAS\",\"SIN PIEDRAS\",\"SIN ROCAS\",\"NO\",NA,NA,NA,\"SI\",26,30,\"NO\",NA,\n" +
-                    "\"NO\",\"GRANULAR\",\"NO\",\"NO\",\"NO HAY\",\"LA MANANA Y LA TARDE\",\"NO HAY\",\"NO HAY\",\"NO\",\"SI\",22,\n" +
-                    "\"PLANTAS NORMALES\",\"NO\",\"NO\",\"SI\",\"NO\",\"BUENO\")");
-//                engine.eval("load(\"funciones_AESCE.RData\")");
-            ListVector res = (ListVector)engine.eval(new java.io.FileReader("inferidas.R"));
-//            System.out.println("The result of a*b is: " + res);
-            // determine the Java class of the result:
-//                Class objectType = res.getClass();
-//                objectType.
-            String depthEffective  = res.getElementAsString(0);
-            String organicMaterial = res.getElementAsString(1);
-            String internalDrain   = res.getElementAsString(2);
-            String externalDrain   = res.getElementAsString(3);
-            Integer error = null;
-            
-            if (depthEffective.equals("Error") || depthEffective.equals("Error.nd") || depthEffective.equals("ERROR.ND") || depthEffective.equals("NO CLASIFICADO")) {
-                error = 1;
-            }
-            
-            String[] infoMaterials = organicMaterial.split(",");
-            for (int i = 0; i < infoMaterials.length; i++) {
-                String temp = infoMaterials[i];
-                if (temp.equals("EE.ND") || internalDrain.equals("NO CLASIFICADA")) {
-                    error = 2;
-                }
-            }            
-            
-            if (internalDrain.equals("ERROR.ND") || internalDrain.equals("NO CLASIFICADO estruc") || internalDrain.equals("NO CLASIFICADO bueno") || internalDrain.equals("NO CLASIFICADO excesivo")) {
-                error = 3;
-            }
-            
-            if (externalDrain.equals("ERROR.ND") || externalDrain.equals("NO CLASIFICADO estruc") || externalDrain.equals("NO CLASIFICADO bueno") || externalDrain.equals("NO CLASIFICADO excesivo")) {
-                error = 4;
-            }
-            
-            if (error!=null) {
-                if (error==1)
-                    addActionError("Se obtuvo un error al momento de obtener la profundidad efectiva");
-                if (error==2)
-                    addActionError("Se obtuvo un error al momento de obtener la materia organica");
-                if (error==3)
-                    addActionError("Se obtuvo un error al momento de obtener el drenaje interno");
-                if (error==4)
-                    addActionError("Se obtuvo un error al momento de obtener el drenaje externo");
-            }
-            
-            
-//            System.out.println("Java class of 'res' is: " + res.getElementAsString(1));
-            // use the getTypeName() method of the SEXP object to get R's type name:
-//                System.out.println("In R, typeof(res) would give '" + res.getTypeName() + "'");
-//                System.out.println("In R, typeof(res) would give '" + objectType.getEnumConstants()+ "'");          
-//                engine.eval("library(RMySQL)");
-//                engine.eval("canal <- odbcConnect('R-MYSQL', uid = 'root')");
-//                engine.eval("prueba <- sqlQuery(canal, 'SELECT * FROM entities')");
-//                engine.eval("head(prueba)");
-        } catch (ScriptException ex) {
-//            System.out.println("Error mostrando la informacion");
-//                Logger.getLogger(ActionContact.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (FileNotFoundException ex) {
-//            System.out.println("Error leyendo el archivo");
-//                Logger.getLogger(ActionContact.class.getName()).log(Level.SEVERE, null, ex);
-        }*/
-
-        return SUCCESS;       
-    }
-    
+    /**
+     * Metodo encargado de cargar los valores de manera general en una base de datos de MongoDB
+     * de todo la informacion respectiva de un usuario
+     * @return String Estado del proceso
+     */
     public String chargeValues() {
         EntitiesDao entDao = new EntitiesDao();
         FarmsDao farDao    = new FarmsDao();
@@ -124,26 +66,6 @@ public class ActionContact extends BaseAction {
         cropDao.setInfoMongo();
         rasDao.setInfoMongo();
         
-        return "states";
-    }
-    
-    public String sendMessage() 
-    { 
-        /*try { // Call Web Service Operation
-            com.sigmamovil.smsapp.soap.sigmamovilservice.SigmaMovilService service = new com.sigmamovil.smsapp.soap.sigmamovilservice.SigmaMovilService();
-            com.sigmamovil.smsapp.soap.sigmamovilservice.SigmaMovilServicePortType port = service.getSigmaMovilServicePort();
-            // TODO initialize WS operation arguments here
-            java.lang.String user = "ciatsms";
-            java.lang.String password = "ciat001";
-            java.lang.String teldestino = "3175274183";
-            java.lang.String mensaje = "Una prueba";
-            // TODO process result here
-            com.sigmamovil.smsapp.soap.sigmamovilservice.WSResSendSMS result = port.newSendSMS(user, password, teldestino, mensaje);
-            System.out.println("Result = "+result);
-        } catch (Exception ex) {
-            // TODO handle custom exceptions here
-            ex.printStackTrace();
-        }*/
         return "states";
     }
 }

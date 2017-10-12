@@ -34,6 +34,8 @@ public class Fertilizations  implements java.io.Serializable {
      private String otherWhereBoughtFer;
      private Boolean status;
      private Integer createdBy;
+     private WetSoils wetSoils;
+     private String commentFer;
 
     public Fertilizations() {
     }
@@ -48,7 +50,7 @@ public class Fertilizations  implements java.io.Serializable {
         this.dateFer = dateFer;
         this.amountProductUsedFer = amountProductUsedFer;
     }
-    public Fertilizations(ProductionEvents productionEvents, CropsTypes cropsTypes, FertilizationsTypes fertilizationsTypes, Date dateFer, Double amountProductUsedFer, String whereBoughtFer, String applicationTechniqueFer, String otherWhereBoughtFer, Boolean status, Integer createdBy) {
+    public Fertilizations(ProductionEvents productionEvents, CropsTypes cropsTypes, FertilizationsTypes fertilizationsTypes, Date dateFer, Double amountProductUsedFer, String whereBoughtFer, String applicationTechniqueFer, String otherWhereBoughtFer,String commentFer, Boolean status, Integer createdBy) {
        this.productionEvents = productionEvents;
        this.cropsTypes = cropsTypes;
        this.fertilizationsTypes = fertilizationsTypes;
@@ -58,6 +60,7 @@ public class Fertilizations  implements java.io.Serializable {
        this.applicationTechniqueFer = applicationTechniqueFer;
        this.otherWhereBoughtFer = otherWhereBoughtFer;
        this.status = status;
+       this.commentFer=commentFer;
        this.createdBy = createdBy;
     }
    
@@ -144,6 +147,16 @@ public class Fertilizations  implements java.io.Serializable {
         this.otherWhereBoughtFer = otherWhereBoughtFer;
     }
     
+     
+    @Column(name="comment_fer")
+    public String getCommentFer() {
+        return this.commentFer;
+    }
+    
+    public void setCommentFer(String commentFer) {
+        this.commentFer = commentFer;
+    }
+    
     @Column(name="status")
     public Boolean getStatus() {
         return this.status;
@@ -160,6 +173,16 @@ public class Fertilizations  implements java.io.Serializable {
     
     public void setCreatedBy(Integer createdBy) {
         this.createdBy = createdBy;
+    }
+    
+    @ManyToOne(fetch=FetchType.LAZY)
+    @JoinColumn(name="wet_soil_fer")
+    public WetSoils getWetSoils() {
+        return this.wetSoils;
+    }
+    
+    public void setWetSoils(WetSoils wetSoils) {
+        this.wetSoils = wetSoils;
     }
     
 }

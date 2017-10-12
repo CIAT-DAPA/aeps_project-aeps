@@ -52,7 +52,6 @@ public class GrowingEnvironmentDao {
         Session session = sessions.openSession();
         List<Object[]> events = null;
         Transaction tx = null;
-//        events.toArray();
         try {
             tx = session.beginTransaction();
             Query query = session.createSQLQuery("select acronym_doc_typ, name_doc_typ from growing_environment");

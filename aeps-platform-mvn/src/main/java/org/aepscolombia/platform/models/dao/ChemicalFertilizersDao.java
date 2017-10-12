@@ -8,6 +8,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.ChemicalFertilizers;
+import org.aepscolombia.platform.models.entity.ChemicalFertilizersCountry;
 import org.aepscolombia.platform.util.HibernateUtil;
 
 /**
@@ -41,7 +42,7 @@ public class ChemicalFertilizersDao
         return events;
     }
     
-    public List<ChemicalFertilizers> findAllByStatus() {
+    public List<ChemicalFertilizers> findAllByStatus(String countryCode) {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
 
@@ -50,13 +51,16 @@ public class ChemicalFertilizersDao
         Transaction tx = null;
         
         sql += "select cr.id_che_fer, cr.name_che_fer, cr.status_che_fer from chemical_fertilizers cr";
-		sql += " where cr.status_che_fer=1";
-//        if (idTypeCrop!=null) {
-            //sql += " and t.id_crop_type_irr_typ_cro="+idTypeCrop;
-//        }
+        sql += " inner join chemical_fertilizers_country cheCon on cheCon.id_selfer_che_fer_co=cr.id_che_fer";
+        sql += " where cr.status_che_fer=1";
+        
+        if (countryCode!=null && !countryCode.equals("")) {
+            sql += " and cheCon.country_che_fer_co='"+countryCode+"'";
+        } 
+        
         try {
             tx = session.beginTransaction();
-            Query query = session.createSQLQuery(sql).addEntity("p", ChemicalFertilizers.class);
+            Query query = session.createSQLQuery(sql).addEntity("cr", ChemicalFertilizers.class);
             event = query.list();
             ChemicalFertilizers temp = new ChemicalFertilizers();
             temp.setIdCheFer(1000000);
@@ -90,6 +94,35 @@ public class ChemicalFertilizersDao
             tx = session.beginTransaction();
             Query query = session.createSQLQuery(sql).addEntity("p", ChemicalFertilizers.class);
             event = (ChemicalFertilizers)query.uniqueResult();
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return event;
+    }    
+    
+    public ChemicalFertilizersCountry fertilizerByCountry(Integer id, String country) {
+        SessionFactory sessions = HibernateUtil.getSessionFactory();
+        Session session = sessions.openSession();
+
+        String sql  = "";        
+        ChemicalFertilizersCountry event = null;
+        Transaction tx = null;
+				
+        sql += "select p.id_che_fer_co, p.id_selfer_che_fer_co, p.country_che_fer_co";
+        sql += " from chemical_fertilizers_country p";
+        sql += " where p.id_selfer_che_fer_co="+id;
+        sql += " and p.country_che_fer_co='"+country+"'";
+//        System.out.println("sql=>"+sql);
+        try {
+            tx = session.beginTransaction();
+            Query query = session.createSQLQuery(sql).addEntity("p", ChemicalFertilizersCountry.class);
+            event = (ChemicalFertilizersCountry)query.uniqueResult();
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
