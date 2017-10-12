@@ -17,33 +17,33 @@ public class HibernateUtil {
         try {
 
             Configuration config = null;
-    config = new Configuration().configure("/hibernate.cfg.xml");
- 
-    config.setProperty("hibernate.connection.username", "ciat");
-    config.setProperty("hibernate.connection.password", "GtA7U5BWcPATbGpT");
-    String urlMysql = "jdbc:mysql://" + "localhost" + ":"
-      + "3306" + "/"
-      + "aeps_ciat_ext" + "?autoReconnect=true&&useSSL=false";
-    config.setProperty("hibernate.connection.url", urlMysql);
-    config.setProperty("hibernate.current_session_context_class", "thread");
-    config.setProperty("hibernate.hikari.dataSource.url", urlMysql);
-    config.setProperty("hibernate.hikari.dataSource.user", "ciat");
-    config.setProperty("hibernate.hikari.dataSource.password", "GtA7U5BWcPATbGpT");
-    config.setProperty("hibernate.hikari.connectionTimeout", "10000");
-    // Minimum number of ideal connections in the pool
-    config.setProperty("hibernate.hikari.minimumIdle", "1000");
-    // Maximum number of actual connection in the pool
-    config.setProperty("hibernate.hikari.maximumPoolSize", "5000");
-    // Maximum time that a connection is allowed to sit ideal in the pool
-    config.setProperty("hibernate.hikari.idleTimeout", "5000");
-    config.setProperty("hibernate.bytecode.use_reflection_optimizer'", "false");
+            config = new Configuration().configure("/hibernate.cfg.xml");
+
+            config.setProperty("hibernate.connection.username", "ciat");
+            config.setProperty("hibernate.connection.password", "GtA7U5BWcPATbGpT");
+            String urlMysql = "jdbc:mysql://" + "localhost" + ":"
+                    + "3306" + "/"
+                    + "aeps_ciat_ext" + "?autoReconnect=true&&useSSL=false";
+            config.setProperty("hibernate.connection.url", urlMysql);
+            config.setProperty("hibernate.current_session_context_class", "thread");
+            config.setProperty("hibernate.hikari.dataSource.url", urlMysql);
+            config.setProperty("hibernate.hikari.dataSource.user", "ciat");
+            config.setProperty("hibernate.hikari.dataSource.password", "GtA7U5BWcPATbGpT");
+            config.setProperty("hibernate.hikari.connectionTimeout", "10000");
+            // Minimum number of ideal connections in the pool
+            config.setProperty("hibernate.hikari.minimumIdle", "1000");
+            // Maximum number of actual connection in the pool
+            config.setProperty("hibernate.hikari.maximumPoolSize", "5000");
+            // Maximum time that a connection is allowed to sit ideal in the pool
+            config.setProperty("hibernate.hikari.idleTimeout", "5000");
+            config.setProperty("hibernate.bytecode.use_reflection_optimizer'", "false");
     // config.setProperty("hibernate.c3p0.min_size", "5");
-    // System.out.println("url_mysql " + url_mysql);
-    // System.out.println(url.toString());
- 
-    StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(config.getProperties());
-    SessionFactory factory = config.buildSessionFactory(builder.build());
-    return factory;
+            // System.out.println("url_mysql " + url_mysql);
+            // System.out.println(url.toString());
+
+            StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().applySettings(config.getProperties());
+            SessionFactory factory = config.buildSessionFactory(builder.build());
+            return factory;
             // Create the SessionFactory from hibernate.cfg.xml
 //            return new Configuration().configure().bu;
             //return new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
@@ -68,10 +68,10 @@ public class HibernateUtil {
     public static String password = "GtA7U5BWcPATbGpT";
     static Connection conn;
     static Statement st;
-    
+
     /**
-     * Metodo encargado de obtener una coneccion ya establecida con la base de datos con los datos ya
-     * pre-establecidos
+     * Metodo encargado de obtener una coneccion ya establecida con la base de
+     * datos con los datos ya pre-establecidos
      */
     public static Connection getInstanceConnection() {
         if (!(conn instanceof Connection)) {
@@ -88,7 +88,7 @@ public class HibernateUtil {
 //        System.out.println(conn);
         return conn;
     }
-    
+
     /**
      * Metodo encargado de cerrar la coneccion preestablecida
      */
@@ -165,7 +165,7 @@ public class HibernateUtil {
         linewidth = 1;
         for (int i = 0; i < numcols; i++) {
             colpos[i] = linewidth;
-            labels[i] = metadata.getColumnLabel(i + 1); 
+            labels[i] = metadata.getColumnLabel(i + 1);
             int size = metadata.getColumnDisplaySize(i + 1);
             if (size > 30 || size == -1) {
                 size = 30;
@@ -184,7 +184,7 @@ public class HibernateUtil {
             divider.insert(i, '-');
             blankline.insert(i, " ");
         }
-				
+
         for (int i = 0; i < numcols; i++) {
             divider.setCharAt(colpos[i] - 1, '+');
         }

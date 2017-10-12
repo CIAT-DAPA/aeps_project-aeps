@@ -86,6 +86,7 @@
             <result name="page">/layout.jsp</result>
             <result>/WEB-INF/views/generals/aboutUs.jsp</result>
         </action>           
+
         <action name="contact" class="org.aepscolombia.platform.controllers.ActionContact">
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="viewAction"/>
@@ -420,6 +421,7 @@
                 <param name="contentType">text/html</param>
             </result>
         </action>   
+
         <action name="listField" method="search" class="org.aepscolombia.platform.controllers.ActionField">
             <interceptor-ref name="defaultStackAeps"/>
             <interceptor-ref name="validateI18n"/>
@@ -530,6 +532,7 @@
                 <param name="bufferSize">1024</param>
             </result>  
         </action>    
+
         <action name="viewPositionSoil" method="viewPosition" class="org.aepscolombia.platform.controllers.ActionRasta">
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="jsonValidationWorkflowStack"/>
