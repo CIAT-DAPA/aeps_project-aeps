@@ -86,7 +86,12 @@
             <result name="page">/layout.jsp</result>
             <result>/WEB-INF/views/generals/aboutUs.jsp</result>
         </action>           
+<<<<<<< HEAD
         <action name="contact" class="org.aepscolombia.platform.controllers.ActionContact">
+=======
+        <action name="contact" method="getReport" class="org.aepscolombia.platform.controllers.ActionContact">
+            <!--<action name="contact">-->
+>>>>>>> iss
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="viewAction"/>
             <result name="page">/layout.jsp</result>
@@ -100,9 +105,17 @@
             <result name="input">/WEB-INF/views/login/login.jsp</result>
         </action>  
         <action name="verifyUser"  method="verifyUser" class="org.aepscolombia.platform.controllers.ActionLogin">
+<<<<<<< HEAD
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="basicStack"/>
             <result type="redirectAction">accessPlatform</result>
+=======
+            <!--            <result>/WEB-INF/views/layoutPrivate.jsp</result>-->
+            <interceptor-ref name="basicStack"/>
+            <result type="redirectAction">accessPlatform</result>
+            <!--            <result name="error" type="redirectAction">400</result>
+            <result name="input" type="redirectAction">404</result>-->
+>>>>>>> iss
         </action> 
         <action name="accessPlatform">
             <result>/WEB-INF/views/generals/accessPlatform.jsp</result>
@@ -319,8 +332,24 @@
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="jsonValidationWorkflowStack"/>
             <interceptor-ref name="defaultStackAeps"/>  
+<<<<<<< HEAD
             <result name="states" type="json"></result>
         </action>
+=======
+            <result name = "states" type="json"></result>
+            <!--            <result name = "list" type="redirectAction">
+                <param name="actionName">searchProducer</param>
+                <param name="namespace">/</param>
+            </result>-->
+            <!--<result name = "list">/WEB-INF/views/producers/list-producer.jsp</result>-->
+            <!--<result name = "row">/WEB-INF/views/producers/row-producer.jsp</result>-->
+            <!--<result name = "success">/WEB-INF/views/producers/form-producer.jsp</result>-->
+            <!--<result name="input">/WEB-INF/views/view-productor.jsp</result>-->
+        </action>
+        <!--        <action name="modifyProducer" method="modify" class="org.aepscolombia.platform.controllers.ActionProducer">
+            <result>/WEB-INF/views/login.jsp</result>
+        </action>-->
+>>>>>>> iss
         <action name="deleteProducer" method="delete" class="org.aepscolombia.platform.controllers.ActionProducer">
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="jsonValidationWorkflowStack"/>            
@@ -419,7 +448,15 @@
             <result type="json" name="combo">
                 <param name="contentType">text/html</param>
             </result>
+<<<<<<< HEAD
         </action>   
+=======
+        </action>     
+        <!--        <action name="searchFarmField" method="search" class="org.aepscolombia.platform.controllers.ActionFarm">
+            <interceptor-ref name="defaultStackAeps"/>
+            <result>/WEB-INF/views/farms/list-farm.jsp</result>
+        </action>-->
+>>>>>>> iss
         <action name="listField" method="search" class="org.aepscolombia.platform.controllers.ActionField">
             <interceptor-ref name="defaultStackAeps"/>
             <interceptor-ref name="validateI18n"/>
@@ -530,6 +567,14 @@
                 <param name="bufferSize">1024</param>
             </result>  
         </action>    
+<<<<<<< HEAD
+=======
+        <!--        <action name="getReportSoil" method="getReportRasta" class="org.aepscolombia.platform.controllers.ActionRasta">
+            <interceptor-ref name="defaultStackAeps"/>
+            <result name = "states" type="json"></result>      
+            <result>/WEB-INF/views/reports/rasta_report.jsp</result>
+        </action>-->
+>>>>>>> iss
         <action name="viewPositionSoil" method="viewPosition" class="org.aepscolombia.platform.controllers.ActionRasta">
             <interceptor-ref name="validateI18n"/>
             <interceptor-ref name="jsonValidationWorkflowStack"/>
