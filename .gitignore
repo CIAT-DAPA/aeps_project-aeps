@@ -12,13 +12,13 @@
 hs_err_pid*
 
 # netbeans
-nbproject/private/
-build/
-nbbuild/
+aeps-platform-mvn/nbproject/private/
+aeps-platform-mvn/build/
+aeps-platform-mvn/nbbuild/
 
 # Mac
 .DS_Store
 
 # Maven
-log/
-target/
+aeps-platform-mvn/log/
+aeps-platform-mvn/target/
