@@ -1,12 +1,12 @@
 
 package org.aepscolombia.platform.controllers;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.validator.annotations.*;
 import java.io.File;
@@ -1077,11 +1077,11 @@ public class ActionProducer extends BaseAction {
             valInfo.put("municipality", cityPro);
             valInfo.put("userMobileId", idUserMobile);
 
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", "" + ent.getIdEnt());
             query.put("form_id", "4");
 
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1204,11 +1204,11 @@ public class ActionProducer extends BaseAction {
 //            logPro.setDateLogEnt(new Date());
 //            logPro.setActionTypeLogEnt("D");
 //            session.saveOrUpdate(logPro);
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", "" + ent.getIdEnt());
             query.put("form_id", "4");
 
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {

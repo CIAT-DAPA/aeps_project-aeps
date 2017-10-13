@@ -1,12 +1,12 @@
 
 package org.aepscolombia.platform.controllers;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -1027,11 +1027,11 @@ public class ActionField extends BaseAction {
             valInfo.put("areaField", areaLot);
             valInfo.put("userMobileId", idUserMobile);      
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+lot.getIdFie());
             query.put("form_id", "5");
             
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1127,11 +1127,11 @@ public class ActionField extends BaseAction {
             session.saveOrUpdate(log);
 //            logDao.save(log);
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+lot.getIdFie());
             query.put("form_id", "5");
             
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {

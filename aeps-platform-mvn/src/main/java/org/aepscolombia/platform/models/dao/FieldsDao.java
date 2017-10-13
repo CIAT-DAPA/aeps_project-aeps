@@ -1,11 +1,11 @@
 package org.aepscolombia.platform.models.dao;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -833,7 +833,7 @@ public class FieldsDao
                 valInfo.put("areaField", temp.get("area_lot"));
                 valInfo.put("userMobileId", idUserMobile);      
 
-                BasicDBObject queryMongo = new BasicDBObject();
+                /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+temp.get("id_lot"));
                 queryMongo.put("form_id", "5");
 
@@ -902,7 +902,7 @@ public class FieldsDao
             Query query  = session.createSQLQuery(sql);            
             events = query.list();         
             
-            MongoClient mongo = null;
+            /*MongoClient mongo = null;
             mongo = new MongoClient("localhost", 27017);
             
             for (Object[] data : events) {
@@ -935,15 +935,15 @@ public class FieldsDao
                 
             }   
             
-            mongo.close();
+            mongo.close();*/
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
+        /*} catch (UnknownHostException ex) {
+            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);*/
         } catch (Exception ex) {
             System.out.println("Error ingresando al MongoDB");
         } finally {

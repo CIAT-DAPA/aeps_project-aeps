@@ -1,11 +1,11 @@
 package org.aepscolombia.platform.models.dao;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
@@ -310,11 +310,11 @@ public class EntitiesDao {
                 valInfo.put("municipality", temp.get("id_mun"));
                 valInfo.put("userMobileId", idUserMobile);      
 
-                BasicDBObject queryMongo = new BasicDBObject();
+                /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+temp.get("id_entity"));
                 queryMongo.put("form_id", "4");
 
-                /*MongoClient mongo = null;
+                MongoClient mongo = null;
                 try {
                     mongo = new MongoClient("localhost", 27017);
                 } catch (UnknownHostException ex) {

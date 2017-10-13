@@ -1,12 +1,12 @@
 
 package org.aepscolombia.platform.controllers;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import com.opensymphony.xwork2.ActionContext;
 import java.io.File;
 import java.io.FileInputStream;
@@ -1113,11 +1113,11 @@ public class ActionFarm extends BaseAction {
             valInfo.put("userMobileId", idUserMobile); 
 //            System.out.println("valInfo=>"+valInfo);
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+far.getIdFar());
             query.put("form_id", "3");
             
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1213,11 +1213,11 @@ public class ActionFarm extends BaseAction {
             session.saveOrUpdate(log);
 //            logDao.save(log);
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+far.getIdFar());
             query.put("form_id", "3");
             
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {

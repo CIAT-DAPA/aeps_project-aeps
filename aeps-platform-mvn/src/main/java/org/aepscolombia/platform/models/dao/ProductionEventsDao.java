@@ -1,10 +1,10 @@
 package org.aepscolombia.platform.models.dao;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -2449,7 +2449,7 @@ public class ProductionEventsDao
             Query query  = session.createSQLQuery(sql);            
             events = query.list();         
             
-            MongoClient mongo = null;
+            /*MongoClient mongo = null;
             mongo = new MongoClient("localhost", 27017);
             
             for (Object[] data : events) {
@@ -2481,15 +2481,15 @@ public class ProductionEventsDao
                 
             }   
             
-            mongo.close();
+            mongo.close();*/
             tx.commit();
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);
+        /*} catch (UnknownHostException ex) {
+            Logger.getLogger(ActionField.class.getName()).log(Level.SEVERE, null, ex);*/
         } catch (Exception ex) {
             System.out.println("Error ingresando al MongoDB");
         } finally {

@@ -1,6 +1,6 @@
 package org.aepscolombia.platform.models.dao;
 
-import com.mongodb.BasicDBObject;
+//import com.mongodb.BasicDBObject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -673,7 +673,7 @@ public class ProducersDao
                 ent.setStatus(false);     
                 session.saveOrUpdate(ent);
 
-                BasicDBObject queryMongo = new BasicDBObject();
+                /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+ent.getIdEnt());
                 queryMongo.put("form_id", "4");
                 

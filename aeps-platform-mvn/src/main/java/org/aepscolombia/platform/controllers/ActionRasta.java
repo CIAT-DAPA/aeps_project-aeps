@@ -1,12 +1,12 @@
 
 package org.aepscolombia.platform.controllers;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -1344,11 +1344,11 @@ public class ActionRasta extends BaseAction {
             valInfo.put("alt", rasta.getAltitudRas());
             valInfo.put("userMobileId", sfUser.getId());      
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+rasta.getIdRas());
             query.put("form_id", "6");
             
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {
@@ -1468,11 +1468,11 @@ public class ActionRasta extends BaseAction {
             session.saveOrUpdate(log);
 //            logDao.save(log);
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+ras.getIdRas());
             query.put("form_id", "6");
             
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {

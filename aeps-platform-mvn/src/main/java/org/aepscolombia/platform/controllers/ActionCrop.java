@@ -1,11 +1,11 @@
 
 package org.aepscolombia.platform.controllers;
 
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import com.opensymphony.xwork2.ActionContext;
 import java.io.File;
 import java.io.FileInputStream;
@@ -1738,7 +1738,7 @@ public class ActionCrop extends BaseAction {
             session.saveOrUpdate(log);
 //            logDao.save(log);
             
-            BasicDBObject query = new BasicDBObject();
+            /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+idCrop);        
             typeCrop = pro.getCropsTypes().getIdCroTyp();
             if (typeCrop==1) {
@@ -1747,7 +1747,7 @@ public class ActionCrop extends BaseAction {
                 query.put("form_id", "39");
             }            
 
-            /*MongoClient mongo = null;
+            MongoClient mongo = null;
             try {
                 mongo = new MongoClient("localhost", 27017);
             } catch (UnknownHostException ex) {

@@ -1,12 +1,12 @@
 package org.aepscolombia.platform.models.dao;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import com.mongodb.BasicDBObject;
+/*import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
-import com.mongodb.WriteResult;
+import com.mongodb.WriteResult;*/
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
