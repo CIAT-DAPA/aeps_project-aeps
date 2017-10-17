@@ -584,7 +584,7 @@ div.t-exception-report li,ul.t-stack-trace li {
 
 .sidebar-component .stats {
 	margin-top: 10px;
-	display: inline-block; *
+	display: inline-block;
 	display: inline;
 	zoom: 1;
 }
@@ -1057,7 +1057,7 @@ div.t-data-grid {
 }
 
 .gridaction-list {
-	display: inline-block; *
+	display: inline-block;
 	display: inline;
 	zoom: 1;
 }
@@ -1356,7 +1356,7 @@ fieldset.bottom {
 	padding: 4px 3px 0 0;
 	text-align: right;
 	width: 25%;
-	vertical-align: top; *
+	vertical-align: top;
 	display: inline;
 	zoom: 1;
 }
@@ -1383,7 +1383,7 @@ fieldset.bottom {
 }
 
 .formfield {
-	display: inline-block; *
+	display: inline-block;
 	display: inline;
 	zoom: 1;
 	width: 66%;
@@ -1448,7 +1448,7 @@ fieldset.bottom {
 
 .formfield .prefix {
 	line-height: 20px;
-	display: inline-block; *
+	display: inline-block;
 	display: inline;
 	zoom: 1;
 }
@@ -1485,7 +1485,7 @@ fieldset.bottom {
 
 .submitfield {
 	line-height: 28px;
-	display: inline-block; *
+	display: inline-block;
 	display: inline;
 	zoom: 1;
 	width: 66%;
@@ -1823,7 +1823,7 @@ li.visible-link {
 
 .olControlLayerSwitcher .layerHeader {
 	display: inline-block;
-	width: 100%; *
+	width: 100%; 
 	display: inline;
 	zoom: 1;
 }
@@ -2760,7 +2760,7 @@ div.product .productDescription {
 	font-size: 12px;
 	padding-bottom: 5px;
 	position: relative;
-	display: inline-block; *
+	display: inline-block; 
 	display: inline;
 	zoom: 1;
 	width: 100%;
@@ -2924,7 +2924,7 @@ div.product .productDescription {
 	height: 100%;
 	background: #000;
 	opacity: 0.65;
-	filter: alpha(opacity =             65); *
+	filter: alpha(opacity =65); 
 	display: none;
 }
 
@@ -3933,7 +3933,7 @@ div.product .productDescription {
 	display: inline-block;
 	width: 100%;
 	background-color: #F9F9F9;
-	border-bottom: 1px solid #E5E5E5; *
+	border-bottom: 1px solid #E5E5E5; 
 	display: inline;
 	zoom: 1;
 }
@@ -3973,7 +3973,7 @@ div.product .productDescription {
 
 #dialog-menu-content {
 	margin: 0 10px;
-	display: inline-block; *
+	display: inline-block; 
 	display: inline;
 	zoom: 1;
 }
@@ -4155,7 +4155,7 @@ div.t-data-grid {
 /****************** reporting *******************/
 #report-menu {
 	padding-left: 10px;
-	display: inline-block; *
+	display: inline-block; 
 	display: inline;
 	zoom: 1;
 }
@@ -4174,7 +4174,7 @@ div.t-data-grid {
 	height: 280px;
 	float: left;
 	margin: 0 5px 10px;
-	display: inline-block; *
+	display: inline-block; 
 	display: inline;
 	zoom: 1;
 }
@@ -4747,7 +4747,7 @@ table.annotatedtimelinetable td {
 	border-width: 0;
 	overflow: visible;
 	text-decoration: none;
-	color: #444; *
+	color: #444; 
 	display: inline;
 	zoom: 1;
 }

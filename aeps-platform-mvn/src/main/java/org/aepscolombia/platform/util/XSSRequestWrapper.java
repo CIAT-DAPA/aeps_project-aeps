@@ -8,6 +8,7 @@ package org.aepscolombia.platform.util;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+import org.owasp.esapi.ESAPI;
 
 /**
  *
@@ -74,7 +75,7 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
         if (value != null) {
             // NOTE: It's highly recommended to use the ESAPI library and uncomment the following line to
             // avoid encoded attacks.
-            // value = ESAPI.encoder().canonicalize(value);
+            value = ESAPI.encoder().canonicalize(value);
 
             // Avoid null characters
             value = value.replaceAll("\0", "");
