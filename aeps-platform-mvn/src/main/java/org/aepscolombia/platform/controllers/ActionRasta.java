@@ -29,7 +29,7 @@ import org.aepscolombia.platform.models.dao.EntitiesDao;
 import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.FieldsDao;
 import org.aepscolombia.platform.models.dao.RastasDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.Entities;
 import org.aepscolombia.platform.models.entity.Fields;
@@ -38,7 +38,7 @@ import org.aepscolombia.platform.models.entity.HorizontesRasta;
 import org.aepscolombia.platform.models.entity.LogEntities;
 import org.aepscolombia.platform.models.entity.Rastas;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
@@ -1158,8 +1158,8 @@ public class ActionRasta extends BaseAction {
         try {
 //            int idProOld = 0;
             tx = session.beginTransaction();
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
 //            Fields lot = null;
 //            if (rasta.getIdRas()<=0) {
 //                lot = new Fields();
@@ -1342,7 +1342,7 @@ public class ActionRasta extends BaseAction {
             valInfo.put("lat", rasta.getLatitudRas());
             valInfo.put("lng", rasta.getLongitudRas());
             valInfo.put("alt", rasta.getAltitudRas());
-            valInfo.put("userMobileId", sfUser.getId());      
+            //valInfo.put("userMobileId", sfUser.getId());      
             
             /*BasicDBObject query = new BasicDBObject();
             query.put("InsertedId", ""+rasta.getIdRas());

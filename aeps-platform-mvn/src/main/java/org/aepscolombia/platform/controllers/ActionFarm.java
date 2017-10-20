@@ -31,7 +31,7 @@ import org.aepscolombia.platform.models.dao.FieldsDao;
 import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.MunicipalitiesDao;
 import org.aepscolombia.platform.models.dao.ProducersDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 
 import org.aepscolombia.platform.models.entity.Departments;
@@ -42,7 +42,7 @@ import org.aepscolombia.platform.models.entity.LogEntities;
 import org.aepscolombia.platform.models.entity.Municipalities;
 import org.aepscolombia.platform.models.entity.Producers;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 
 import org.aepscolombia.platform.util.HibernateUtil;
@@ -1023,8 +1023,8 @@ public class ActionFarm extends BaseAction {
 
         try {
             tx = session.beginTransaction();
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
             Farms far = null;
             int idProOld = 0;
             if (idFarm<=0) {
@@ -1046,9 +1046,9 @@ public class ActionFarm extends BaseAction {
             far.setNameCommuneFar(lane_property);     
             far.setMunicipalities(new Municipalities(Integer.parseInt(cityFar)));
             Integer idUserMobile = null;
-            if (sfUser!=null) {
+            /*if (sfUser!=null) {
                 idUserMobile = sfUser.getId().intValue();
-            }
+            }*/
             far.setCreatedBy(idUserMobile);
             session.saveOrUpdate(far);
             depFar   = String.valueOf(MunicipalitiesDao.getDepartmentId(Integer.parseInt(cityFar)));

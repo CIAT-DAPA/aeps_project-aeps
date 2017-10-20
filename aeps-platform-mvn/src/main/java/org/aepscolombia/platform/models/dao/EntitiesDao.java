@@ -20,7 +20,7 @@ import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.Entities;
 import org.aepscolombia.platform.models.entity.EntitiesTypes;
 import org.aepscolombia.platform.models.entity.UserEntity;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 
@@ -285,12 +285,12 @@ public class EntitiesDao {
                 
                 String emailUser = String.valueOf(data[23]);
                 
-                SfGuardUserDao sfDao = new SfGuardUserDao();
+                /*SfGuardUserDao sfDao = new SfGuardUserDao();
                 SfGuardUser sfUser   = sfDao.getUserByLogin(null, emailUser, "");
                 Integer idUserMobile = null;
                 if (sfUser!=null) {
                     idUserMobile = sfUser.getId().intValue();
-                }
+                }*/
                 
                 HashMap valInfo = new HashMap();
                 valInfo.put("entId", temp.get("id_entity"));
@@ -308,7 +308,7 @@ public class EntitiesDao {
                 valInfo.put("validation", temp.get("digit"));
                 valInfo.put("department", temp.get("id_dep"));
                 valInfo.put("municipality", temp.get("id_mun"));
-                valInfo.put("userMobileId", idUserMobile);      
+                //valInfo.put("userMobileId", idUserMobile);      
 
                 /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+temp.get("id_entity"));

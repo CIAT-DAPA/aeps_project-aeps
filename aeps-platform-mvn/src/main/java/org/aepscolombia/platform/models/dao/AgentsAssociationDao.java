@@ -20,7 +20,6 @@ import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.AgentsAssociation;
 //import org.aepscolombia.platform.models.entity.AgentsAssociationTypes;
 import org.aepscolombia.platform.models.entity.UserEntity;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 

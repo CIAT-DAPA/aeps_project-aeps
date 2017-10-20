@@ -14,7 +14,7 @@ import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.MaizeDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
 import org.aepscolombia.platform.models.dao.RiceDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.SowingDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.Beans;
@@ -26,7 +26,7 @@ import org.aepscolombia.platform.models.entity.ProductionEvents;
 import org.aepscolombia.platform.models.entity.Rice;
 import org.aepscolombia.platform.models.entity.Sowing;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.HibernateUtil;
 
@@ -452,8 +452,8 @@ public class ActionSowing extends BaseAction {
                 info  = getText("message.successedit.sowing");
 //                return "list";
             }
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
 //            GlobalFunctions.sendInformationCrop(idCrop, typeCrop, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {

@@ -32,7 +32,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.Rastas;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -1127,12 +1127,12 @@ public class RastasDao
                 
                 String emailUser = String.valueOf(data[3]);
                 
-                SfGuardUserDao sfDao = new SfGuardUserDao();
+                /*SfGuardUserDao sfDao = new SfGuardUserDao();
                 SfGuardUser sfUser   = sfDao.getUserByLogin(null, emailUser, "");
                 Integer idUserMobile = null;
                 if (sfUser!=null) {
                     idUserMobile = sfUser.getId().intValue();
-                }
+                }*/
                 
                 Integer idRasta = Integer.parseInt(String.valueOf(temp.get("idRasta")));
                 Rastas rasta = this.objectById(idRasta);
@@ -1187,7 +1187,7 @@ public class RastasDao
                 valInfo.put("lat", rasta.getLatitudRas());
                 valInfo.put("lng", rasta.getLongitudRas());
                 valInfo.put("alt", rasta.getAltitudRas());
-                valInfo.put("userMobileId", idUserMobile);      
+                //valInfo.put("userMobileId", idUserMobile);      
 
                 /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+rasta.getIdRas());

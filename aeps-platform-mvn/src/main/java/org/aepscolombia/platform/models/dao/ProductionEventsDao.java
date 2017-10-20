@@ -34,7 +34,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.ProductionEvents;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -2400,17 +2400,17 @@ public class ProductionEventsDao
                 
                 String emailUser = String.valueOf(data[2]);
                 
-                SfGuardUserDao sfDao = new SfGuardUserDao();
+                /*SfGuardUserDao sfDao = new SfGuardUserDao();
                 SfGuardUser sfUser   = sfDao.getUserByLogin(null, emailUser, "");
                 Long idUserMobile    = null;
                 if (sfUser!=null) {
                     idUserMobile = sfUser.getId();
-                }                
+                }  */              
                 
                 Integer idCrop   = Integer.parseInt(String.valueOf(temp.get("idCrop")));
                 Integer typeCrop = Integer.parseInt(String.valueOf(temp.get("typeCrop")));                
                 
-                GlobalFunctions.sendInformationCrop(idCrop, typeCrop, idUserMobile);
+                //GlobalFunctions.sendInformationCrop(idCrop, typeCrop, idUserMobile);
                 
             }   
             tx.commit();

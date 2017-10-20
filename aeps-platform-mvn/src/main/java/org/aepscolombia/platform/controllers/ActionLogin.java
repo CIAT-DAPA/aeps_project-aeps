@@ -1,4 +1,3 @@
-
 package org.aepscolombia.platform.controllers;
 
 import com.opensymphony.xwork2.ActionContext;
@@ -16,7 +15,7 @@ import org.aepscolombia.platform.models.dao.AssociationDao;
 import org.aepscolombia.platform.models.dao.EntitiesDao;
 import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.ProducersDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.dao.UserEntityDao;
 import org.aepscolombia.platform.models.dao.UsersProfilesDao;
@@ -30,7 +29,7 @@ import org.aepscolombia.platform.models.entity.IdiomCountry;
 import org.aepscolombia.platform.models.entity.UserEntity;
 import org.aepscolombia.platform.models.entity.Users;
 import org.aepscolombia.platform.models.entity.WorkTypeExtAgent;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
@@ -47,23 +46,24 @@ import org.slf4j.LoggerFactory;
 /**
  * Clase ActionLogin
  *
- * Contiene los metodos necesarios al momento de identificar un usuario o crear uno nuevo
+ * Contiene los metodos necesarios al momento de identificar un usuario o crear
+ * uno nuevo
  *
  * @author Juan Felipe Rodriguez
  * @version 1.0
  */
 public class ActionLogin extends BaseAction {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(ActionLogin.class);
     private static final long serialVersionUID = -890122014241894430L;
     private Users user;
-    private UsersDao userDao     = new UsersDao();
-    private EntitiesDao entDao     = new EntitiesDao();
-    private ProducersDao proDao   = new ProducersDao();
-    private LogEntitiesDao logDao  = new LogEntitiesDao();
+    private UsersDao userDao = new UsersDao();
+    private EntitiesDao entDao = new EntitiesDao();
+    private ProducersDao proDao = new ProducersDao();
+    private LogEntitiesDao logDao = new LogEntitiesDao();
     private UserEntityDao usrEntDao;
     private UsersProfilesDao usrPerDao;
-    
+
     //Datos de acceso al sistema
     private String username;
     private String password;
@@ -94,7 +94,7 @@ public class ActionLogin extends BaseAction {
     private String pageLink;
     private String direction;
     private String nameAsso;
-    private String idAssoExt;    
+    private String idAssoExt;
     private List<Association> association_list;
 
     public int getTypeUser() {
@@ -119,7 +119,7 @@ public class ActionLogin extends BaseAction {
 
     public void setAssociation_list(List<Association> association_list) {
         this.association_list = association_list;
-    }   
+    }
 
     public Integer getWorkType() {
         return workType;
@@ -203,16 +203,16 @@ public class ActionLogin extends BaseAction {
         this.infoUser = infoUser;
     }
 
-    public ActionLogin() {        
+    public ActionLogin() {
         super();
     }
-    
+
     private String logSel = "";
 
     public String getLogSel() {
         return logSel;
-    }   
-    
+    }
+
     //Datos para el manejo del captcha
     private String recaptcha_challenge_field;
     private String recapChanllenge;
@@ -224,12 +224,11 @@ public class ActionLogin extends BaseAction {
 
     public void setRecaptcha_response_field(String recaptcha_response_field) {
         this.recaptcha_response_field = recaptcha_response_field;
-    }    
-    
+    }
 
     @Override
-    public String execute() throws Exception {        
-        logSel  = this.getRequest().getParameter("logSel");
+    public String execute() throws Exception {
+        logSel = this.getRequest().getParameter("logSel");
         return SUCCESS;
     }
 
@@ -240,11 +239,11 @@ public class ActionLogin extends BaseAction {
     public Users getUser() {
         return user;
     }
-    
+
     public void setUser(Users user) {
         this.user = user;
-    }   
-    
+    }
+
     private String lanSel;
 
     public String getLanSel() {
@@ -254,20 +253,24 @@ public class ActionLogin extends BaseAction {
     public void setLanSel(String lanSel) {
         this.lanSel = lanSel;
     }
-    
-    private String coCode="";
-    
+
+    private String coCode = "";
+
     /**
-     * Metodo encargado de cargar toda la informacion previa antes de realizar cualquier accion
+     * Metodo encargado de cargar toda la informacion previa antes de realizar
+     * cualquier accion
+     *
      * @throws Exception
      */
     @Override
     public void prepare() throws Exception {
         this.setAssociation_list(new AssociationDao().findAll());
-        if(coCode==null && coCode.equals("")) coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
+        if (coCode == null && coCode.equals("")) {
+            coCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
+        }
 //        if(lanTemp.equals("")) lanTemp = (String) this.getSession().get(APConstants.SESSION_LANG);
         String lanSave = (String) ActionContext.getContext().getLocale().getLanguage();
-        coCode = lanSave.substring(lanSave.length()-2,lanSave.length()).toUpperCase();
+        coCode = lanSave.substring(lanSave.length() - 2, lanSave.length()).toUpperCase();
 //        System.out.println("coCode=>"+coCode);
 //        ActionContext.getContext().put(APConstants.COUNTRY_CODE, coCode);
 //            lanSel = lanSave.replace(coCode.toLowerCase(), "");
@@ -275,32 +278,35 @@ public class ActionLogin extends BaseAction {
     }
 
     /**
-     * Encargado de verificar si un usuario se encuentra registrado en el sistema
+     * Encargado de verificar si un usuario se encuentra registrado en el
+     * sistema
+     *
      * @return Estado del proceso
      */
     public String signin() {
-        if(this.getUsername()!=null && this.getPassword()!=null) {
-            String userUsr=this.getUsername().trim();
-            String passUsr=this.getPassword().trim();
-            String saltUsr="";
+        if (this.getUsername() != null && this.getPassword() != null) {
+            String userUsr = this.getUsername().trim();
+            String passUsr = this.getPassword().trim();
+            String saltUsr = "";
 //          String passTransform = GlobalFunctions.generateMD5(this.getPasswordUser());            
             Users usrTemp = userDao.getUserByLogin(userUsr, "");
-            if (usrTemp!=null) saltUsr = usrTemp.getSaltUsr();
-            
-            String passRes = GlobalFunctions.generateSHA1(saltUsr+passUsr);            
-            
+            if (usrTemp != null) {
+                saltUsr = usrTemp.getSaltUsr();
+            }
+
+            String passRes = GlobalFunctions.generateSHA1(saltUsr + passUsr);
+
 //          String passRes = GlobalFunctions.generateSHA1(passUsr, saltUsr);
-            
             Users loggedUser = userDao.login(userUsr, passRes);
             if (loggedUser != null) {
                 this.setUsername("");
-                this.setPassword("");                
+                this.setPassword("");
 //              this.setLastLogin(loggedUser.getLastInUsr());
-                String countryCode = (String)this.getSession().get(APConstants.COUNTRY_CODE);
+                String countryCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
 //                loggedUser.setCountryUsr(new IdiomCountry(countryCode));          
                 userDao.save(loggedUser);
                 this.getSession().put(APConstants.SESSION_USER, loggedUser);
-                
+
 //              this.getSession().put(APConstants.SESSION_USER, loggedUser);
 //              LOG.info("User " + user.getEmail() + " logged in successfully.");
 //              return "states";
@@ -314,23 +320,26 @@ public class ActionLogin extends BaseAction {
         }
         return INPUT;
     }
-    
+
     /**
      * Encargado de ingresar al sistema de forma gratuita
+     *
      * @return Estado del proceso
      */
     public String tryFree() {
-        String userUsr=getText("user.usernamefree");
-        String passUsr=getText("user.passwordfree");
-        String saltUsr="";
+        String userUsr = getText("user.usernamefree");
+        String passUsr = getText("user.passwordfree");
+        String saltUsr = "";
 
         Users usrTemp = userDao.getUserByLogin(userUsr, "");
-        if (usrTemp!=null) saltUsr = usrTemp.getSaltUsr();
+        if (usrTemp != null) {
+            saltUsr = usrTemp.getSaltUsr();
+        }
 
-        String passRes   = GlobalFunctions.generateSHA1(saltUsr+passUsr);
+        String passRes = GlobalFunctions.generateSHA1(saltUsr + passUsr);
         Users loggedUser = userDao.login(userUsr, passRes);
         if (loggedUser != null) {
-            String countryCode = (String)this.getSession().get(APConstants.COUNTRY_CODE);
+            String countryCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
 //            loggedUser.setCountryUsr(new IdiomCountry(countryCode));        
             userDao.save(loggedUser);
             this.getSession().put(APConstants.SESSION_USER, loggedUser);
@@ -341,19 +350,20 @@ public class ActionLogin extends BaseAction {
     }
 
     /**
-     * Encargado de verificar con el usuario y el codigo que se le envia por correo, para 
-     * poder que se habilite en el sistema
+     * Encargado de verificar con el usuario y el codigo que se le envia por
+     * correo, para poder que se habilite en el sistema
+     *
      * @return Estado del proceso
      */
     public String verifyUser() {
-        String codVal   = this.getRequest().getParameter("codVal");
+        String codVal = this.getRequest().getParameter("codVal");
         String nameUser = this.getRequest().getParameter("nameUser");
         if (nameUser != null && codVal != null) {
             Users loggedUser = userDao.getUserByCode(nameUser.trim(), codVal.trim());
             if (loggedUser != null) {
                 loggedUser.setCodValidationUsr("");
                 loggedUser.setStatus(1);
-                String countryCode = (String)this.getSession().get(APConstants.COUNTRY_CODE);
+                String countryCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
 //                loggedUser.setCountryUsr(new IdiomCountry(countryCode));            
                 userDao.save(loggedUser);
                 this.getSession().put(APConstants.SESSION_USER, loggedUser);
@@ -368,21 +378,22 @@ public class ActionLogin extends BaseAction {
         }
 
     }
-    
+
     /**
-     * Encargado de verificar con el usuario y el codigo que se le envia por celular, para
-     * poder que se habilite en el sistema
+     * Encargado de verificar con el usuario y el codigo que se le envia por
+     * celular, para poder que se habilite en el sistema
+     *
      * @return Estado del proceso
      */
     public String verifyUserManual() {
-        String codVal   = this.getRequest().getParameter("codVal");
+        String codVal = this.getRequest().getParameter("codVal");
         String nameUser = this.getRequest().getParameter("nameUser");
         Users loggedUser = userDao.getUserByCode(nameUser.trim(), codVal.trim());
         this.setAssociation_list(null);
         if (loggedUser != null) {
             loggedUser.setCodValidationUsr("");
             loggedUser.setStatus(1);
-            String countryCode = (String)this.getSession().get(APConstants.COUNTRY_CODE);
+            String countryCode = (String) this.getSession().get(APConstants.COUNTRY_CODE);
 //            loggedUser.setCountryUsr(new IdiomCountry(countryCode));            
             userDao.save(loggedUser);
             this.getSession().put(APConstants.SESSION_USER, loggedUser);
@@ -391,28 +402,31 @@ public class ActionLogin extends BaseAction {
             return "states";
         } else {
             state = "failure";
-            info  = getText("message.invalidinfocellphone.login");
+            info = getText("message.invalidinfocellphone.login");
             return "states";
         }
 
     }
-    
+
     /**
-     * Encargado de obtener el usuario y el codigo que se le envia a un usuario por celular para 
-     * poder redirigirlo a la seccion donde puede generar una nueva contraseña
+     * Encargado de obtener el usuario y el codigo que se le envia a un usuario
+     * por celular para poder redirigirlo a la seccion donde puede generar una
+     * nueva contraseña
+     *
      * @return Estado del proceso
      */
     public String verifyUserToRestoreMan() {
-        String codVal   = this.getRequest().getParameter("codVal");
+        String codVal = this.getRequest().getParameter("codVal");
         String nameUser = this.getRequest().getParameter("nameUser");
         this.setAssociation_list(null);
-        info = "verifyUserToRestore.action?codVal="+codVal+"&nameUser="+nameUser;
+        info = "verifyUserToRestore.action?codVal=" + codVal + "&nameUser=" + nameUser;
         return "states";
     }
-    
+
     /**
-     * Encargado de cerrar la sesion de un usuario
-     * poder habilitar un usuario nuevo
+     * Encargado de cerrar la sesion de un usuario poder habilitar un usuario
+     * nuevo
+     *
      * @return Estado del proceso
      */
     public String logout() {
@@ -426,14 +440,14 @@ public class ActionLogin extends BaseAction {
 //        session.clear();
         session.remove(APConstants.SESSION_USER);
         return SUCCESS;
-    }    
-    
+    }
+
     /**
      * Propiedades de estado de las peticiones que se manejan a traves de AJAX
      */
     protected String state;
     protected String info;
-    
+
     /**
      * Metodos getter y setter por cada propiedad de estado de las peticiones
      */
@@ -451,15 +465,15 @@ public class ActionLogin extends BaseAction {
 
     public String getInfo() {
         return info;
-    }   
-    
-    
+    }
+
     /**
      * Encargado de enviar el correo para recuperar la contraseña de un usuario
+     *
      * @return Estado del proceso
      */
     public String restorePassword() {
-        String nameUser = this.getInfoUser(); 
+        String nameUser = this.getInfoUser();
         nameUser = nameUser.trim();
         String codValidation = "";
         try {
@@ -468,35 +482,35 @@ public class ActionLogin extends BaseAction {
 //            java.util.logging.Logger.getLogger(ActionLogin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchProviderException ex) {
 //            java.util.logging.Logger.getLogger(ActionLogin.class.getName()).log(Level.SEVERE, null, ex);
-        }        
+        }
         this.setAssociation_list(null);
         Users loggedUser = userDao.getUserByLogin(nameUser, "");
         if (loggedUser != null) {
 //          LOG.info("User " + user.getEmail() + " logged in successfully.");            
             loggedUser.setStatus(2);
-            boolean isNum = ValidatorUtil.validateNumber(nameUser);            
+            boolean isNum = ValidatorUtil.validateNumber(nameUser);
             if (isNum) {
                 String randomCode = GlobalFunctions.getRandomKey();
-                String messageSms = getText("message.restorepassword.login")+" "+randomCode;                
+                String messageSms = getText("message.restorepassword.login") + " " + randomCode;
                 loggedUser.setCodValidationUsr(randomCode);
                 GlobalFunctions.sendSms(loggedUser.getNameUserUsr(), messageSms);
             } else {
                 loggedUser.setCodValidationUsr(codValidation);
                 GlobalFunctions.sendEmail(loggedUser.getNameUserUsr(), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToRestoreUser(this.getRequest().getLocalAddr(), loggedUser.getNameUserUsr(), codValidation), null);
             }
-            userDao.save(loggedUser);            
+            userDao.save(loggedUser);
             state = "success";
-            info  = getText("message.sendinfoviaemailcellphone.login");            
+            info = getText("message.sendinfoviaemailcellphone.login");
         } else {
 //          LOG.info("User " + user.getEmail() + " tried to logged in but failed.");
             addFieldError("infoUser", "Campo obligatorio");
             state = "failure";
-            info  = getText("message.invaliduser.login");
+            info = getText("message.invaliduser.login");
         }
-        
+
         return "states";
-    } 
-    
+    }
+
     //Datos de envio de informacion
     private String nameUser;
     private String celphone;
@@ -519,7 +533,7 @@ public class ActionLogin extends BaseAction {
     public void setCodVal(String codVal) {
         this.codVal = codVal;
     }
-    
+
     public String getCelphone() {
         return celphone;
     }
@@ -543,28 +557,28 @@ public class ActionLogin extends BaseAction {
     public void setWhatneed(String whatneed) {
         this.whatneed = whatneed;
     }
-    
-    
-    
-    
+
     /**
      * Encargado de enviar el correo sobre las inquietudes del usuario
+     *
      * @return Estado del proceso
      */
     public String sendInformation() {
         state = "success";
-        info  = getText("message.sendissuetoadmin.login")+".";
+        info = getText("message.sendissuetoadmin.login") + ".";
         GlobalFunctions.sendEmail(getText("email.from"), getText("email.from"), getText("email.fromPass"), getText("email.subjectContact"), GlobalFunctions.messageToSendContact(this.getNameUser(), this.getEmailUser(), this.getWhatneed()), null);
         return "states";
-    } 
-    
+    }
+
     /**
-     * Encargado de verificar el usuario y el codigo que se le envia a un usuario por correo para 
-     * poder habilitar a un usuario que desea generar una nueva contraseña
+     * Encargado de verificar el usuario y el codigo que se le envia a un
+     * usuario por correo para poder habilitar a un usuario que desea generar
+     * una nueva contraseña
+     *
      * @return Estado del proceso
      */
     public String verifyUserToRestore() {
-        String codVal   = this.getRequest().getParameter("codVal");
+        String codVal = this.getRequest().getParameter("codVal");
         String nameUser = this.getRequest().getParameter("nameUser");
         if (nameUser != null && codVal != null) {
             Users loggedUser = userDao.getUserByCode(nameUser.trim(), codVal.trim());
@@ -580,7 +594,7 @@ public class ActionLogin extends BaseAction {
             return BaseAction.NOT_POSSIBLE;
         }
     }
-    
+
     private String passRest;
     private String passRestCon;
     private Integer idUser;
@@ -591,7 +605,7 @@ public class ActionLogin extends BaseAction {
 
     public void setIdUser(Integer idUser) {
         this.idUser = idUser;
-    }   
+    }
 
     public String getPassRest() {
         return passRest;
@@ -608,48 +622,44 @@ public class ActionLogin extends BaseAction {
     public void setPassRestCon(String passRestCon) {
         this.passRestCon = passRestCon;
     }
-    
-    
-    
+
     /**
      * Encargado de cambiar la contraseña para un usuario
+     *
      * @return Estado del proceso
-     */    
+     */
     public String changePassUser() {
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
-        Transaction tx  = session.beginTransaction();
+        Transaction tx = session.beginTransaction();
 
         try {
 //            String passRes = GlobalFunctions.generateSHA1(this.getPassRest());
 //            String passResCon = this.getPassRestCon();
 //            String saltUsr = GlobalFunctions.getSalt();
-            
-            Double salt = (Math.floor(Math.random()*999999+100000));
+
+            Double salt = (Math.floor(Math.random() * 999999 + 100000));
 //            int valAss = salt.intValue();
-            
+
             this.setAssociation_list(null);
 //            String passTransform = GlobalFunctions.generateSHA1(this.getPasswordUser());
 //            String passRes = GlobalFunctions.generateSHA1(this.getPassRest(), saltUsr);
 
             Users user = (Users) userDao.objectById(this.getIdUser());
-            
-            
-            String saltUsr = GlobalFunctions.generateMD5(salt+user.getNameUserUsr());
-            String passRes = GlobalFunctions.generateSHA1(saltUsr+this.getPassRest());
-            
+
+            String saltUsr = GlobalFunctions.generateMD5(salt + user.getNameUserUsr());
+            String passRes = GlobalFunctions.generateSHA1(saltUsr + this.getPassRest());
+
             user.setSaltUsr(saltUsr);
             user.setPasswordUsr(passRes);
             user.setStatus(1);
             session.saveOrUpdate(user);
-            
-            
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
-            sfUser.setSalt(saltUsr);
-            sfUser.setPassword(passRes);
-            sfDao.save(sfUser);
 
+            /*SfGuardUserDao sfDao = new SfGuardUserDao();
+             SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
+             sfUser.setSalt(saltUsr);
+             sfUser.setPassword(passRes);
+             sfDao.save(sfUser);*/
 //            LogEntities logPro = new LogEntities();
 //            logPro.setIdLogEnt(null);
 //            logPro.setIdEntityLogEnt(ent.getIdEnt()); 
@@ -660,14 +670,14 @@ public class ActionLogin extends BaseAction {
 //            session.saveOrUpdate(logPro);
             tx.commit();
             state = "success";
-            info  = getText("message.successrestorepassword.login");
+            info = getText("message.successrestorepassword.login");
         } catch (HibernateException e) {
             if (tx != null) {
                 tx.rollback();
             }
             e.printStackTrace();
             state = "failure";
-            info  = getText("message.failrestorepassword.login");
+            info = getText("message.failrestorepassword.login");
         }
 //        } catch (NoSuchAlgorithmException ex) {
 ////            java.util.logging.Logger.getLogger(ActionLogin.class.getName()).log(Level.SEVERE, null, ex);
@@ -676,14 +686,12 @@ public class ActionLogin extends BaseAction {
 //        }
         return "states";
     }
-    
 
     /**
      * Metodo encargado de validar el formulario de un nuevo usuario a registrar
      */
     @Override
-    public void validate() 
-    {
+    public void validate() {
         /*
          * Se evalua dependiendo a la accion realizada:
          * 1) login: Al momento de ingresar al sistema
@@ -692,43 +700,45 @@ public class ActionLogin extends BaseAction {
          * 4) changepass: Al momento de recuperar la contraseña
          */
 //        System.out.println("ingress->"+this.getIngress());
-        if (actExe.equals("login")) {            
-            if (this.getUsername()==null || this.getUsername().isEmpty()) {
+        if (actExe.equals("login")) {
+            if (this.getUsername() == null || this.getUsername().isEmpty()) {
                 addFieldError("username", getText("message.fieldusernamerequired.login"));
             }
-            if (this.getPassword()==null || this.getPassword().isEmpty()) {
+            if (this.getPassword() == null || this.getPassword().isEmpty()) {
                 addFieldError("password", getText("message.fieldpasswordrequired.login"));
             }
             if (!getFieldErrors().isEmpty()) {
                 addActionError(getText("desc.fieldusernamerequired.login"));
             }
-            
-            if(this.getUsername()!=null && this.getPassword()!=null) {
+
+            if (this.getUsername() != null && this.getPassword() != null) {
                 String userUsr = this.getUsername().trim();
                 String passUsr = this.getPassword().trim();
-                String saltUsr = "";         
-                Users usrTemp  = userDao.getUserByLogin(userUsr, "");
-                if (usrTemp!=null) saltUsr = usrTemp.getSaltUsr();
+                String saltUsr = "";
+                Users usrTemp = userDao.getUserByLogin(userUsr, "");
+                if (usrTemp != null) {
+                    saltUsr = usrTemp.getSaltUsr();
+                }
 
-                String passRes   = GlobalFunctions.generateSHA1(saltUsr+passUsr);
-                Users loggedUser = userDao.login(userUsr, passRes);                
+                String passRes = GlobalFunctions.generateSHA1(saltUsr + passUsr);
+                Users loggedUser = userDao.login(userUsr, passRes);
                 if (loggedUser == null) {
                     addFieldError("username", getText("message.fieldusernameinvalid.login"));
                     addFieldError("password", getText("message.fieldusernameinvalid.login"));
                     addActionError(getText("desc.fieldusernameinvalid.login"));
                 }
             }
-            
-        } else if (actExe.equals("newuser")) {           
+
+        } else if (actExe.equals("newuser")) {
             HashMap required = new HashMap();
             required.put("typeUser", typeUser);
-            if (typeUser==1) {            
+            if (typeUser == 1) {
                 required.put("workType", workType);
-                if (workType==3 || workType==4 || workType==5) {
+                if (workType == 3 || workType == 4 || workType == 5) {
                     required.put("idAssoExt", idAssoExt);
                 }
-            } else if (typeUser==3) {
-                if (this.getEmailRep()!=null || !this.getEmailRep().isEmpty()) {
+            } else if (typeUser == 3) {
+                if (this.getEmailRep() != null || !this.getEmailRep().isEmpty()) {
                     if (!ValidatorUtil.validateEmail(this.getEmailRep())) {
                         addFieldError("emailRep", getText("message.invalidemail.login"));
                         this.setPassword(null);
@@ -736,52 +746,50 @@ public class ActionLogin extends BaseAction {
                 }
                 required.put("emailRep", emailRep);
                 required.put("pageLink", pageLink);
-                required.put("direction", direction);    
-                required.put("nameAsso", nameAsso);            
+                required.put("direction", direction);
+                required.put("nameAsso", nameAsso);
             }
 //            required.put("emailUser", emailUser);
-            required.put("passwordUser", passwordUser);    
-            required.put("passwordRepUser", passwordRepUser);    
+            required.put("passwordUser", passwordUser);
+            required.put("passwordRepUser", passwordRepUser);
             boolean enter = false;
-            
+
             for (Iterator it = required.keySet().iterator(); it.hasNext();) {
                 String sK = (String) it.next();
                 String sV = String.valueOf(required.get(sK));
-                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
+                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV) == null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
                     addFieldError(sK, getText("message.fieldsrequired.login"));
                     enter = true;
                 }
             }
 
-            
             if (enter) {
                 addActionError(getText("message.missingfields.login"));
             }
-            
-            if ((this.getEmailUser()==null || this.getEmailUser().isEmpty()) && (this.getCelphoneUser()==null || this.getCelphoneUser().isEmpty())) {
+
+            if ((this.getEmailUser() == null || this.getEmailUser().isEmpty()) && (this.getCelphoneUser() == null || this.getCelphoneUser().isEmpty())) {
 //            if ((this.getEmailUser()==null || this.getEmailUser().isEmpty())) {
                 addFieldError("emailUser", getText("message.needemailcellphone.login"));
                 addFieldError("celphoneUser", getText("message.needemailcellphone.login"));
                 addActionError(getText("desc.needemailcellphone.login"));
             }
 
-            if ((this.getEmailUser()!=null || !this.getEmailUser().isEmpty()) && (this.getCelphoneUser()==null || this.getCelphoneUser().isEmpty())) {
+            if ((this.getEmailUser() != null || !this.getEmailUser().isEmpty()) && (this.getCelphoneUser() == null || this.getCelphoneUser().isEmpty())) {
                 if (!ValidatorUtil.validateEmail(this.getEmailUser())) {
                     addFieldError("emailUser", getText("message.invalidemail.login"));
                     this.setPassword(null);
                 }
-            }            
-            
-            if (this.getPasswordUser()!=null && this.getPasswordUser().length() < 6) {
+            }
+
+            if (this.getPasswordUser() != null && this.getPasswordUser().length() < 6) {
                 addFieldError("passwordUser", getText("message.fieldincomplete.login"));
                 addActionError(getText("desc.fieldincomplete.login"));
             }
-            
+
 //            if (this.getPasswordUser()!=null && this.getPasswordUser().length() > 10) {
 //                addFieldError("passwordUser", "Campo muy largo");
 //                addActionError("Debe ingresar una contraseña de menos de 10 caracteres");
 //            }
-            
 //            System.out.println("datos->"+this.getRequest().getLocalAddr()+" datos1->"+this.getRequest().getLocalName()+" datos2->"+this.getRequest().getMethod());
 //            this.getRequest().getRemoteAddr()            
 //            if (!result.isValid()) {
@@ -792,57 +800,57 @@ public class ActionLogin extends BaseAction {
 //            result   = null;
 //            recaptcha_challenge_field = ""; 
 //            recaptcha_response_field  = "";
-            
             if (getFieldErrors().isEmpty()) {
 //                return NONE;
             }
-            
+
 //            boolean resVerify = ValidatorUtil.verifyCaptcha(this.getRequest().getRemoteAddr(), recaptcha_challenge_field, recaptcha_response_field);
 //            if (!resVerify) {
 //                addActionError("El codigo ingresado es incorrecto, intentelo nuevamente y recargue la imagen");
 //            } 
-            
-            if ((this.getPasswordRepUser()==null || this.getPasswordRepUser().isEmpty()) || !this.getPasswordUser().equals(this.getPasswordRepUser())) {
+            if ((this.getPasswordRepUser() == null || this.getPasswordRepUser().isEmpty()) || !this.getPasswordUser().equals(this.getPasswordRepUser())) {
                 addFieldError("passwordUser", "");
                 addFieldError("passwordRepUser", "");
                 addActionError(getText("message.notsamepassword.login"));
             }
 
-            if (this.getEmailUser()!=null || this.getCelphoneUser()!=null) {
+            if (this.getEmailUser() != null || this.getCelphoneUser() != null) {
                 String nameUser = this.getEmailUser();
-                if (this.getEmailUser()==null) nameUser = this.getCelphoneUser();
+                if (this.getEmailUser() == null) {
+                    nameUser = this.getCelphoneUser();
+                }
                 Users resUser = userDao.checkUsername(nameUser);
-                
-                if (resUser!=null) {      
+
+                if (resUser != null) {
                     addFieldError("emailUser", getText("message.userexist.login"));
                     addActionError(getText("desc.userexist.login"));
                 }
             }
-            
+
         } else if (actExe.equals("restuser")) {
-            if (this.getInfoUser()==null || this.getInfoUser().isEmpty()) {
+            if (this.getInfoUser() == null || this.getInfoUser().isEmpty()) {
                 addFieldError("infoUser", getText("message.requireduser.login"));
                 addActionError(getText("desc.requireduser.login"));
             }
         } else if (actExe.equals("changepass")) {
-            
-            if (this.getPassRest()!=null && this.getPassRest().length() < 6) {
+
+            if (this.getPassRest() != null && this.getPassRest().length() < 6) {
                 addFieldError("passRest", getText("message.fieldincompletepassword.login"));
                 addActionError(getText("desc.fieldincompletepassword.login"));
             }
 
-            if (this.getPassRest()!=null && this.getPassRest().length() > 10) {
+            if (this.getPassRest() != null && this.getPassRest().length() > 10) {
                 addFieldError("passRest", getText("message.fieldverylong.login"));
                 addActionError(getText("desc.fieldverylong.login"));
             }
-            
-            if ((this.getPassRestCon()==null || this.getPassRestCon().isEmpty()) || !this.getPassRest().equals(this.getPassRestCon())) {
+
+            if ((this.getPassRestCon() == null || this.getPassRestCon().isEmpty()) || !this.getPassRest().equals(this.getPassRestCon())) {
                 addFieldError("passRest", "");
                 addFieldError("passRestCon", "");
                 addActionError(getText("message.notsamepassword.login"));
             }
-            
-        } else if (actExe.equals("contact")) {            
+
+        } else if (actExe.equals("contact")) {
             HashMap required = new HashMap();
             required.put("nameUser", nameUser);
             required.put("emailUser", emailUser);
@@ -851,17 +859,17 @@ public class ActionLogin extends BaseAction {
             for (Iterator it = required.keySet().iterator(); it.hasNext();) {
                 String sK = (String) it.next();
                 String sV = (String) required.get(sK);
-                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
+                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV) == null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
                     enterFields = true;
                     addFieldError(sK, getText("message.fieldsrequired.contact"));
                 }
             }
-            
+
             if (enterFields) {
                 addActionError(getText("message.missingfields.contact"));
             }
-        
-        } else if (actExe.equals("verifyuser") || actExe.equals("changePassUser")) {            
+
+        } else if (actExe.equals("verifyuser") || actExe.equals("changePassUser")) {
             HashMap required = new HashMap();
             required.put("nameUser", nameUser);
             required.put("codVal", codVal);
@@ -869,12 +877,12 @@ public class ActionLogin extends BaseAction {
             for (Iterator it = required.keySet().iterator(); it.hasNext();) {
                 String sK = (String) it.next();
                 String sV = (String) required.get(sK);
-                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV)==null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
+                if (StringUtils.trim(sV).equals("null") || StringUtils.trim(sV) == null || StringUtils.trim(sV).equals("") || sV.equals("-1")) {
                     enterFields = true;
                     addFieldError(sK, getText("message.fieldsrequiredverify.login"));
                 }
             }
-            
+
             if (enterFields) {
                 addActionError(getText("message.missingfieldsverify.login"));
             }
@@ -883,10 +891,10 @@ public class ActionLogin extends BaseAction {
 
     /**
      * Encargado de guardar la informacion al momento de crear un nuevo usuario
+     *
      * @return Estado del proceso
      */
-    public String saveData() 
-    {
+    public String saveData() {
         String action = "C";
 //        if (actExe.equals("save")) {
 //            action = "C";
@@ -896,52 +904,50 @@ public class ActionLogin extends BaseAction {
         if (action.equals("C")) {
             ReCaptcha captcha = ReCaptchaFactory.newReCaptcha("6Le3bu4SAAAAAAIy3mS2Ov8XerDrpgVxmWOShi9C", "6Le3bu4SAAAAAAdFTwmmT_2XuBKPGUhfdlgpRseY", false);
             ReCaptchaResponse result = captcha.checkAnswer(this.getRequest().getRemoteAddr(), recaptcha_challenge_field, recaptcha_response_field);
-            if (!result.isValid()) { 
+            if (!result.isValid()) {
                 state = "failure";
-                info  = getText("message.codeincorrect.login");         
+                info = getText("message.codeincorrect.login");
                 return "states";
             }
         }
         this.setAssociation_list(null);
         SessionFactory sessions = HibernateUtil.getSessionFactory();
         Session session = sessions.openSession();
-        Transaction tx  = session.beginTransaction();       
-        
-        
+        Transaction tx = session.beginTransaction();
         try {
             String codValidation = GlobalFunctions.getSalt();
 //            String saltUsr       = GlobalFunctions.getSalt();
-            Double salt = (Math.floor(Math.random()*999999+100000));
+            Double salt = (Math.floor(Math.random() * 999999 + 100000));
 //            int valAss = salt.intValue();
-            String saltUsr = GlobalFunctions.generateMD5(salt+this.getEmailUser());
-            String passTransform = GlobalFunctions.generateSHA1(saltUsr+this.getPasswordUser());
-            
+            String saltUsr = GlobalFunctions.generateMD5(salt + this.getEmailUser());
+            String passTransform = GlobalFunctions.generateSHA1(saltUsr + this.getPasswordUser());            
             Entities ent = new Entities();
             ent.setIdEnt(null);
 //            ent.setEntityTypeEnt(1);
             ent.setEntitiesTypes(new EntitiesTypes(this.getTypeUser()));
-            if(this.getCelphoneUser()!=null && !this.getCelphoneUser().equals("")) ent.setCellphoneEnt(Long.parseLong(this.getCelphoneUser()));
+            if (this.getCelphoneUser() != null && !this.getCelphoneUser().equals("")) {
+                ent.setCellphoneEnt(Long.parseLong(this.getCelphoneUser()));
+            }
             ent.setEmailEnt(this.getEmailUser());
             ent.setStatus(true);
-            if (this.getTypeUser()==3) {
+            if (this.getTypeUser() == 3) {
                 ent.setEmail2Ent(this.getEmailRep());
                 ent.setPageLinkEnt(this.getPageLink());
                 ent.setAddressEnt(this.getDirection());
-                ent.setNameEnt(this.getNameAsso());  
+                ent.setNameEnt(this.getNameAsso());
             }
             session.saveOrUpdate(ent);
 //            entDao.save(ent);
 
             /*LogEntities log = new LogEntities();
-            log.setIdLogEnt(null);
-            log.setIdEntityLogEnt(ent.getIdEnt());
-            log.setIdObjectLogEnt(ent.getIdEnt());
-            log.setTableLogEnt("entities");
-            log.setDateLogEnt(new Date());
-            log.setActionTypeLogEnt(action);
-            session.saveOrUpdate(log);*/
+             log.setIdLogEnt(null);
+             log.setIdEntityLogEnt(ent.getIdEnt());
+             log.setIdObjectLogEnt(ent.getIdEnt());
+             log.setTableLogEnt("entities");
+             log.setDateLogEnt(new Date());
+             log.setActionTypeLogEnt(action);
+             session.saveOrUpdate(log);*/
 //            logDao.save(log);
-                        
 //            System.out.println("Result = "+result);
             if (this.getTypeUser() == 2) {
                 Producers pro = new Producers();
@@ -951,27 +957,26 @@ public class ActionLogin extends BaseAction {
                 session.saveOrUpdate(pro);
 
                 /*LogEntities logPro = new LogEntities();
-                logPro.setIdLogEnt(null);
-                logPro.setIdEntityLogEnt(ent.getIdEnt());
-                logPro.setIdObjectLogEnt(pro.getIdPro());
-                logPro.setTableLogEnt("producers");
-                logPro.setDateLogEnt(new Date());
-                logPro.setActionTypeLogEnt(action);
-                session.saveOrUpdate(logPro);*/
+                 logPro.setIdLogEnt(null);
+                 logPro.setIdEntityLogEnt(ent.getIdEnt());
+                 logPro.setIdObjectLogEnt(pro.getIdPro());
+                 logPro.setTableLogEnt("producers");
+                 logPro.setDateLogEnt(new Date());
+                 logPro.setActionTypeLogEnt(action);
+                 session.saveOrUpdate(logPro);*/
 //                logDao.save(logPro);
-
-            } else if (this.getTypeUser() == 1) {                
+            } else if (this.getTypeUser() == 1) {
                 ExtensionAgents ext = new ExtensionAgents();
                 ext.setIdExtAge(null);
                 ext.setEntities(ent);
-                ext.setWorkTypeExtAge(new WorkTypeExtAgent(this.getWorkType()));                
-                if (workType==3 || workType==4 || workType==5) {
+                ext.setWorkTypeExtAge(new WorkTypeExtAgent(this.getWorkType()));
+                if (workType == 3 || workType == 4 || workType == 5) {
                     ext.setStatus(false);
                 } else {
                     ext.setStatus(true);
                 }
-                session.saveOrUpdate(ext);  
-                if (this.getIdAssoExt()!=null && !this.getIdAssoExt().equals(" ")) {
+                session.saveOrUpdate(ext);
+                if (this.getIdAssoExt() != null && !this.getIdAssoExt().equals(" ")) {
                     Integer idAss = Integer.parseInt(this.getIdAssoExt());
                     AgentsAssociation agAsc = new AgentsAssociation();
                     agAsc.setAssociation(new Association(idAss));
@@ -981,15 +986,14 @@ public class ActionLogin extends BaseAction {
                 }
 
                 /*LogEntities logPro = new LogEntities();
-                logPro.setIdLogEnt(null);
-                logPro.setIdEntityLogEnt(ent.getIdEnt());
-                logPro.setIdObjectLogEnt(ext.getIdExtAge());
-                logPro.setTableLogEnt("extension_agents");
-                logPro.setDateLogEnt(new Date());
-                logPro.setActionTypeLogEnt(action);
-                session.saveOrUpdate(logPro);*/
+                 logPro.setIdLogEnt(null);
+                 logPro.setIdEntityLogEnt(ent.getIdEnt());
+                 logPro.setIdObjectLogEnt(ext.getIdExtAge());
+                 logPro.setTableLogEnt("extension_agents");
+                 logPro.setDateLogEnt(new Date());
+                 logPro.setActionTypeLogEnt(action);
+                 session.saveOrUpdate(logPro);*/
 //                logDao.save(logPro);
-
             } else if (this.getTypeUser() == 3) {
                 Association asc = new Association();
                 asc.setIdAsc(null);
@@ -999,13 +1003,13 @@ public class ActionLogin extends BaseAction {
                 session.saveOrUpdate(asc);
 
                 /*LogEntities logPro = new LogEntities();
-                logPro.setIdLogEnt(null);
-                logPro.setIdEntityLogEnt(ent.getIdEnt());
-                logPro.setIdObjectLogEnt(asc.getIdAsc());
-                logPro.setTableLogEnt("association");
-                logPro.setDateLogEnt(new Date());
-                logPro.setActionTypeLogEnt(action);
-                session.saveOrUpdate(logPro);*/
+                 logPro.setIdLogEnt(null);
+                 logPro.setIdEntityLogEnt(ent.getIdEnt());
+                 logPro.setIdObjectLogEnt(asc.getIdAsc());
+                 logPro.setTableLogEnt("association");
+                 logPro.setDateLogEnt(new Date());
+                 logPro.setActionTypeLogEnt(action);
+                 session.saveOrUpdate(logPro);*/
             }
 
             String nameUser = null;
@@ -1014,36 +1018,35 @@ public class ActionLogin extends BaseAction {
             } else if (!this.getCelphoneUser().isEmpty()) {
                 nameUser = this.getCelphoneUser();
             }
-            
 
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser   = sfDao.getUserByLogin(null, nameUser, "");    
+
+            /*SfGuardUserDao sfDao = new SfGuardUserDao();
+             SfGuardUser sfUser   = sfDao.getUserByLogin(null, nameUser, "");    
             
-            if (sfUser==null) {
-                sfUser = new SfGuardUser();
-                sfUser.setEmailAddress(this.getEmailUser());
-                sfUser.setFirstName("");
-                sfUser.setLastName("");
-                sfUser.setAlgorithm("sha1");
-                sfUser.setSalt(saltUsr);
-                sfUser.setPassword(passTransform);
-                sfUser.setIsActive(true);
-                sfUser.setIsSuperAdmin(false);
-                sfUser.setUsername(nameUser);
-                sfUser.setCreatedAt(new Date());
-                sfUser.setUpdatedAt(new Date());
-                sfUser.setCanLogin(false);                
-            } else {
-                sfUser.setSalt(saltUsr);
-                sfUser.setPassword(passTransform);
-                sfUser.setUpdatedAt(new Date());
-            }
-            sfDao.save(sfUser);
-                
+             if (sfUser==null) {
+             sfUser = new SfGuardUser();
+             sfUser.setEmailAddress(this.getEmailUser());
+             sfUser.setFirstName("");
+             sfUser.setLastName("");
+             sfUser.setAlgorithm("sha1");
+             sfUser.setSalt(saltUsr);
+             sfUser.setPassword(passTransform);
+             sfUser.setIsActive(true);
+             sfUser.setIsSuperAdmin(false);
+             sfUser.setUsername(nameUser);
+             sfUser.setCreatedAt(new Date());
+             sfUser.setUpdatedAt(new Date());
+             sfUser.setCanLogin(false);                
+             } else {
+             sfUser.setSalt(saltUsr);
+             sfUser.setPassword(passTransform);
+             sfUser.setUpdatedAt(new Date());
+             }
+             sfDao.save(sfUser);*/
             String userContact = this.getCelphoneUser();
             boolean isNum = ValidatorUtil.validateNumber(userContact);
             String randomCode = GlobalFunctions.getRandomKey();
-                
+
             Users user = new Users();
             user.setIdUsr(null);
             user.setNameUserUsr(nameUser);
@@ -1054,29 +1057,28 @@ public class ActionLogin extends BaseAction {
                 user.setCodValidationUsr(randomCode);
             } else {
                 user.setCodValidationUsr(codValidation);
-            }            
+            }
             user.setLastInUsr(null);
-            if(coCode!=null) user.setCountryUsr(new IdiomCountry(coCode));
+            if (coCode != null) {
+                user.setCountryUsr(new IdiomCountry(coCode));
+            }
             user.setStatus(2);//Estado inhabilitado hasta confirmar
 //            user.setCreatedBy(sfUser.getId().intValue());
             session.saveOrUpdate(user);
 //            userDao.save(user);
-            
-            
+
             /*LogEntities logPro = new LogEntities();
-            logPro.setIdLogEnt(null);
-            logPro.setIdEntityLogEnt(ent.getIdEnt());
-            logPro.setIdObjectLogEnt(user.getIdUsr());
-            logPro.setTableLogEnt("users");
-            logPro.setDateLogEnt(new Date());
-            logPro.setActionTypeLogEnt(action);
-            session.saveOrUpdate(logPro);*/
+             logPro.setIdLogEnt(null);
+             logPro.setIdEntityLogEnt(ent.getIdEnt());
+             logPro.setIdObjectLogEnt(user.getIdUsr());
+             logPro.setTableLogEnt("users");
+             logPro.setDateLogEnt(new Date());
+             logPro.setActionTypeLogEnt(action);
+             session.saveOrUpdate(logPro);*/
 //            logDao.save(logPro);
 //            throw new HibernateException("Error creando usuario entidades");
 //            tx.rollback();
-            
 //            usrEntDao.saveUserEnt(ent.getIdEnt(), user.getIdUsr());
-            
             UserEntity usrEnt = new UserEntity();
             usrEnt.setIdUsrEnt(null);
             usrEnt.setIdProjectUsrEnt(null);
@@ -1086,50 +1088,57 @@ public class ActionLogin extends BaseAction {
             session.saveOrUpdate(usrEnt);
 //            resUsrEnt = usrEntDao.save(usrEnt);
 //            if(!resUsrEnt) tx.rollback();
-            
+
 ////            resUsrEnt = usrEntDao.save(usrEnt);
 ////            if(!resUsrEnt) throw new HibernateException("Error creando usuario entidades");
 ////
             //Guardar el usuario segun el perfil designado
             int profile = 0;
-            if(this.getTypeUser()==1) {
+            if (this.getTypeUser() == 1) {
                 profile = 4;
-            } else if(this.getTypeUser()==2) {
+            } else if (this.getTypeUser() == 2) {
                 profile = 3;
-            } else if(this.getTypeUser()==3) {
+            } else if (this.getTypeUser() == 3) {
                 profile = 5;
             }
-						
-            /*UsersProfiles usrPer = new UsersProfiles();
-            Profiles prof = new Profiles(profile);
-            usrPer.setId(new UsersProfilesId(user.getIdUsr(), prof.getIdPro()));
-            usrPer.setUsers(user);
-            usrPer.setProfiles(prof);
-            usrPer.setIdProjectUsrPro(null);
-            session.saveOrUpdate(usrPer);*/
 
+            /*UsersProfiles usrPer = new UsersProfiles();
+             Profiles prof = new Profiles(profile);
+             usrPer.setId(new UsersProfilesId(user.getIdUsr(), prof.getIdPro()));
+             usrPer.setUsers(user);
+             usrPer.setProfiles(prof);
+             usrPer.setIdProjectUsrPro(null);
+             session.saveOrUpdate(usrPer);*/
             tx.commit();
             state = "success";
             String host = this.getRequest().getRemoteHost();
 //            String host = "www.open-aeps.org";            
-            String messageSms = getText("message.codeofactivation.login")+" "+randomCode;
+            String messageSms = getText("message.codeofactivation.login") + " " + randomCode;
             if (this.getTypeUser() == 3) {
                 GlobalFunctions.sendEmail(getText("email.fromContact"), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToValidateUser(host, user.getNameUserUsr()), null);
-                info  = getText("message.successaddassociation.login");
+                info = getText("message.successaddassociation.login");
             } else if (this.getTypeUser() == 1) {
-                if (this.getWorkType()== 1 || this.getWorkType()== 2) {
-                    if (!isNum) GlobalFunctions.sendEmail(this.getEmailUser(), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToNewUser(host, user.getNameUserUsr(), codValidation), null);
-                    if (isNum)  GlobalFunctions.sendSms(userContact, messageSms);
-                    info  = getText("message.successaddagronomist.login");//Tener la posibilidad de enviarlo por celular
+                if (this.getWorkType() == 1 || this.getWorkType() == 2) {
+                    if (!isNum) {
+                        GlobalFunctions.sendEmail(this.getEmailUser(), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToNewUser(host, user.getNameUserUsr(), codValidation), null);
+                    }
+                    if (isNum) {
+                        GlobalFunctions.sendSms(userContact, messageSms);
+                    }
+                    info = getText("message.successaddagronomist.login");//Tener la posibilidad de enviarlo por celular
                 } else {
                     //Enviar correo al representante del gremio o empresa privada encargado (PENDING)
                     GlobalFunctions.sendEmail(getText("email.fromContact"), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToValidateUser(host, user.getNameUserUsr()), null);
-                    info  = getText("message.successaddagronomistindependent.login");//Tener la posibilidad de enviarlo por celular
+                    info = getText("message.successaddagronomistindependent.login");//Tener la posibilidad de enviarlo por celular
                 }
             } else if (this.getTypeUser() == 2) {
-                if (!isNum) GlobalFunctions.sendEmail(this.getEmailUser(), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToNewUser(host, user.getNameUserUsr(), codValidation), null);
-                if (isNum)  GlobalFunctions.sendSms(userContact, messageSms);
-                info  = getText("message.successaddproducer.login");//Tener la posibilidad de enviarlo por celular
+                if (!isNum) {
+                    GlobalFunctions.sendEmail(this.getEmailUser(), getText("email.from"), getText("email.fromPass"), getText("email.subjectNewUser"), GlobalFunctions.messageToNewUser(host, user.getNameUserUsr(), codValidation), null);
+                }
+                if (isNum) {
+                    GlobalFunctions.sendSms(userContact, messageSms);
+                }
+                info = getText("message.successaddproducer.login");//Tener la posibilidad de enviarlo por celular
             }
         } catch (HibernateException e) {
             if (tx != null) {
@@ -1137,7 +1146,7 @@ public class ActionLogin extends BaseAction {
             }
             e.printStackTrace();
             state = "failure";
-            info  = getText("message.failadduser.login");
+            info = getText("message.failadduser.login");
         } catch (NoSuchAlgorithmException ex) {
             ex.printStackTrace();
 //            java.util.logging.Logger.getLogger(ActionLogin.class.getName()).log(Level.SEVERE, null, ex);
@@ -1147,7 +1156,7 @@ public class ActionLogin extends BaseAction {
         } catch (Exception ex) {
             ex.printStackTrace();
             state = "failure";
-            info  = getText("message.failaddmobileuser.login");
+            info = getText("message.failaddmobileuser.login");
         } finally {
             session.close();
         }

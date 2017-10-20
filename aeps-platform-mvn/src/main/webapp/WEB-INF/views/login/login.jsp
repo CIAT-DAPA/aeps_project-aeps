@@ -61,26 +61,17 @@
                                     <span><s:property value="getText('link.signup.login')" /></span>
                                 </a>
                             </div>
-                            <div class="login_links col-md-12">
-                                <a href="javascript:void(0)" id="verUser">
-                                    <span><s:property value="getText('button.verifyuser.login')" /></span>
-                                </a>
-                            </div>
-                            <div class="login_links col-md-12">
-                                <a href="javascript:void(0)" id="changePass">
-                                    <span><s:property value="getText('link.changepasscel.login')" /></span>
-                                </a>
-                            </div>                         
                         </div>                 
                     </s:form>
                     <div class="">
-                        <sj:submit type="button" formIds="formLogin" cssClass="btn btn-initial btn-lg" onclick="addMessageProcessLogin('formLogin_lanSel'); ga('send', 'event', 'Register', 'click', 'SingIn');" onCompleteTopics="completeLogin" validate="true" validateFunction="validationForm"><s:property value="%{getText('button.signin.login')}"/></sj:submit>
+                        <sj:submit type="button" formIds="formLogin" cssClass="btn btn-initial btn-lg" onclick="addMessageProcessLogin('formLogin_lanSel'); ga('send', 'event', 'Register', 'click', 'SingIn');" onCompleteTopics="completeLogin" validate="true" validateFunction="validationForm"><s:property value="%{getText('button.signin.login')}"/>
+                        </sj:submit>
                     </div>
                     <script>
-                        $.subscribe('completeLogin', function(event,data) {
+                        $.subscribe('completeLogin', function (event, data) {
                             $.unblockUI();
-//                                alert(event.originalEvent.request.responseText)
-//                            document.location='http://localhost:8083/dashboard.action'
+                            //                                alert(event.originalEvent.request.responseText)
+                            //                            document.location='http://localhost:8083/dashboard.action'
                         });
                     </script>
                 </div>
@@ -103,8 +94,8 @@
                             </div>
                             <div class="col-md-12">
                                 <sj:submit type="button" id="btRestore" cssClass="btn btn-initial btn-lg" onclick="addMessageProcessLogin('formValidate_lanSel'); ga('send', 'event', 'Register', 'click', 'Remember');" targets="divMessage" onCompleteTopics="completeRestore" validate="true" validateFunction="validationForm"><s:property value="getText('button.restore.login')" /></sj:submit>
+                                </div>
                             </div>
-                        </div>
                     </s:form>
                     <div class="hideInfo">
                         <div id="confirm_dialog" class="cbox_content">
@@ -117,7 +108,7 @@
                         </div>
                     </div>
                     <script>
-                        $.subscribe('completeRestore', function(event, data) {
+                        $.subscribe('completeRestore', function (event, data) {
                             showDialogWarning('confirm_dialog');
                             completeForm('', 'formValidate', event.originalEvent.request.responseText);
                         });
@@ -140,7 +131,7 @@
                                     headerKey="-1" 
                                     headerValue="---" 
                                     onchange="showOtherElementUser(this.value, 'divWorkType', 'divDataAssociation');"
-                                />
+                                    />
                             </div>   
                         </div>
                         <div class="hideInfo" id="divWorkType">
@@ -153,7 +144,7 @@
                                         headerKey="-1" 
                                         headerValue="---"   
                                         onchange="showOtherElementWorkType(this.value, 'divAssociationAdd');"
-                                    />
+                                        />
                                 </div>
                             </div>
                             <div class="hideInfo" id="divAssociationAdd">
@@ -167,7 +158,7 @@
                                             listValue="nameAsc"          
                                             headerKey=" " 
                                             headerValue="---"
-                                        />
+                                            />
                                     </div>
                                 </div>
                             </div>
@@ -204,16 +195,7 @@
                                 <s:textfield type="email" class="form-control" id="formNewUser_emailUser" name="emailUser" placeholder="%{getText('desc.emailuser.login')}"/>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <div class="row">
-                                <div class="col-md-5">
-                                    <label class="control-label" for="formNewUser_celphoneUser"><s:property value="getText('text.celphoneuser.login')" />:</label>
-                                    <div class="controls">
-                                        <s:textfield class="form-control" id="formNewUser_celphoneUser" name="celphoneUser"/>                                   
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        
                         <div class="form-group">
                             <div class="row">
                                 <div class="col-md-5">
@@ -233,33 +215,33 @@
                                         var strongLogin = "";
                                         var veryStrongLogin = "";
                                         var lanVal = $('#formNewUser_lanSel').val();
-                                        var str   = lanVal;
+                                        var str = lanVal;
                                         var valEs = str.search("es");
                                         var valEn = str.search("en");
-                                        
-                                        if(valEs!=-1) {
-                                                veryWeakLogin = "Muy Debil";
-                                                weakLogin = "Debil";
-                                                mediumLogin = "Normal";
-                                                strongLogin = "Fuerte";
-                                                veryStrongLogin = "Muy Fuerte";
+
+                                        if (valEs != -1) {
+                                            veryWeakLogin = "Muy Debil";
+                                            weakLogin = "Debil";
+                                            mediumLogin = "Normal";
+                                            strongLogin = "Fuerte";
+                                            veryStrongLogin = "Muy Fuerte";
                                         }
 
-                                        if(valEn!=-1) {
-                                                veryWeakLogin = "Very Weak";
-                                                weakLogin = "Weak";
-                                                mediumLogin = "Normal";
-                                                strongLogin = "Strong";
-                                                veryStrongLogin = "Very Strong";
-                                        }                                 
-                                        
+                                        if (valEn != -1) {
+                                            veryWeakLogin = "Very Weak";
+                                            weakLogin = "Weak";
+                                            mediumLogin = "Normal";
+                                            strongLogin = "Strong";
+                                            veryStrongLogin = "Very Strong";
+                                        }
+
                                         $('.itooltip').popover({
 //                                            placement: wheretoplace,
-                                            html: true, 
-                                            trigger: 'hover', 
+                                            html: true,
+                                            trigger: 'hover',
                                             template: '<div class="popover arrowSituate"><div class="arrow" style="top:65px;"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
                                         });
-                                        
+
 //                                        $('[data-toggle=popover]').popover();
 //
 //                                        $('[data-toggle=popover]').on('shown.bs.popover', function () {
@@ -311,116 +293,14 @@
                         </div>                            
                     </s:form>
                     <script>
-                        $.subscribe('completeUser', function(event, data) {
+                        $.subscribe('completeUser', function (event, data) {
                             completeForm('', 'formNewUser', event.originalEvent.request.responseText);
                         });
-                        if($('.pop-over').length) {
-                            $('.pop-over').popover({html:true});
+                        if ($('.pop-over').length) {
+                            $('.pop-over').popover({html: true});
                         }
                     </script>
-                </div>
-                <div class="panel" style="display:none;" id="divValidateUser">
-                    <h3 class="heading_main"><s:property value="getText('title.validatedata.login')" /></h3>
-                    <s:form id="formVerify" action="verifyUserManual.action">
-                        <s:hidden name="lanSel"/>
-                        <s:hidden name="actExe" value="verifyuser"/>
-                        <div class="row">
-                            <div class="col-md-12 form-group">
-                                <label class="control-label req" for="formVerify_nameUser">
-                                    <s:property value="getText('text.verifycel.login')" />
-                                </label>
-                                <div class="controls">
-                                    <s:textfield id="formVerify_nameUser" name="nameUser"/>
-                                </div>                         
-                            </div>                                            
-                        </div>    
-                        <div class="row">
-                            <div class="col-md-12 form-group">
-                                <label class="control-label req" for="formVerify_codVal">
-                                    <s:property value="getText('text.codvalidation.login')" />
-                                </label>
-                                <div class="controls">
-                                    <s:textfield id="formVerify_codVal" name="codVal"/>
-                                </div>                         
-                            </div>                                            
-                        </div> 
-                        <div class="row">    
-                            <div class="login_links col-md-12">
-                                <a href="javascript:void(0)" id="accessSystemUserVer">
-                                    <span><s:property value="getText('link.systemingress.login')" /></span>
-                                </a>
-                            </div>
-                        </div> 
-                    </s:form>
-                    <div class="">
-                        <sj:submit type="button" formIds="formVerify" cssClass="btn btn-initial btn-lg" onclick="addMessageProcessLogin('formVerify_lanSel'); ga('send', 'event', 'Register', 'click', 'VerifyUser');" targets="divMessage" onCompleteTopics="completeVerify" validate="true" validateFunction="validationForm"><s:property value="%{getText('button.verifyuser.login')}"/></sj:submit>
-                    </div>
-                    <script>
-                        $.subscribe('completeVerify', function(event,data) {                            
-                            var json = jQuery.parseJSON(event.originalEvent.request.responseText);
-                            if (json.state == 'failure') {
-                                completeForm('', 'formVerify', event.originalEvent.request.responseText);
-                            } else {
-                                $.unblockUI();
-//                                alert(json.info);
-                                var host = window.location.host;
-                                var protocol = window.location.protocol;
-                                document.location = protocol+'//'+host+'/'+json.info;
-//                                document.location = protocol+'//'+host+'/aeps/'+json.info;
-                            }
-                        });
-                    </script>
-                </div>
-                <div class="panel" style="display:none;" id="divChangePass">
-                    <h3 class="heading_main"><s:property value="getText('title.changepasscel.login')" /></h3>
-                    <s:form id="formChangePass" action="verifyUserToRestoreMan.action">
-                        <s:hidden name="actExe" value="changePassUser"/>
-                        <s:hidden name="lanSel"/>
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label class="control-label req" for="formChangePass_nameUser">
-                                    <s:property value="getText('text.verifycel.login')" />
-                                </label>
-                                <div class="controls">
-                                    <s:textfield id="formChangePass_nameUser" name="nameUser"/>
-                                </div>                         
-                            </div>                                            
-                        </div>    
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label class="control-label req" for="formChangePass_codVal">
-                                    <s:property value="getText('text.codvalidation.login')" />
-                                </label>
-                                <div class="controls">
-                                    <s:textfield id="formChangePass_codVal" name="codVal"/>
-                                </div>                         
-                            </div>                                            
-                        </div> 
-                        <div class="row">    
-                            <div class="login_links col-md-6">
-                                <a href="javascript:void(0)" id="accessSystemChangePass">
-                                    <span><s:property value="getText('link.systemingress.login')" /></span>
-                                </a>
-                            </div>
-                        </div> 
-                    </s:form>
-                    <div class="">
-                        <sj:submit type="button" formIds="formChangePass" cssClass="btn btn-initial btn-lg" onclick="addMessageProcessLogin('formChangePass_lanSel'); ga('send', 'event', 'Register', 'click', 'ChangePass');" targets="divMessage" onCompleteTopics="completeChangePass" validate="true" validateFunction="validationForm"><s:property value="%{getText('button.verifychangepass.login')}"/></sj:submit>
-                    </div>
-                    <script>
-                        $.subscribe('completeChangePass', function(event,data) {                            
-                            var json = jQuery.parseJSON(event.originalEvent.request.responseText);
-                            if (json.state == 'failure') {
-                                completeForm('', 'formChangePass', event.originalEvent.request.responseText);
-                            } else {
-                                $.unblockUI();
-                                var host = window.location.host;
-                                var protocol = window.location.protocol;
-                                document.location = protocol+'//'+host+'/'+json.info;
-                            }
-                        });
-                    </script>
-                </div>
+                </div>                
             </div>
         </div>
         <% String logSel = String.valueOf(request.getParameter("logSel"));%>
@@ -431,118 +311,118 @@
         <script type="text/javascript" src="scripts/js/colorbox/jquery.colorbox.min.js"></script>
         <script type="text/javascript" src="scripts/js/jquery/pwdMeter/jquery.pwdMeter.min.js"></script>
         <script type="text/javascript" src="scripts/js/generals/functions.js"></script>  
-        <script type="text/javascript">            
-            (function(a) {
-                a.fn.vAlign = function() {
-                    return this.each(function() {
-                        var b = a(this).height(), c = a(this).outerHeight(), b = (b + (c - b)) / 2;
-                        a(this).css("margin-top", "-" + b + "px");
-                        a(this).css("top", "50%");
-                        a(this).css("position", "absolute")
-                    })
-                }
-            })(jQuery);
-            (function(a) {
-                a.fn.hAlign = function() {
-                    return this.each(function() {
-                        var b = a(this).width(), c = a(this).outerWidth(), b = (b + (c - b)) / 2;
-                        a(this).css("margin-left", "-" + b + "px");
-                        a(this).css("left", "50%");
-                        a(this).css("position", "absolute")
-                    })
-                }
-            })(jQuery);
-            $(document).ready(function() {
-                $('#remPass').click(function() {
-                    $('#divRegisterUser').slideUp('200');
-                    $('#divNewUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divRestoreUser').slideDown('200');
-                });
+        <script type="text/javascript">
+                        (function (a) {
+                            a.fn.vAlign = function () {
+                                return this.each(function () {
+                                    var b = a(this).height(), c = a(this).outerHeight(), b = (b + (c - b)) / 2;
+                                    a(this).css("margin-top", "-" + b + "px");
+                                    a(this).css("top", "50%");
+                                    a(this).css("position", "absolute")
+                                })
+                            }
+                        })(jQuery);
+                        (function (a) {
+                            a.fn.hAlign = function () {
+                                return this.each(function () {
+                                    var b = a(this).width(), c = a(this).outerWidth(), b = (b + (c - b)) / 2;
+                                    a(this).css("margin-left", "-" + b + "px");
+                                    a(this).css("left", "50%");
+                                    a(this).css("position", "absolute")
+                                })
+                            }
+                        })(jQuery);
+                        $(document).ready(function () {
+                            $('#remPass').click(function () {
+                                $('#divRegisterUser').slideUp('200');
+                                $('#divNewUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divRestoreUser').slideDown('200');
+                            });
 
-                $('#accessSystem').click(function() {
-                    $('#divNewUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divRegisterUser').slideDown('200');
-                });
+                            $('#accessSystem').click(function () {
+                                $('#divNewUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divRegisterUser').slideDown('200');
+                            });
 
-                $('#newUser').click(function() {
-                    $('#divRegisterUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divNewUser').slideDown('200');
-                    //$(this).children('span').toggle();
-                });
+                            $('#newUser').click(function () {
+                                $('#divRegisterUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divNewUser').slideDown('200');
+                                //$(this).children('span').toggle();
+                            });
 
-                $('#accessSystemUser').click(function() {
-                    $('#divNewUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divRegisterUser').slideDown('200');
-                });
-                
-                $('#accessSystemUserVer').click(function() {
-                    $('#divNewUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divRegisterUser').slideDown('200');
-                });
-                
-                $('#verUser').click(function() {
-                    $('#divNewUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divRegisterUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divValidateUser').slideDown('200');
-                });
-                
-                $('#accessSystemChangePass').click(function() {
-                    $('#divNewUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideUp('200');
-                    $('#divRegisterUser').slideDown('200');
-                });
-                
-                $('#changePass').click(function() {
-                    $('#divNewUser').slideUp('200');
-                    $('#divRestoreUser').slideUp('200');
-                    $('#divRegisterUser').slideUp('200');
-                    $('#divValidateUser').slideUp('200');
-                    $('#divChangePass').slideDown('200');
-                });
-            });  
-            if($('#formNewUser_passwordUser').length) {
-                $('#formNewUser_passwordUser').pwdMeter({
-                    minLength: 6,
-                    displayGeneratePassword: false,
-                    neutralText:"",
-                    veryWeakText:veryWeakLogin,
-                    weakText:weakLogin,
-                    mediumText:mediumLogin,
-                    strongText:strongLogin,
-                    veryStrongText:veryStrongLogin
-                });  
-            }
-            $.mask.definitions['h'] = "[3]";
-            $('#formNewUser_celphoneUser').mask("h999999999",{placeholder:""});
-            $('#formNewUser_passwordRepUser').bind("cut copy paste",function(e) {
-                e.preventDefault();
-            });
-            var val = "<%=logSel%>";
-            if (val == 'new') {
-                $('#divRegisterUser').slideUp('200');
-                $('#divRestoreUser').slideUp('200');
-                $('#divValidateUser').slideUp('200');
-                $('#divChangePass').slideUp('200');
-                $('#divNewUser').slideDown();
-            }            
+                            $('#accessSystemUser').click(function () {
+                                $('#divNewUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divRegisterUser').slideDown('200');
+                            });
+
+                            $('#accessSystemUserVer').click(function () {
+                                $('#divNewUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divRegisterUser').slideDown('200');
+                            });
+
+                            $('#verUser').click(function () {
+                                $('#divNewUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divRegisterUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divValidateUser').slideDown('200');
+                            });
+
+                            $('#accessSystemChangePass').click(function () {
+                                $('#divNewUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideUp('200');
+                                $('#divRegisterUser').slideDown('200');
+                            });
+
+                            $('#changePass').click(function () {
+                                $('#divNewUser').slideUp('200');
+                                $('#divRestoreUser').slideUp('200');
+                                $('#divRegisterUser').slideUp('200');
+                                $('#divValidateUser').slideUp('200');
+                                $('#divChangePass').slideDown('200');
+                            });
+                        });
+                        if ($('#formNewUser_passwordUser').length) {
+                            $('#formNewUser_passwordUser').pwdMeter({
+                                minLength: 6,
+                                displayGeneratePassword: false,
+                                neutralText: "",
+                                veryWeakText: veryWeakLogin,
+                                weakText: weakLogin,
+                                mediumText: mediumLogin,
+                                strongText: strongLogin,
+                                veryStrongText: veryStrongLogin
+                            });
+                        }
+                        $.mask.definitions['h'] = "[3]";
+                        $('#formNewUser_celphoneUser').mask("h999999999", {placeholder: ""});
+                        $('#formNewUser_passwordRepUser').bind("cut copy paste", function (e) {
+                            e.preventDefault();
+                        });
+                        var val = "<%=logSel%>";
+                        if (val == 'new') {
+                            $('#divRegisterUser').slideUp('200');
+                            $('#divRestoreUser').slideUp('200');
+                            $('#divValidateUser').slideUp('200');
+                            $('#divChangePass').slideUp('200');
+                            $('#divNewUser').slideDown();
+                        }
         </script>
     </body>
 </html>

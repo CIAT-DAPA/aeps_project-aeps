@@ -31,7 +31,7 @@ import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 
 import org.aepscolombia.platform.models.dao.MunicipalitiesDao;
 import org.aepscolombia.platform.models.dao.ProducersDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.EntitiesTypes;
 import org.aepscolombia.platform.models.entity.DocumentsTypes;
@@ -39,7 +39,7 @@ import org.aepscolombia.platform.models.entity.Entities;
 import org.aepscolombia.platform.models.entity.Producers;
 import org.aepscolombia.platform.models.entity.Municipalities;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.HibernateUtil;
 import org.aepscolombia.platform.util.ValidatorUtil;
@@ -932,10 +932,10 @@ public class ActionProducer extends BaseAction {
 
         try {
             tx = session.beginTransaction();
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
             Integer idUserMobile = null;
-            if (sfUser != null) idUserMobile = sfUser.getId().intValue();
+            //if (sfUser != null) idUserMobile = sfUser.getId().intValue();
             HashMap proData = proDao.findById(idProducer);
             int idEnt = 0;
 //            System.out.println("values->"+proData);

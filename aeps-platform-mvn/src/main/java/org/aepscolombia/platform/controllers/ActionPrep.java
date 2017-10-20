@@ -14,7 +14,7 @@ import org.aepscolombia.platform.models.dao.PreparationsDao;
 import org.aepscolombia.platform.models.dao.PreparationsTypesDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
 import org.aepscolombia.platform.models.dao.ResidualsClasificationDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.SowingDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 
@@ -25,7 +25,7 @@ import org.aepscolombia.platform.models.entity.ProductionEvents;
 import org.aepscolombia.platform.models.entity.ResidualsClasification;
 import org.aepscolombia.platform.models.entity.Sowing;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
@@ -431,8 +431,8 @@ public class ActionPrep extends BaseAction {
             
             HashMap prod  = cropDao.findById(idCrop);
             Integer tyCro = Integer.parseInt(String.valueOf(prod.get("typeCrop")));
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
 //            GlobalFunctions.sendInformationCrop(idCrop, tyCro, sfUser.getId());
         } catch (HibernateException e) {
             if (tx != null) {

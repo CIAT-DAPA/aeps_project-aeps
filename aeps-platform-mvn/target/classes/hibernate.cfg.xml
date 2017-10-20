@@ -3,7 +3,7 @@
 <hibernate-configuration>
     <session-factory>
         <property name="hibernate.bytecode.use_reflection_optimizer">false</property>
-        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        
         <property name="hibernate.search.autoregister_listeners">false</property>
         <property name="hibernate.validator.apply_to_ddl">false</property>
         <property name="connection.autoReconnect">true</property>

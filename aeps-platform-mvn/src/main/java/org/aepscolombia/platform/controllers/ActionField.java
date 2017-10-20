@@ -29,7 +29,7 @@ import org.aepscolombia.platform.models.dao.FieldTypesDao;
 import org.aepscolombia.platform.models.dao.ProducersDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
 import org.aepscolombia.platform.models.dao.RastasDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
 import org.aepscolombia.platform.models.entity.Entities;
 
@@ -39,7 +39,7 @@ import org.aepscolombia.platform.models.entity.FieldTypes;
 import org.aepscolombia.platform.models.entity.FieldsProducers;
 import org.aepscolombia.platform.models.entity.FieldsProducersId;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 
 import org.aepscolombia.platform.util.HibernateUtil;
@@ -915,8 +915,8 @@ public class ActionField extends BaseAction {
             Double availableArea = null;
             Double areaOld = null;
             tx = session.beginTransaction();
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");
             Fields lot = null;
 //            FarmsDao farmDao = new FarmsDao();
             HashMap objFarm = new FarmsDao().findById(idFarm);
@@ -959,9 +959,9 @@ public class ActionField extends BaseAction {
             if (areaLot!=null) lot.setAreaFie(areaLot);            
             lot.setFieldTypes(new FieldTypes(typeLot));
             Integer idUserMobile = null;
-            if (sfUser!=null) {
+            /*if (sfUser!=null) {
                 idUserMobile = sfUser.getId().intValue();
-            }
+            }*/
             lot.setCreatedBy(idUserMobile);
 //            lot.setControlPlagasLot(true);
 //            lot.setControlEnfermedadesLot(true);       

@@ -35,7 +35,7 @@ import org.aepscolombia.platform.models.entity.FarmsProducers;
 import org.aepscolombia.platform.models.entity.FarmsProducersId;
 import org.aepscolombia.platform.models.entity.LogEntities;
 import org.aepscolombia.platform.models.entity.Producers;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -759,12 +759,12 @@ public class FarmsDao
                 
                 String emailUser = String.valueOf(data[18]);
                 
-                SfGuardUserDao sfDao = new SfGuardUserDao();
+                /*SfGuardUserDao sfDao = new SfGuardUserDao();
                 SfGuardUser sfUser   = sfDao.getUserByLogin(null, emailUser, "");
                 Integer idUserMobile = null;
                 if (sfUser!=null) {
                     idUserMobile = sfUser.getId().intValue();
-                }
+                }*/
                 
                 HashMap valInfo = new HashMap();
                 valInfo.put("farmId", temp.get("id_farm"));
@@ -778,7 +778,7 @@ public class FarmsDao
                 valInfo.put("alt", temp.get("altitude_farm"));
                 valInfo.put("department", temp.get("id_dep"));
                 valInfo.put("municipality", temp.get("id_mun"));
-                valInfo.put("userMobileId", idUserMobile); 
+                //valInfo.put("userMobileId", idUserMobile); 
 
                 /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+temp.get("id_farm"));

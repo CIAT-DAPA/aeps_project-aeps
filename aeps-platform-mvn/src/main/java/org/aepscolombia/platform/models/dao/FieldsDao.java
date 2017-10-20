@@ -35,7 +35,7 @@ import org.hibernate.SessionFactory;
 import org.aepscolombia.platform.models.entity.Fields;
 import org.aepscolombia.platform.models.entity.FieldsProducers;
 import org.aepscolombia.platform.models.entity.LogEntities;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -814,12 +814,12 @@ public class FieldsDao
                 
                 String emailUser = String.valueOf(data[15]);
                 
-                SfGuardUserDao sfDao = new SfGuardUserDao();
+                /*SfGuardUserDao sfDao = new SfGuardUserDao();
                 SfGuardUser sfUser   = sfDao.getUserByLogin(null, emailUser, "");
                 Integer idUserMobile = null;
                 if (sfUser!=null) {
                     idUserMobile = sfUser.getId().intValue();
-                }
+                }*/
                 
                 HashMap valInfo = new HashMap();
                 valInfo.put("fieldId", temp.get("id_lot"));
@@ -831,7 +831,7 @@ public class FieldsDao
                 valInfo.put("lng", temp.get("length_lot"));
                 valInfo.put("alt", temp.get("altitude_lot"));
                 valInfo.put("areaField", temp.get("area_lot"));
-                valInfo.put("userMobileId", idUserMobile);      
+                //valInfo.put("userMobileId", idUserMobile);      
 
                 /*BasicDBObject queryMongo = new BasicDBObject();
                 queryMongo.put("InsertedId", ""+temp.get("id_lot"));

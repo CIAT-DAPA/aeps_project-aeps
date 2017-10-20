@@ -53,7 +53,7 @@ import org.aepscolombia.platform.models.dao.SeedsColorsDao;
 import org.aepscolombia.platform.models.dao.SeedsInoculationsDao;
 import org.aepscolombia.platform.models.dao.SeedsOriginsDao;
 import org.aepscolombia.platform.models.dao.SeedsTypesDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.SowingDao;
 import org.aepscolombia.platform.models.dao.SowingTypesDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
@@ -86,7 +86,7 @@ import org.aepscolombia.platform.models.entity.SeedsTypes;
 import org.aepscolombia.platform.models.entity.Sowing;
 import org.aepscolombia.platform.models.entity.SowingTypes;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.GlobalFunctions;
 import org.aepscolombia.platform.util.HibernateUtil;
@@ -1645,8 +1645,8 @@ public class ActionCrop extends BaseAction {
             idCrop = pro.getIdProEve();            
             tx.commit();           
             
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser   = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");            
 //            GlobalFunctions.sendInformationCrop(idCrop, typeCrop, sfUser.getId());
             
             state = "success";            

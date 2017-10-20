@@ -19,7 +19,7 @@ import org.aepscolombia.platform.models.dao.EntitiesDao;
 
 import org.aepscolombia.platform.models.dao.LogEntitiesDao;
 import org.aepscolombia.platform.models.dao.ProductionEventsDao;
-import org.aepscolombia.platform.models.dao.SfGuardUserDao;
+//import org.aepscolombia.platform.models.dao.SfGuardUserDao;
 import org.aepscolombia.platform.models.dao.SoilAnalysisDao;
 import org.aepscolombia.platform.models.dao.TexturesDao;
 import org.aepscolombia.platform.models.dao.UsersDao;
@@ -33,7 +33,7 @@ import org.aepscolombia.platform.models.entity.ProductionEvents;
 import org.aepscolombia.platform.models.entity.SoilAnalysis;
 import org.aepscolombia.platform.models.entity.Textures;
 import org.aepscolombia.platform.models.entity.Users;
-import org.aepscolombia.platform.models.entityservices.SfGuardUser;
+//import org.aepscolombia.platform.models.entityservices.SfGuardUser;
 import org.aepscolombia.platform.util.APConstants;
 import org.aepscolombia.platform.util.HibernateUtil;
 
@@ -684,8 +684,8 @@ public class ActionSoil extends BaseAction {
         try {
 //            int idProOld = 0;
             tx = session.beginTransaction();
-            SfGuardUserDao sfDao = new SfGuardUserDao();
-            SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");      
+            //SfGuardUserDao sfDao = new SfGuardUserDao();
+            //SfGuardUser sfUser = sfDao.getUserByLogin(user.getCreatedBy(), user.getNameUserUsr(), "");      
             
             String dmy     = new SimpleDateFormat("yyyy-MM-dd").format(soil.getDateSamplingSoAna());
             Date dateSoil  = new SimpleDateFormat("yyyy-MM-dd").parse(dmy);
