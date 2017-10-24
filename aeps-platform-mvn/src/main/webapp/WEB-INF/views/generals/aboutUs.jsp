@@ -16,6 +16,7 @@
                             <li><a href="#tb3_b" aria-controls="tb3_b" role="tab" data-toggle="tab"><s:property value="getText('link.vision.aboutus')" /></a></li>
                             <li><a href="#tb3_c" aria-controls="tb3_c" role="tab" data-toggle="tab"><s:property value="getText('link.projects.aboutus')" /></a></li>
                             <li><a href="#tb3_d" aria-controls="tb3_d" role="tab" data-toggle="tab"><s:property value="getText('link.ourteam.aboutus')" /></a></li>
+                            <li><a href="#tb3_e" aria-controls="tb3_d" role="tab" data-toggle="tab"><s:property value="getText('link.privacy.aboutus')" /></a></li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tb3_a">
@@ -37,6 +38,11 @@
                                 <p><strong><s:property value="getText('title.ourteam.aboutus')" /></strong></p>
                                 <hr>
                                 <p><s:text name="%{getText('area.ourteam.aboutus')}" /></p>                                        
+                            </div>
+                            <div class="tab-pane" id="tb3_e">
+                                <p><strong><s:property value="getText('link.privacy.aboutus')" /></strong></p>
+                                <hr>
+                                <p><s:text name="%{getText('area.privacy.aboutus')}" /></p>                                        
                             </div>
                         </div>
                     </div>
