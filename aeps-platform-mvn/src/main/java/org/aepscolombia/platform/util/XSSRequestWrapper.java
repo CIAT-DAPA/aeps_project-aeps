@@ -78,10 +78,9 @@ public class XSSRequestWrapper extends HttpServletRequestWrapper {
             value = ESAPI.encoder().canonicalize(value);
 
             // Avoid null characters
-            value = value.replaceAll("\0", "");
-
+            //value = value.replaceAll("\0", "");
             // Remove all sections that match a pattern
-            for (Pattern scriptPattern : patterns){
+            for (Pattern scriptPattern : patterns) {
                 value = scriptPattern.matcher(value).replaceAll("");
             }
         }
