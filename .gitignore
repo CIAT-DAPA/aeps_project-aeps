@@ -22,3 +22,6 @@ aeps-platform-mvn/nbbuild/
 # Maven
 aeps-platform-mvn/log/
 aeps-platform-mvn/target/
+
+# Target
+target/
