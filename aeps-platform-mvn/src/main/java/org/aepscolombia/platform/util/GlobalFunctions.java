@@ -309,10 +309,12 @@ public class GlobalFunctions extends BaseAction {
 //        String host = "localhost";
         Properties props = new Properties();
 //        props.setProperty("mail.smtp.host", host); 
+        /*props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp-mail.outlook.com");*/
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", "smtp-mail.outlook.com");
-//        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.port", "587");
 //        props.put("mail.transport.protocol", "smtps");
 //        Session session  = Session.getDefaultInstance(props, null);

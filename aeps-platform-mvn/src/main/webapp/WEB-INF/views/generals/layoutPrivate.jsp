@@ -18,7 +18,7 @@
         <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/colorbox/colorbox.css"/>
         <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/main.min.css">        
         <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/font-awesome/css/font-awesome.min.css">               
-        <link href='http://fonts.googleapis.com/css?family=Istok+Web:500,700' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Istok+Web:500,700' rel='stylesheet' type='text/css'>
         <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/geoxml/gmap.css"/>
         <link rel="stylesheet" href="<%= request.getContextPath() %>/scripts/css/generals/multiple-select.css"/> 
         <link href="<%= request.getContextPath() %>/scripts/css/generals/vis.min.css" rel="stylesheet" type="text/css" />

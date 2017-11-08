@@ -2272,13 +2272,13 @@ function removeRowHorizon(rowId, tbPrin, tableId)
 
 function getCountry () {
     var deferred = $.Deferred();
-    $.getJSON("http://ip-api.com/json", function(result){
-        countryCode = result.countryCode;
-//        countryCode = "CO";
+//    $.getJSON("http://ip-api.com/json", function(result){
+//        countryCode = result.countryCode;
+        countryCode = "CO";
 //                    alert('Country: ' + result.country_name + '\n' + 'Code: ' + result.country_code);
         deferred.resolve();
 //                    doAction();
-    });
+//    });
     return deferred;
 }
 
@@ -2286,7 +2286,7 @@ function sendCountry(url)
 {
 //    getCountry();
 //    alert(window.location.host)
-    $.when(getCountry()).then(document.location = "http://"+window.location.host+"/"+url+"&countryCode="+countryCode);
+    $.when(getCountry()).then(document.location = "https://"+window.location.host+"/"+url+"&countryCode="+countryCode);
 }
 
 function showInfoPageCountry(url, countryCode, valFill)

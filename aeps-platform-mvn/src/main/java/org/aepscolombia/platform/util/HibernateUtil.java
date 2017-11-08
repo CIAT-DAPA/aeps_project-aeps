@@ -19,24 +19,24 @@ public class HibernateUtil {
             Configuration config = null;
             config = new Configuration().configure("/hibernate.cfg.xml");
 
-            config.setProperty("hibernate.connection.username", "ciat");
-            config.setProperty("hibernate.connection.password", "GtA7U5BWcPATbGpT");
+            //config.setProperty("hibernate.connection.username", "ciat");
+            //config.setProperty("hibernate.connection.password", "GtA7U5BWcPATbGpT");
             String urlMysql = "jdbc:mysql://" + "localhost" + ":"
                     + "3306" + "/"
                     + "aeps_ciat_ext" + "?autoReconnect=true&&useSSL=false";
-            config.setProperty("hibernate.connection.url", urlMysql);
-            config.setProperty("hibernate.current_session_context_class", "thread");
-            config.setProperty("hibernate.hikari.dataSource.url", urlMysql);
-            config.setProperty("hibernate.hikari.dataSource.user", "ciat");
-            config.setProperty("hibernate.hikari.dataSource.password", "GtA7U5BWcPATbGpT");
-            config.setProperty("hibernate.hikari.connectionTimeout", "10000");
+            //config.setProperty("hibernate.connection.url", urlMysql);
+            //config.setProperty("hibernate.current_session_context_class", "thread");
+            //config.setProperty("hibernate.hikari.dataSource.url", urlMysql);
+            //config.setProperty("hibernate.hikari.dataSource.user", "ciat");
+            //config.setProperty("hibernate.hikari.dataSource.password", "GtA7U5BWcPATbGpT");
+            //config.setProperty("hibernate.hikari.connectionTimeout", "10000");
             // Minimum number of ideal connections in the pool
-            config.setProperty("hibernate.hikari.minimumIdle", "1000");
+            //config.setProperty("hibernate.hikari.minimumIdle", "1000");
             // Maximum number of actual connection in the pool
-            config.setProperty("hibernate.hikari.maximumPoolSize", "5000");
+            //config.setProperty("hibernate.hikari.maximumPoolSize", "5000");
             // Maximum time that a connection is allowed to sit ideal in the pool
-            config.setProperty("hibernate.hikari.idleTimeout", "5000");
-            config.setProperty("hibernate.bytecode.use_reflection_optimizer'", "false");
+            //config.setProperty("hibernate.hikari.idleTimeout", "5000");
+            //config.setProperty("hibernate.bytecode.use_reflection_optimizer'", "false");
     // config.setProperty("hibernate.c3p0.min_size", "5");
             // System.out.println("url_mysql " + url_mysql);
             // System.out.println(url.toString());

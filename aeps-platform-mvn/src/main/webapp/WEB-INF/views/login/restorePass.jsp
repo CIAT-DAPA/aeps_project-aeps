@@ -15,7 +15,7 @@
         <sj:head jqueryui="false"/>
         <sb:head includeScripts="true" includeScriptsValidation="true"/>        
         <link rel="stylesheet" href="scripts/css/generals/login.css">        
-        <link href = 'http://fonts.googleapis.com/css?family=Istok+Web:400700400cursiva,700italicysubconjunto=latin,latin-ext' rel='stylesheet' type='text/css'>
+        <link href = 'https://fonts.googleapis.com/css?family=Istok+Web:400700400cursiva,700italicysubconjunto=latin,latin-ext' rel='stylesheet' type='text/css'>
     </head>
     <body>
         <%@ include file="../generals/googleAnalytics.jsp" %>
@@ -57,7 +57,7 @@
                     <script type="text/javascript" src="scripts/js/jquery/pwdMeter/jquery.pwdMeter.js"></script>
                     <script type="text/javascript" src="scripts/js/jquery/jquery.blockUI.js"></script>
                     <script type="text/javascript" src="scripts/js/jquery/jquery.validate.js"></script>
-                    <script type="text/javascript" src="scripts/js/generals/functions.min.js"></script>	        
+                    <script type="text/javascript" src="scripts/js/generals/functions.js"></script>	        
                     <script>
                         var lanVal = $('#formRestCon_lanSel').val();
                         var str   = lanVal;

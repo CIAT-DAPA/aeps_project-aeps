@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="scripts/css/colorbox/colorbox.css"/>
         <link rel="stylesheet" href="scripts/css/generals/login.css">
         <link rel="stylesheet" href="scripts/css/font-awesome/css/font-awesome.min.css">
-        <link href = 'http://fonts.googleapis.com/css?family=Istok+Web:400700400cursiva,700italicysubconjunto=latin,latin-ext' rel='stylesheet' type='text/css'>        
+        <link href = 'https://fonts.googleapis.com/css?family=Istok+Web:400700400cursiva,700italicysubconjunto=latin,latin-ext' rel='stylesheet' type='text/css'>        
     </head>
     <body>
         <%@ include file="../generals/googleAnalytics.jsp" %>
@@ -282,7 +282,8 @@
                                 <%@ page import="net.tanesha.recaptcha.ReCaptcha" %>
                                 <%@ page import="net.tanesha.recaptcha.ReCaptchaFactory" %>
                                 <%
-                                    ReCaptcha captcha = ReCaptchaFactory.newReCaptcha("6Le3bu4SAAAAAAIy3mS2Ov8XerDrpgVxmWOShi9C", "6Le3bu4SAAAAAAdFTwmmT_2XuBKPGUhfdlgpRseY", false);
+                                    //ReCaptcha captcha = ReCaptchaFactory.newReCaptcha("6Le3bu4SAAAAAAIy3mS2Ov8XerDrpgVxmWOShi9C", "6Le3bu4SAAAAAAdFTwmmT_2XuBKPGUhfdlgpRseY", false);
+                                    ReCaptcha captcha = ReCaptchaFactory.newSecureReCaptcha("6Le3bu4SAAAAAAIy3mS2Ov8XerDrpgVxmWOShi9C", "6Le3bu4SAAAAAAdFTwmmT_2XuBKPGUhfdlgpRseY", false);
                                     String captchaScript = captcha.createRecaptchaHtml(request.getParameter("error"), null);
                                     out.print(captchaScript);
                                 %>
